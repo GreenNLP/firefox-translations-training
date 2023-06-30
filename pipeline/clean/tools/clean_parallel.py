@@ -55,6 +55,12 @@ CHARS = {
 def main():
     args = parse_user_args()
 
+    #Cleaning does not work with CJK languages, since it does not tokenize them, so skip it
+    #TODO: add proper cleaning for CJK
+    cjk_langs = ["zh", "ja", "ko"]
+    if args.src_lang in cjk_langs or args.trg_lang in cjk_langs:
+        do_not_clean = True
+
     for i, line in enumerate(sys.stdin):
         fields = line.strip().split('\t')
         if len(fields) < 2:
@@ -62,8 +68,11 @@ def main():
 
         src = fields[-2].strip()
         trg = fields[-1].strip()
-
-        skip = clean_parallel(src, trg, args.src_lang, args.trg_lang)
+        
+        if do_not_clean:
+            skip = False
+        else:
+            skip = clean_parallel(src, trg, args.src_lang, args.trg_lang)
         if skip:
             if args.debug:
                 sys.stderr.write("{}\t{}".format(skip, line))

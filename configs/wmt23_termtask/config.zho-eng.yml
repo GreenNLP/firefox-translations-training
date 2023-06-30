@@ -1,0 +1,97 @@
+####
+# Example of a production config
+# Change language pair, experiment name, datasets and other settings if needed
+# Training low resource languages might require more tuning of pipeline/training/configs
+###
+
+
+experiment:
+  name: wmt23-termtask-zho-eng
+  src: zh
+  trg: en
+
+  teacher-ensemble: 1
+  # path to a pretrained backward model (optional)
+  backward-model: ""
+  # path to a pretrained vocabulary (optional)
+  vocab: ""
+
+  # limits per downloaded dataset
+  mono-max-sentences-src: 100000000
+  mono-max-sentences-trg: 20000000
+  # split corpus to parallelize translation
+  split-length: 1000000
+  # vocab training sample
+  spm-sample-size: 10000000
+
+  best-model: chrf
+ 
+marian-args:
+# these configs override pipeline/train/configs
+  training-backward:
+    # change based on available training data
+    after: 10e
+  training-teacher-base:
+    # remove for low resource languages or if training without augmentation
+    valid-freq: 200
+    disp-freq: 100
+    beam-size: 1
+    valid-mini-batch: 64
+    valid-max-length: 100
+    # these configs override pipeline/translate/decoder.yml
+  decoding-backward:
+    # 12 Gb GPU, s2s model
+    mini-batch-words: 2000
+    beam-size: 12
+  decoding-teacher:
+    # 12 Gb GPU, ensemble of 2 teachers
+    mini-batch-words: 1000
+    # 2080ti or newer
+    precision: float16
+
+
+datasets:
+  # parallel training corpus
+  train:
+    #- mtdata_ParaCrawl-paracrawl-1_bonus-eng-zho
+    - mtdata_Statmt-news_commentary-16-eng-zho
+    - mtdata_Statmt-wikititles-3-zho-eng
+    - mtdata_OPUS-unpc-v1.0-eng-zho
+    - mtdata_Facebook-wikimatrix-1-eng-zho
+    - custom-corpus_/pfs/lustrep1/scratch/project_462000088/members/niemine1/wmt23_termtask/firefox-translations-training/custom_corpora/en-zh-v1.txt
+  # datasets to merge for validation while training
+  devtest:
+    - flores_dev
+    - sacrebleu_wmt17
+    - sacrebleu_wmt18
+    - sacrebleu_wmt19
+  # datasets for evaluation
+  test:
+    - flores_devtest
+    - sacrebleu_wmt20
+    - sacrebleu_wmt21
+    - sacrebleu_wmt22
+  # mtdata does not support loading of mono data except as part of recipes, so skip these.
+  # In any case, the emphasis here is on terminology, not overall MT quality
+  # monolingual datasets (ex. paracrawl-mono_paracrawl8, commoncrawl_wmt16, news-crawl_news.2020)
+  # to be translated by the teacher model
+  #  mono-src:
+  #    - mtdata_Statmt-news_crawl-2021-ces
+  #    - mtdata_Statmt-europarl-10-ces
+  #    - mtdata_Statmt-news_commentary-17-ces
+  #    - mtdata_Statmt-commoncrawl-wmt22-ces
+  #    - mtdata_Leipzig-news-2022_1m-ces 
+  #    - mtdata_Leipzig-newscrawl-2019_1m-ces
+  #    - mtdata_Leipzig-wikipedia-2021_1m-ces
+  #    - mtdata_Leipzig-web_public-2019_1m-ces_CZ
+  #  # to be translated by the backward model to augment teacher corpus with back-translations
+  #  # leave empty to skip augmentation step (high resource languages)
+  #  mono-trg:
+  #    - mtdata_Statmt-news_crawl-2021-eng
+  #    - mtdata_Statmt-news_discussions-2019-eng
+  #    - mtdata_Statmt-news_commentary-17-eng
+  #    - mtdata_Statmt-commoncrawl-wmt22-eng
+  #    - mtdata_Statmt-europarl-10-eng
+  #    - mtdata_Leipzig-news-2020_1m-eng
+  #    - mtdata_Leipzig-ukweb_public-2018_1m-eng
+  #      tatmt-news_commentary-17-eng

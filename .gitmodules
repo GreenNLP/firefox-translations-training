@@ -19,3 +19,6 @@
 [submodule "3rd_party/lumi-marian"]
 	path = 3rd_party/lumi-marian
 	url = git@github.com:hplt-project/lumi-marian.git
+[submodule "3rd_party/soft-term-constraints"]
+	path = 3rd_party/soft-term-constraints
+	url = git@github.com:TommiNieminen/soft-term-constraints.git

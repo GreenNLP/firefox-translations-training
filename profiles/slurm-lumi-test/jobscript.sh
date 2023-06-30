@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # properties = {properties}
 
 #parse properties json and get log file name

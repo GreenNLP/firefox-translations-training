@@ -1,7 +1,7 @@
 # CSC Puhti
 single-gpu-partition: small-g
-multi-gpu-partition: small-g
+multi-gpu-partition: standard-g
 cpu-partition: small
 cpu-account: project_462000088
 gpu-account: project_462000088
-time-limit: "72:00:00"
+time-limit: "48:00:00"

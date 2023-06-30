@@ -10,6 +10,9 @@ test -v GPUS
 test -v MARIAN
 test -v WORKSPACE
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 input=$1
 output=$2
 models=( "${@:4}" )

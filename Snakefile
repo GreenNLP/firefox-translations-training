@@ -47,6 +47,8 @@ backward_pretrained_vocab = config['experiment'].get('backward-vocab')
 vocab_pretrained = config['experiment'].get('vocab')
 forward_pretrained = config['experiment'].get('forward-model')
 
+quantize_student = config['experiment'].get('quantize-student')
+
 experiment_dir=f"{data_root_dir}/experiments/{src}-{trg}/{experiment}"
 
 # override marian cofings
@@ -75,6 +77,10 @@ mono_src_datasets = config['datasets'].get('mono-src')
 mono_trg_datasets = config['datasets'].get('mono-trg')
 mono_datasets = {src: mono_src_datasets, trg: mono_trg_datasets}
 mono_max_sent = {src: mono_max_sent_src, trg: mono_max_sent_trg}
+
+# wmt23 term task (TODO: generalize this to generic term support)
+wmt23_termtask = config['experiment'].get('wmt23_termtask')
+ 
 
 # parallelization
 
@@ -123,6 +129,8 @@ augmented = f"{data_dir}/augmented"
 merged = f"{data_dir}/merged"
 filtered = f'{data_dir}/filtered'
 align_dir = f"{data_dir}/alignment"
+term_data_dir = f"{data_dir}/termdata"
+
 
 # models
 models_dir = f"{data_root_dir}/models/{src}-{trg}/{experiment}"
@@ -167,20 +175,47 @@ envs = f'''SRC={src} TRG={trg} MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir
 BIN="{bin}" CUDA_DIR="{cuda_dir}" CUDNN_DIR="{cudnn_dir}" ROCM_PATH="{rocm_dir}" '''
 # CUDA_VISIBLE_DEVICES is used by bicleaner ai. slurm sets this variable
 # it can be overriden manually by 'gpus' config setting to split GPUs in local mode
-if config['gpus']:
-    envs += f' CUDA_VISIBLE_DEVICES="{gpus}" '
+# Note that this will also work with AMD GPUs, they recognize this env variable
+envs += f' CUDA_VISIBLE_DEVICES="{gpus}" '
 
 ### workflow options
 
 results = [
-    f'{exported_dir}/model.{src}{trg}.intgemm.alphas.bin.gz',
-    f'{exported_dir}/lex.50.50.{src}{trg}.s2t.bin.gz',
-    f'{exported_dir}/vocab.{src}{trg}.spm.gz',
     f'{experiment_dir}/config.yml',
-    *expand(f'{eval_student_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-    *expand(f'{eval_student_finetuned_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-    *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
+    *expand(f'{eval_student_dir}/{{dataset}}.metrics',dataset=eval_datasets)
     ]
+
+if quantize_student:
+    results.extend([
+        f'{exported_dir}/model.{src}{trg}.intgemm.alphas.bin.gz',
+        f'{exported_dir}/lex.50.50.{src}{trg}.s2t.bin.gz',
+        f'{exported_dir}/vocab.{src}{trg}.spm.gz',
+        *expand(f'{eval_student_finetuned_dir}/{{dataset}}.metrics',dataset=eval_datasets),
+        *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
+    ])
+
+if wmt23_termtask:
+    results.extend([f'{eval_student_dir}/wmt23_termtask.score'])
+
+    if not (opusmt_teacher or forward_pretrained):
+        results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/wmt23_termtask.score',ens=ensemble))
+
+    annotation_schemes = wmt23_termtask['annotation-schemes']
+    term_ratios = wmt23_termtask['term-ratios']
+    sents_per_term_sents = wmt23_termtask['sents-per-term-sents']
+
+    results.extend(expand(f'{eval_student_dir}-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/wmt23_termtask.score',
+        annotation_scheme=annotation_schemes,
+        term_ratio=term_ratios,
+        sents_per_term_sent=sents_per_term_sents))
+
+    results.extend(expand(f'{eval_student_dir}-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/{{dataset}}.metrics',
+        annotation_scheme=annotation_schemes,
+        term_ratio=term_ratios,
+        sents_per_term_sent=sents_per_term_sents,dataset=eval_datasets))
+         
+#TODO: add evaluation for different parameters of soft term constraint models.
+
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -211,6 +246,13 @@ if 'bicleaner' in config['experiment']:
     bicl_dataset_thresholds = config['experiment']['bicleaner']['dataset-thresholds']
 
     bicleaner_type = packs.find(src, trg)
+    # bicleaner-ai does not work with multiple AMD gpus currently, so set gpu amount to 1
+    if rocm_dir:
+        #if gpus_num % 8 != 0:
+        #    raise ValueError("Only use multiples of 8 for gpu_num on LUMI")       
+        bicleaner_ai_gpus = gpus_num
+    else:
+        bicleaner_ai_gpus = gpus_num	
 else:
     bicleaner_type = None    
 
@@ -426,8 +468,8 @@ if use_bicleaner:
         log: f"{log_dir}/bicleaner/{{dataset}}.log"
         conda: bicleaner_env
 #       group: "bicleaner"
-        threads: gpus_num * 2 if bicleaner_type == "bicleaner-ai" else workflow.cores
-        resources: gpu=gpus_num if bicleaner_type == "bicleaner-ai" else 0, mem_mb=128000
+        threads: (bicleaner_ai_gpus * 8) if bicleaner_type == "bicleaner-ai" else workflow.cores
+        resources: gpu=bicleaner_ai_gpus if bicleaner_type == "bicleaner-ai" else 0
         input: ancient(rules.kenlm.output), multiext(f"{clean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz"),
                 pack_dir=rules.bicleaner_pack.output
         output: multiext(f"{biclean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
@@ -493,7 +535,7 @@ if not vocab_pretrained:
         output: vocab_path
         params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset"
         shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" {spm_sample_size} \
-                   {spm_vocab_size} >> {log} 2>&1'''
+                   {threads} {spm_vocab_size} >> {log} 2>&1'''
 
 if do_train_backward: 
     mono_trg_file = f'{translated}/mono_trg/file.{{part}}'
@@ -606,7 +648,7 @@ elif not forward_pretrained:
         message: "Training teacher on all data"
         log: f"{log_dir}/train_teacher{{model_index}}-{{ens}}.log"
         conda: "envs/base.yml"
-        threads: gpus_num*2
+        threads: gpus_num*3
         resources: gpu=gpus_num
         input:
             rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
@@ -918,7 +960,7 @@ rule train_student:
     message: "Training student"
     log: f"{log_dir}/train_student.log"
     conda: "envs/base.yml"
-    threads: gpus_num*2
+    threads: gpus_num*3
     resources: gpu=gpus_num
     #group 'student'
     input:
@@ -932,6 +974,67 @@ rule train_student:
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
+
+
+checkpoint split_corpus_for_annotation:
+    message: "Splitting the corpus for term annotation"
+    log: f"{log_dir}/split_corpus_for_annotation.log"
+    conda: "envs/base.yml"
+    threads: 1
+    input:
+        train_src=rules.ce_filter.output.src_corpus,
+        train_trg=rules.ce_filter.output.trg_corpus,
+        alignments=rules.alignments.output.alignment
+    output: directory(f"{term_data_dir}/corpus")
+    shell: '''bash pipeline/wmt23_termtask/split-corpus.sh \
+                {input.corpus_src} {input.corpus_trg} {output} {split_length} >> {log} 2>&1'''
+
+rule annotate_terms: 
+    message: "Annotating corpus with term information"
+    log: f"{log_dir}/annotate_terms/{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}.{{part}}.log"
+    conda: :"envs/base.yml"
+    threads: 7
+    resources: gpu=1
+    #group 'student'
+    input:
+        train_src=f"{term_data_dir}/corpus/file.src.{{part}}",
+        train_trg=f"{term_data_dir}/corpus/file.trg.{{part}}",
+        alignments=f"{term_data_dir}/corpus/file.aln.{{part}}",
+        vocab=vocab_path
+    output:
+        annotated_src=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/annotated.src.{{part}}.gz",
+        annotated_trg=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}i}/annotated.trg.{{part}}.gz",
+        annotated_alignments=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/annotated.aln.{{part}}.gz"
+    shell: '''python 3rd_party/soft-term-constraints/src/softconstraint.py \
+                --source_spm "{input.vocab}" --target_spm "{input.vocab}" --annotation_method {wildcards.scheme} \
+                --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2 \
+                --mask_tag augmentsymbol3 --source_lang "{src}" --target_lang "{trg}" \
+                --source_corpus "{input.train_src}" --target_corpus "{input.train_trg}" \
+                --alignment_file "{input.alignments}" --terms_per_sent_ratio {wildcards.term_ratio} \
+                --sents_per_term_sent {wildcards.sents_per_term_sent}  \
+                --source_output_path "{output.annotated_src}" --target_output_path "{output.annotated_trg}" \
+                --alignment_output_path "{output.annotated_alignments}" >> {log} 2>&1'''
+
+
+rule train_term_student:
+    message: "Training student with term constraints"
+    log: f"{log_dir}/train_student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}.log"
+    conda: "envs/base.yml"
+    threads: gpus_num*3
+    resources: gpu=gpus_num
+    #group 'student'
+    input:
+        rules.merge_devset.output, ancient(trainer),
+        train_src=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.{src}.gz",
+        train_trg=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.{trg}.gz",
+        alignments=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.aln.gz",
+        vocab=vocab_path
+    output: model=f'{student_dir}-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/{best_model}'
+    params: prefix_train=f"{term_data_dir}/student-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus",prefix_test=f"{original}/devset",
+            args=get_args("training-student"),student_term_dir=f"student_term_dir={student_dir}-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}"
+    shell: '''bash pipeline/train/train-student.sh \
+                "{input.alignments}" student train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+                "{params.student_term_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 # quantize
 
@@ -1038,3 +1141,33 @@ rule eval_quantized:
         decoder_config='../quantize/decoder.yml'
     shell: '''bash pipeline/eval/eval-quantized.sh "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
             "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" >> {log} 2>&1'''
+
+rule wmt23_termtask_score: 
+    message: "Scoring wmt23 termtask dev data"
+    log: f"{log_dir}/eval/eval_{{model}}_wmt23_termtask.log"
+    conda: "envs/base.yml"
+    threads: gpus_num * 2
+    resources: gpu=gpus_num
+    #group '{model}'
+    priority: 50
+    wildcard_constraints:
+        model="[\w-]+"
+    input:
+        ancient(decoder),
+        wmt23_dev_src=f"{data_root_dir}/wmt23_term_devtest/dev/dev.{src}-{trg}.{src}",
+        wmt23_dev_dict=f"{data_root_dir}/wmt23_term_devtest/dev/dev.{src}-{trg}.dict.jsonl",
+        wmt23_test_src=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.{src}",
+        wmt23_test_dict=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.dict.jsonl", 
+        models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
+                                    if wildcards.model != 'teacher-ensemble'
+                                    else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+    output: f'{eval_res_dir}/{{model}}/wmt23_termtask.score'
+    params:
+        res_prefix=f'{eval_res_dir}/{{model}}/wmt23_termtask',
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            if wildcards.model != 'teacher-ensemble'
+                            else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+    shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.wmt23_dev_src}" "{input.wmt23_dev_dict}" \
+            "{input.wmt23_test_src}" "{input.wmt23_test_dict}" "{src}" "{trg}" \
+            "{params.decoder_config}" {input.models} {params.res_prefix} >> {log} 2>&1'''
+

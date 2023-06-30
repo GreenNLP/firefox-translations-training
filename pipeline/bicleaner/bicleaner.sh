@@ -41,7 +41,8 @@ if [ "${bicleaner_threshold}" == "0" ]; then
 else
   if [ "${type}" == 'bicleaner-ai' ]; then
     echo "### Using bicleaner-ai"
-    cmd=bicleaner-ai-classify
+    # See here for batch size benchmarks: https://github.com/paracrawl/cirrus-scripts/issues/29
+    cmd="bicleaner-ai-classify --batch_size 64 --block_size 50000"
   elif [ "${type}" == 'bicleaner' ]; then
     echo "### Using bicleaner"
     cmd=bicleaner-classify
@@ -57,7 +58,6 @@ else
     export tcol=1
   fi
 
-  #TODO: More than 1 GPU is not supported with AMD GPUs right now (usually 1 is enough, though, it's pretty fast).
   #Export cuda visible devices if empty or not set
   if [ -z "${CUDA_VISIBLE_DEVICES:-}" ]; then
     export CUDA_VISIBLE_DEVICES=$(nvidia-smi --query-gpu=index --format=csv,noheader);

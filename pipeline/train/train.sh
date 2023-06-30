@@ -8,6 +8,9 @@ set -euo pipefail
 
 echo "###### Training a model"
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 model_type=$1
 training_type=$2
 src=$3
@@ -32,7 +35,7 @@ echo "### Training ${model_dir}"
 
 # if doesn't fit in RAM, remove --shuffle-in-ram and add --shuffle batches
 
-"${MARIAN}/marian" \
+"${MARIAN}"/marian \
   --model "${model_dir}/model.npz" \
   -c "configs/model/${model_type}.yml" "configs/training/${model_type}.${training_type}.yml" \
   --train-sets "${train_set_prefix}".{"${src}","${trg}"}.gz \
@@ -42,6 +45,7 @@ echo "### Training ${model_dir}"
   -w "${WORKSPACE}" \
   --devices ${GPUS} \
   --sharding local \
+  --data-threads 16 \
   --sync-sgd \
   --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
   --valid-sets "${valid_set_prefix}".{"${src}","${trg}"}.gz \
