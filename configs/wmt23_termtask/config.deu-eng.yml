@@ -1,8 +1,8 @@
-#WMT23 term task experiment, ces-eng
+#WMT23 term task experiment, deu-eng
 
 experiment:
-  name: wmt23-termtask-ces-eng
-  src: cs
+  name: wmt23-termtask-deu-eng
+  src: de
   trg: en
 
   teacher-ensemble: 1
@@ -29,28 +29,31 @@ experiment:
   bicleaner:
     default-threshold: 0.5
     dataset-thresholds:
-      mtdata_Statmt-europarl-10-ces-eng: 0
-      mtdata_ParaCrawl-paracrawl-9-eng-ces: 0.8
-      mtdata_Statmt-commoncrawl_wmt13-1-ces-eng: 0.8
-      mtdata_Statmt-news_commentary-16-ces-eng: 0
-      mtdata_Statmt-wikititles-3-ces-eng: 0.3
-      mtdata_Facebook-wikimatrix-1-ces-eng: 0.3
-      mtdata_Tilde-eesc-2017-ces-eng: 0.2
-      mtdata_Tilde-ema-2016-ces-eng: 0.2
-      mtdata_Tilde-ecb-2017-ces-eng: 0.2
-      mtdata_Tilde-rapid-2019-ces-eng: 0.2
+      mtdata_Statmt-europarl-10-deu-eng: 0
+      mtdata_ParaCrawl-paracrawl-9-eng-deu: 0.9
+      mtdata_Statmt-commoncrawl_wmt13-1-deu-eng: 0.8
+      mtdata_Statmt-news_commentary-16-deu-eng: 0 
+      mtdata_Facebook-wikimatrix-1-deu-eng: 0.3
+      mtdata_Tilde-eesc-2017-deu-eng: 0.2
+      mtdata_Tilde-ema-2016-deu-eng: 0.2
+      mtdata_Tilde-airbaltic-1-deu-eng: 0.2
+      mtdata_Tilde-czechtourism-1-deu-eng: 0.2
+      mtdata_Tilde-ecb-2017-deu-eng: 0.2
+      mtdata_Tilde-rapid-2016-deu-eng: 0.2
+      mtdata_Tilde-rapid-2019-deu-eng: 0.2
     
 marian-args:
 # these configs override pipeline/train/configs
   training-backward:
     # change based on available training data
     after: 10e
-  training-teacher-base:
-    early-stopping: 10
-    #student training has a very flat increase in metrics, so early stopping  
+    #training-teacher-base:
+    # remove for low resource languages or if training without augmentation
+    #after: 2e
+  #student training has a very flat increase in metrics, so early stopping  
   ##takes too much time
   training-student:
-    after: 100e
+    after: 50e
 # these configs override pipeline/translate/decoder.yml
   decoding-backward:
     # 12 Gb GPU, s2s model
@@ -66,16 +69,18 @@ marian-args:
 datasets:
   # parallel training corpus
   train:
-    - mtdata_Statmt-europarl-10-ces-eng
-    - mtdata_ParaCrawl-paracrawl-9-eng-ces
-    - mtdata_Statmt-commoncrawl_wmt13-1-ces-eng
-    - mtdata_Statmt-news_commentary-16-ces-eng
-    - mtdata_Statmt-wikititles-3-ces-eng
-    - mtdata_Facebook-wikimatrix-1-ces-eng
-    - mtdata_Tilde-eesc-2017-ces-eng
-    - mtdata_Tilde-ema-2016-ces-eng
-    - mtdata_Tilde-ecb-2017-ces-eng
-    - mtdata_Tilde-rapid-2019-ces-eng
+    - mtdata_Statmt-europarl-10-deu-eng
+    - mtdata_ParaCrawl-paracrawl-9-eng-deu
+    - mtdata_Statmt-commoncrawl_wmt13-1-deu-eng
+    - mtdata_Statmt-news_commentary-16-deu-eng
+    - mtdata_Facebook-wikimatrix-1-deu-eng
+    - mtdata_Tilde-eesc-2017-deu-eng
+    - mtdata_Tilde-ema-2016-deu-eng
+    - mtdata_Tilde-airbaltic-1-deu-eng
+    - mtdata_Tilde-czechtourism-1-deu-eng
+    - mtdata_Tilde-ecb-2017-deu-eng
+    - mtdata_Tilde-rapid-2016-deu-eng
+    - mtdata_Tilde-rapid-2019-deu-eng
   # datasets to merge for validation while training
   devtest:
     - flores_dev

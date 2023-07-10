@@ -1,4 +1,4 @@
-# CSC Puhti
+# CSC LUMI
 single-gpu-partition: dev-g
 multi-gpu-partition: dev-g
 cpu-partition: debug

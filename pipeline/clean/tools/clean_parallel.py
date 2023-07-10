@@ -60,6 +60,8 @@ def main():
     cjk_langs = ["zh", "ja", "ko"]
     if args.src_lang in cjk_langs or args.trg_lang in cjk_langs:
         do_not_clean = True
+    else:
+        do_not_clean = False
 
     for i, line in enumerate(sys.stdin):
         fields = line.strip().split('\t')

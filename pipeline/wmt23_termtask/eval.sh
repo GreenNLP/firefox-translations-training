@@ -22,6 +22,20 @@ models=$8
 res_prefix=$9
 args=( "${@:10}" )
 
+# Check whether this is a term model 
+model_base_dir=$(basename $(dirname $8))
+term_model_regex="^.*term-([a-z-]+)-[0-9]+-[0-9]+"
+if [[ $model_base_dir =~ $term_model_regex ]]; then
+  echo "###### Annotating terms to input file"
+  annotation_scheme="${BASH_REMATCH[1]}"
+  # Add term augmentation annotations to test set
+  annotated_dev_src=${dev_src}.${annotation_scheme}
+  python 3rd_party/soft-term-constraints/src/annotate.py --source_file ${dev_src} --source_lang ${src} --target_lang ${trg} --terms_per_sentence ${dev_dict} --source_output_path ${annotated_dev_src} --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2
+  dev_src=${annotated_dev_src}
+fi
+
+
+
 mkdir -p "$(basename "${res_prefix}")"
 
 cat "${dev_src}" |

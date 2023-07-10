@@ -11,7 +11,7 @@ local-cores: 1
 latency-wait: 60
 rerun-incomplete: true  # recomended for cluster submissions
 keep-going: false
-default-resources: ["mem_mb=64000","disk_mb=128000"]
+default-resources: ["mem_mb=128000","disk_mb=128000"]
 use-singularity: false
 use-conda: false
 resources: gpu=8

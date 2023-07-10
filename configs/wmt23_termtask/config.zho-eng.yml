@@ -1,9 +1,4 @@
-####
-# Example of a production config
-# Change language pair, experiment name, datasets and other settings if needed
-# Training low resource languages might require more tuning of pipeline/training/configs
-###
-
+#WMT23 term task experiment, zho-eng
 
 experiment:
   name: wmt23-termtask-zho-eng
@@ -16,6 +11,11 @@ experiment:
   # path to a pretrained vocabulary (optional)
   vocab: ""
 
+  wmt23_termtask:
+    annotation-schemes: ['surface-nonfac-int-append']
+    term-ratios: [2]
+    sents-per-term-sents: [10]
+  
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000
   mono-max-sentences-trg: 20000000
