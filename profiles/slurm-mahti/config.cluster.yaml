@@ -4,4 +4,4 @@ multi-gpu-partition: gpumedium
 cpu-partition: medium
 cpu-account: project_2007095
 gpu-account: project_2007095
-time-limit: "00:72:00"
+time-limit: "36:00:00"
