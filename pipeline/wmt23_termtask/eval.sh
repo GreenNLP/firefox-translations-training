@@ -13,17 +13,16 @@ echo "###### Scoring a model with WMT23 term task dev and test"
 
 dev_src=$1
 dev_dict=$2
-test_src=$3
-test_dict=$4
-src=$5
-trg=$6
-decoder_config=$7
-models=$8
-res_prefix=$9
-args=( "${@:10}" )
+src=$3
+trg=$4
+decoder_config=$5
+models=$6
+vocab=$7
+res_prefix=$8
+args=( "${@:9}" )
 
 # Check whether this is a term model 
-model_base_dir=$(basename $(dirname $8))
+model_base_dir=$(basename $(dirname ${models}))
 term_model_regex="^.*term-([a-z-]+)-[0-9]+-[0-9]+"
 if [[ $model_base_dir =~ $term_model_regex ]]; then
   echo "###### Annotating terms to input file"
@@ -46,8 +45,9 @@ cat "${dev_src}" |
     --quiet-translation \
     --log "${res_prefix}.log" \
     --models ${models} \
+    --vocabs "${vocab}" "${vocab}" \
     "${args[@]}" > "${res_prefix}.dev.${trg}"
 
-python pipeline/wmt23_termtask/wmt23_score.py --system_output  "${res_prefix}.dev.${trg}" --output_lang ${trg} --terms ${dev_dict} > ${res_prefix}.score
+python pipeline/wmt23_termtask/wmt23_score.py --system_output  "${res_prefix}.${trg}" --output_lang ${trg} --terms ${dev_dict} > ${res_prefix}.score
 
 echo "###### Done: Scoring model with WMT23 term task dev and test"

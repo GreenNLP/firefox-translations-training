@@ -133,3 +133,5 @@ dmypy.json
 .models
 .bin
 .snakemake
+slurm*.out
+*.swp

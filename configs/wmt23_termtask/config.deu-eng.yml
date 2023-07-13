@@ -15,6 +15,7 @@ experiment:
     annotation-schemes: ['surface-nonfac-int-append']
     term-ratios: [2]
     sents-per-term-sents: [10]
+    train-term-teacher: True
 
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000

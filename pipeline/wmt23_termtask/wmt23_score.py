@@ -1,4 +1,6 @@
 import json
+import gzip
+import ast
 import argparse
 
 if __name__ == "__main__":
@@ -17,12 +19,17 @@ if __name__ == "__main__":
     
     missing_terms = 0
     all_terms = 0
-    with open(args.system_output,'rt') as output, open(args.terms,'rt') as terms:
+    jsonl_terms = args.endswith(".jsonl")
+    with open(args.system_output,'rt') as output, \
+         open(args.terms,'rt') if jsonl_terms else gzip.open(args.terms,'r') as terms:
         for line in output:
             term_line = terms.readline()
             if not term_line or term_line.isspace():
                 continue
-            line_terms = json.loads(term_line)
+            if jsonl_terms:
+                line_terms = json.loads(term_line)
+            else:
+                line_terms = [{args.source_lang: " ".join(x[4]),args.target_lang: " ".join(x[5])} for x in ast.literal_eval(term_line)]
             for line_term in line_terms:
                 all_terms += 1
                 if line_term[args.output_lang] not in line:
