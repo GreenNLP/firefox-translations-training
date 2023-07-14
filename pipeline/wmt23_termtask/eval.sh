@@ -48,6 +48,6 @@ cat "${dev_src}" |
     --vocabs "${vocab}" "${vocab}" \
     "${args[@]}" > "${res_prefix}.dev.${trg}"
 
-python pipeline/wmt23_termtask/wmt23_score.py --system_output  "${res_prefix}.${trg}" --output_lang ${trg} --terms ${dev_dict} > ${res_prefix}.score
+python pipeline/wmt23_termtask/wmt23_score.py --system_output  "${res_prefix}.dev.${trg}" --output_lang ${trg} --terms ${dev_dict} > ${res_prefix}.score
 
 echo "###### Done: Scoring model with WMT23 term task dev and test"

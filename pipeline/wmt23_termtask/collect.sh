@@ -27,11 +27,11 @@ src_len=$(pigz -dc "${output_src}" | wc -l)
 trg_len=$(pigz -dc "${output_trg}" | wc -l)
 aln_len=$(pigz -dc "${output_aln}" | wc -l)
 
-if [ "${src_len}" != "${trg_len}" != ${aln_len}]; then
+if [ "${src_len}" != "${trg_len}" ] || [ ${trg_len} != "${aln_len}" ]; then
   echo "### Error: lengths of source, target and alignment files are not identical"
   exit 1
 fi
 
 echo "### Filtering annotated sentences"
-paste <(pigz -dc "${output_src}") <(pigz -dc "${output_trg}") <(pigz -dc "${output_aln})" |\
+paste <(pigz -dc "${output_src}") <(pigz -dc "${output_trg}") <(pigz -dc "${output_aln}") |
 grep "augmentsymbol0" | tee >(cut -f 1 > "${output_src_omit}") | tee >(cut -f 2 > "${output_trg_omit}") | cut -f 3 > "${output_aln_omit}"

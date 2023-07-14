@@ -15,7 +15,7 @@ experiment:
     annotation-schemes: ['surface-nonfac-int-append']
     term-ratios: [2]
     sents-per-term-sents: [10]
-    train-term-teacher: True
+    train-term-teacher: False
     finetune-teacher-with-terms: True
 
   # limits per downloaded dataset
@@ -53,6 +53,8 @@ marian-args:
   ##takes too much time
   training-term-teacher:
     after: 50e
+  finetune-teacher-with-terms:
+    after: 1e
   training-student:
     after: 100e
 # these configs override pipeline/translate/decoder.yml

@@ -218,6 +218,12 @@ if wmt23_termtask:
                 sents_per_term_sent=sents_per_term_sents,
                 omit=omit_unannotated))
 
+            results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/evalsets_terms.score',
+                annotation_scheme=annotation_schemes,
+                term_ratio=term_ratios,
+                sents_per_term_sent=sents_per_term_sents,
+                omit=omit_unannotated))
+
             results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
                 annotation_scheme=annotation_schemes,
                 term_ratio=term_ratios,
@@ -726,12 +732,18 @@ elif not forward_pretrained:
             train_trg=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.{trg}.gz",
             alignments=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.aln.gz",
             vocab=vocab_path
-        output: model=f'{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{best_model}'
-        params: prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus",prefix_test=f"{original}/devset",
-                args=get_args("training-teacher"),teacher_term_dir=f"{teacher_base_dir}-finetuned-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}"
-        shell: '''bash pipeline/train/train-student.sh \
-                    "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+        output: model=f'{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/model.npz'
+        params: 
+            prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus",
+            prefix_test=f"{original}/devset",
+            args=get_args("finetune-teacher-with-terms"),
+            teacher_term_dir=f"{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}"
+        shell: '''bash pipeline/train/term-finetune.sh \
+                    teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
                     "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.model}" {params.args} >> {log} 2>&1'''
+        #shell: '''bash pipeline/train/train-student.sh \
+        #            "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+        #            "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.model}" {params.args} >> {log} 2>&1'''
 
     rule teacher_alignments:
         message: 'Training word alignment and lexical shortlists'
@@ -1326,9 +1338,12 @@ rule evaluate:
         ancient(decoder),
         data=multiext(f'{eval_data_dir}/{{dataset}}',f".{src}.gz",f".{trg}.gz"),
         vocab=vocab_path,
-        models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
-                                    if wildcards.model != 'teacher-ensemble'
-                                    else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+        models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
+                                    if "finetuned-term" in wildcards.model
+                                    else f'{models_dir}/{wildcards.model}/{best_model}'
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
     output:
         report(f'{eval_res_dir}/{{model}}/{{dataset}}.metrics',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
@@ -1370,7 +1385,7 @@ rule annotate_evalsets:
     message: "Annotating evalsets with term information"
     log: f"{log_dir}/annotate_evalset.log"
     conda: "envs/base.yml"
-    threads: 7
+    threads: workflow.cores
     #This should run on CPU, there are not that many sentences usually. If using a big evalset, uncomment this.
     #resources: gpu=1,mem_mb=128000
     #group 'student'
@@ -1380,18 +1395,25 @@ rule annotate_evalsets:
         evalsets_trg=f'{eval_data_dir}/evalsets.trg.gz',
         vocab=vocab_path
     output:
-        evalsets_terms_src=f'{eval_data_dir}/evalsets_terms.src.gz',
-        evalsets_terms_trg=f'{eval_data_dir}/evalsets_terms.trg.gz',
-        evalsets_terms_aln=f'{eval_data_dir}/evalsets_terms.aln.gz',
-        evalsets_terms_jsonl=f'{eval_data_dir}/evalsets_terms.jsonl',
+        evalsets_terms_src=f'{eval_data_dir}/evalsets_terms.src',
+        evalsets_terms_trg=f'{eval_data_dir}/evalsets_terms.trg',
+        evalsets_terms_aln=f'{eval_data_dir}/evalsets_terms.aln',
+        evalsets_terms_jsonl=f'{eval_data_dir}/evalsets_terms.jsonl'
+    params: 
+        evalsets_terms_src_gz=f'{eval_data_dir}/evalsets_terms.src.gz',
+        evalsets_terms_trg_gz=f'{eval_data_dir}/evalsets_terms.trg.gz',
+        evalsets_terms_aln_gz=f'{eval_data_dir}/evalsets_terms.aln.gz',
     shell: '''python 3rd_party/soft-term-constraints/src/softconstraint.py \
                 --source_spm "{input.vocab}" --target_spm "{input.vocab}"  \
                 --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2 \
                 --mask_tag augmentsymbol3 --source_lang "{src}" --target_lang "{trg}" \
                 --source_corpus "{input.evalsets_src}" --target_corpus "{input.evalsets_trg}" \
-                --alignment_file "{input.evalsets_aln}" --omit_unannotated  \
-                --source_output_path "{output.evalsets_terms_src}" --target_output_path "{output.evalsets_terms_trg}" \
-                --alignment_output_path "{output.evalsets_terms_aln}" --term_jsonl_output_path "{output.evalsets_terms_jsonl}" >> {log} 2>&1'''
+                --alignment_file "{input.evalsets_aln}" --do_not_augment --omit_unannotated  \
+                --source_output_path "{params.evalsets_terms_src_gz}" --target_output_path "{params.evalsets_terms_trg_gz}" \
+                --alignment_output_path "{params.evalsets_terms_aln_gz}" --term_jsonl_output_path "{output.evalsets_terms_jsonl}" \
+                && zcat "{params.evalsets_terms_src_gz}" > "{output.evalsets_terms_src}" \
+                && zcat "{params.evalsets_terms_trg_gz}" > "{output.evalsets_terms_trg}" \
+                && zcat "{params.evalsets_terms_aln_gz}" > "{output.evalsets_terms_aln}" >> {log} 2>&1'''
 
 rule eval_termscore: 
     message: "Scoring evalsets based on recognized terms"
@@ -1409,9 +1431,12 @@ rule eval_termscore:
         eval_trg=rules.annotate_evalsets.output.evalsets_terms_trg,
         eval_dict=rules.annotate_evalsets.output.evalsets_terms_jsonl,
         vocab=vocab_path, 
-        models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
-                                    if wildcards.model != 'teacher-ensemble'
-                                    else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+        models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
+                                    if "finetuned-term" in wildcards.model
+                                    else f'{models_dir}/{wildcards.model}/{best_model}'
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
     output: f'{eval_res_dir}/{{model}}/evalsets_terms.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/evalsets_terms',
@@ -1461,9 +1486,12 @@ rule wmt23_termtask_score:
         wmt23_test_src=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.{src}",
         wmt23_test_dict=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.dict.jsonl",
         vocab=vocab_path, 
-        models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
-                                    if wildcards.model != 'teacher-ensemble'
-                                    else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+        models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
+                                    if "finetuned-term" in wildcards.model
+                                    else f'{models_dir}/{wildcards.model}/{best_model}'
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
     output: f'{eval_res_dir}/{{model}}/wmt23_termtask.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/wmt23_termtask',

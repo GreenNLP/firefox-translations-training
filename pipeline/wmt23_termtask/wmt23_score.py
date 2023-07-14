@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
     missing_terms = 0
     all_terms = 0
-    jsonl_terms = args.endswith(".jsonl")
+    jsonl_terms = args.terms.endswith(".jsonl")
     with open(args.system_output,'rt') as output, \
          open(args.terms,'rt') if jsonl_terms else gzip.open(args.terms,'r') as terms:
         for line in output:
