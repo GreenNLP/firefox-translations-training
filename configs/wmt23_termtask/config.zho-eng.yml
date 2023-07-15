@@ -12,9 +12,13 @@ experiment:
   vocab: ""
 
   wmt23_termtask:
-    annotation-schemes: ['surface-nonfac-int-append']
+    annotation-schemes:
+      - 'surface-nonfac-int-append'
+      - 'surface-nonfac-int-replace'
     term-ratios: [2]
     sents-per-term-sents: [10]
+    train-term-teacher: False
+    finetune-teacher-with-terms: True
   
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000
@@ -39,6 +43,8 @@ marian-args:
     valid-mini-batch: 64
     valid-max-length: 100
     # these configs override pipeline/translate/decoder.yml
+  finetune-teacher-with-terms:
+    after: 1e
   decoding-backward:
     # 12 Gb GPU, s2s model
     mini-batch-words: 2000
