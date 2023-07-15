@@ -734,7 +734,7 @@ elif not forward_pretrained:
             vocab=vocab_path
         output: model=f'{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/model.npz'
         params: 
-            prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus",
+            prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}",
             prefix_test=f"{original}/devset",
             args=get_args("finetune-teacher-with-terms"),
             teacher_term_dir=f"{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}"

@@ -12,7 +12,9 @@ experiment:
   vocab: ""
 
   wmt23_termtask:
-    annotation-schemes: ['surface-nonfac-int-append']
+    annotation-schemes:
+      - 'surface-nonfac-int-append'
+      - 'surface-nonfac-int-replace'
     term-ratios: [2]
     sents-per-term-sents: [10]
     train-term-teacher: False

@@ -12,10 +12,14 @@ experiment:
   vocab: ""
 
   wmt23_termtask:
-    annotation-schemes: ['surface-nonfac-int-append']
+  wmt23_termtask:
+    annotation-schemes:
+      - 'surface-nonfac-int-append'
+      - 'surface-nonfac-int-replace'
     term-ratios: [2]
     sents-per-term-sents: [10]
-    train-term-teacher: True
+    train-term-teacher: False
+    finetune-teacher-with-terms: True
 
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000
@@ -51,6 +55,8 @@ marian-args:
     #training-teacher-base:
     # remove for low resource languages or if training without augmentation
     #after: 2e
+  finetune-teacher-with-terms:
+    after: 1e
   #student training has a very flat increase in metrics, so early stopping  
   ##takes too much time
   training-student:
