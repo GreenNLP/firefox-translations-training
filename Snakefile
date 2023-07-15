@@ -1352,9 +1352,11 @@ rule evaluate:
         res_prefix=f'{eval_res_dir}/{{model}}/{{dataset}}',
         src_lng=lambda wildcards: src if wildcards.model != 'backward' else trg,
         trg_lng=lambda wildcards: trg if wildcards.model != 'backward' else src,
-        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
-                            if wildcards.model != 'teacher-ensemble'
-                            else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
+                            if "finetuned-term" in wildcards.model
+                            else f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" \
              {params.src_lng} {params.trg_lng} "{params.decoder_config}" {input.vocab} {input.models} >> {log} 2>&1'''
 
@@ -1440,9 +1442,11 @@ rule eval_termscore:
     output: f'{eval_res_dir}/{{model}}/evalsets_terms.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/evalsets_terms',
-        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
-                            if wildcards.model != 'teacher-ensemble'
-                            else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
+                            if "finetuned-term" in wildcards.model
+                            else f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.models} {input.vocab} {params.res_prefix} >> {log} 2>&1'''
 
@@ -1495,9 +1499,11 @@ rule wmt23_termtask_score:
     output: f'{eval_res_dir}/{{model}}/wmt23_termtask.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/wmt23_termtask',
-        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
-                            if wildcards.model != 'teacher-ensemble'
-                            else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
+                            if "finetuned-term" in wildcards.model
+                            else f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.wmt23_dev_src}" "{input.wmt23_dev_dict}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.models} {input.vocab} {params.res_prefix} >> {log} 2>&1'''
 
