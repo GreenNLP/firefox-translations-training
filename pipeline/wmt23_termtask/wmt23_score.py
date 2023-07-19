@@ -32,7 +32,7 @@ if __name__ == "__main__":
                 line_terms = [{args.source_lang: " ".join(x[4]),args.target_lang: " ".join(x[5])} for x in ast.literal_eval(term_line)]
             for line_term in line_terms:
                 all_terms += 1
-                if line_term[args.output_lang] not in line:
+                if line_term[args.output_lang].lower() not in line.lower():
                     missing_terms += 1
                     if not args.score_only:
                         print(f"term missing: {line_term[args.output_lang]}")

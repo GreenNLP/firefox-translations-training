@@ -1,9 +1,9 @@
-#WMT23 term task experiment, zho-eng
+#WMT23 term task experiment, ces-eng
 
 experiment:
-  name: wmt23-termtask-zho-eng
-  src: zh
-  trg: en
+  name: wmt23-termtask-eng-ces
+  src: en
+  trg: cs
 
   teacher-ensemble: 1
   # path to a pretrained backward model (optional)
@@ -24,7 +24,6 @@ experiment:
       - 'teacher-base-finetuned-term-surface-nonfac-int-append-2-10'
       - 'teacher-base-finetuned-term-surface-nonfac-int-replace-2-10'
 
-  
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000
   mono-max-sentences-trg: 20000000
@@ -34,22 +33,37 @@ experiment:
   spm-sample-size: 10000000
 
   best-model: chrf
- 
+
+  bicleaner:
+    default-threshold: 0.5
+    dataset-thresholds:
+      mtdata_Statmt-europarl-10-ces-eng: 0
+      mtdata_ParaCrawl-paracrawl-9-eng-ces: 0.8
+      mtdata_Statmt-commoncrawl_wmt13-1-ces-eng: 0.8
+      mtdata_Statmt-news_commentary-16-ces-eng: 0
+      mtdata_Statmt-wikititles-3-ces-eng: 0.3
+      mtdata_Facebook-wikimatrix-1-ces-eng: 0.3
+      mtdata_Tilde-eesc-2017-ces-eng: 0.2
+      mtdata_Tilde-ema-2016-ces-eng: 0.2
+      mtdata_Tilde-ecb-2017-ces-eng: 0.2
+      mtdata_Tilde-rapid-2019-ces-eng: 0.2
+    
 marian-args:
 # these configs override pipeline/train/configs
   training-backward:
     # change based on available training data
     after: 10e
   training-teacher-base:
-    # remove for low resource languages or if training without augmentation
-    valid-freq: 200
-    disp-freq: 100
-    beam-size: 1
-    valid-mini-batch: 64
-    valid-max-length: 100
-    # these configs override pipeline/translate/decoder.yml
+    early-stopping: 10
+    #student training has a very flat increase in metrics, so early stopping  
+  ##takes too much time
+  training-term-teacher:
+    after: 50e
   finetune-teacher-with-terms:
     after: 1e
+  training-student:
+    after: 100e
+# these configs override pipeline/translate/decoder.yml
   decoding-backward:
     # 12 Gb GPU, s2s model
     mini-batch-words: 2000
@@ -64,24 +78,29 @@ marian-args:
 datasets:
   # parallel training corpus
   train:
-    #- mtdata_ParaCrawl-paracrawl-1_bonus-eng-zho
-    - mtdata_Statmt-news_commentary-16-eng-zho
-    - mtdata_Statmt-wikititles-3-zho-eng
-    - mtdata_OPUS-unpc-v1.0-eng-zho
-    - mtdata_Facebook-wikimatrix-1-eng-zho
-    - custom-corpus_/pfs/lustrep1/scratch/project_462000088/members/niemine1/wmt23_termtask/firefox-translations-training/custom_corpora/en-zh-v1.txt
+    - mtdata_Statmt-europarl-10-ces-eng
+    - mtdata_ParaCrawl-paracrawl-9-eng-ces
+    - mtdata_Statmt-commoncrawl_wmt13-1-ces-eng
+    - mtdata_Statmt-news_commentary-16-ces-eng
+    - mtdata_Statmt-wikititles-3-ces-eng
+    - mtdata_Facebook-wikimatrix-1-ces-eng
+    - mtdata_Tilde-eesc-2017-ces-eng
+    - mtdata_Tilde-ema-2016-ces-eng
+    - mtdata_Tilde-ecb-2017-ces-eng
+    - mtdata_Tilde-rapid-2019-ces-eng
   # datasets to merge for validation while training
   devtest:
     - flores_dev
     - sacrebleu_wmt17
-    - sacrebleu_wmt18
-    - sacrebleu_wmt19
+    - sacrebleu_wmt15
+    - sacrebleu_wmt14
   # datasets for evaluation
   test:
     - flores_devtest
     - sacrebleu_wmt20
-    - sacrebleu_wmt21
-    - sacrebleu_wmt22
+    - sacrebleu_wmt18
+    - sacrebleu_wmt16
+    - sacrebleu_wmt13
   # mtdata does not support loading of mono data except as part of recipes, so skip these.
   # In any case, the emphasis here is on terminology, not overall MT quality
   # monolingual datasets (ex. paracrawl-mono_paracrawl8, commoncrawl_wmt16, news-crawl_news.2020)

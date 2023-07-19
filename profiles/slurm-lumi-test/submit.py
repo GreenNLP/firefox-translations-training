@@ -47,11 +47,14 @@ if "resources" in job_properties:
             options += [f'--nodes={num_node}']
             options += [f'--gpus-per-node=8']
             #options += [f'--cpu-bind=map_cpu:48,56,16,24,1,8,32,40']
-
-
+ 
             partition = cluster_config['multi-gpu-partition']
+
+        options += ['-t', str(cluster_config['gpu-time-limit'])]
         rocm_dir = os.getenv("ROCM_PATH")
         #options += ['--export', f'ALL,SINGULARITY_BIND="{rocm_dir}"']
+    else:
+        options += ['-t', str(cluster_config['time-limit'])]
 
     # we don't need explicit memory limiting for now
     if 'mem_mb' in resources:
@@ -62,7 +65,7 @@ if "resources" in job_properties:
 options += ['-p', partition]
 options += ['-A', account]
 #options += ['--nodes=1']
-options += ['-t', str(cluster_config['time-limit'])]
+
 
 if "threads" in job_properties:
     options += ["--cpus-per-task", str(job_properties["threads"])]

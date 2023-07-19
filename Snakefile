@@ -1,6 +1,7 @@
 import yaml
 import os
 import glob
+import hashlib
 
 from snakemake.utils import min_version
 from pipeline.bicleaner import packs
@@ -202,7 +203,8 @@ if quantize_student:
 if wmt23_termtask:
     finetune_teacher_with_terms = wmt23_termtask.get('finetune-teacher-with-terms') 
     train_term_teacher = wmt23_termtask.get('train-term-teacher') 
-    
+    mixture_of_models = wmt23_termtask.get('mixture-of-models')
+
     annotation_schemes = wmt23_termtask['annotation-schemes']
     term_ratios = wmt23_termtask['term-ratios']
     sents_per_term_sents = wmt23_termtask['sents-per-term-sents']
@@ -230,6 +232,13 @@ if wmt23_termtask:
                 sents_per_term_sent=sents_per_term_sents,
                 omit=omit_unannotated,
                 dataset=eval_datasets))
+
+        if mixture_of_models:
+            mixture_hash = hashlib.md5(("+".join(mixture_of_models)).encode("utf-8")).hexdigest()
+            #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/testset_terms.mixture.{trg}'))
+            #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/blindset_terms.mixture.{trg}'))
+            results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms.mixture.{trg}'))
+                
 
         if train_term_teacher:
             results.extend(expand(f'{eval_res_dir}/teacher-base-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/wmt23_termtask.score',
@@ -1328,8 +1337,8 @@ rule evaluate:
     message: "Evaluating a model"
     log: f"{log_dir}/eval/eval_{{model}}_{{dataset}}.log"
     conda: "envs/base.yml"
-    threads: gpus_num * 2
-    resources: gpu=gpus_num
+    threads: 7
+    resources: gpu=8
     #group '{model}'
     priority: 50
     wildcard_constraints:
@@ -1450,6 +1459,114 @@ rule eval_termscore:
     shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.models} {input.vocab} {params.res_prefix} >> {log} 2>&1'''
 
+
+rule testset_mixture_termscore: 
+    message: "Scoring testset based on recognized terms using mixture of models"
+    log: f"{log_dir}/eval/testset_mixture-{mixture_hash}_termscore.log"
+    conda: "envs/base.yml"
+    threads: 16
+    resources: gpu=8
+    #group '{model}'
+    priority: 50
+    wildcard_constraints:
+        models="[+\w-]+"
+    input:
+        ancient(decoder),
+        eval_src=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.{src}",
+        eval_dict=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.dict.jsonl",
+        vocab=vocab_path, 
+        models=lambda wildcards: [f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models] 
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+    output: f'{eval_res_dir}/mixture-{mixture_hash}/testset_terms.mixture.{trg}'
+    params:
+        models=lambda wildcards: " ".join([f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models]), 
+        res_prefix=f'{eval_res_dir}/mixture-{mixture_hash}/testset_terms',
+        decoder_config=lambda wildcards: [f'{models_dir}/{model}/model.npz.decoder.yml'
+                            if "finetuned-term" in model
+                            else f'{models_dir}/{model}/{best_model}.decoder.yml' for model in mixture_of_models][0] 
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+    shell: '''bash pipeline/wmt23_termtask/term_mixture.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
+            "{params.decoder_config}" {input.vocab} {params.res_prefix} 8 {params.models} >> {log} 2>&1'''
+
+
+rule blindset_mixture_termscore: 
+    message: "Scoring blindset based on recognized terms using mixture of models"
+    log: f"{log_dir}/eval/blindset_mixture-{mixture_hash}_termscore.log"
+    conda: "envs/base.yml"
+    threads: 16
+    resources: gpu=8
+    #group '{model}'
+    priority: 50
+    wildcard_constraints:
+        models="[+\w-]+"
+    input:
+        ancient(decoder),
+        eval_src=f"{data_root_dir}/wmt23_blind/blind_terminology_{src}_{trg}.txt.{src}",
+        eval_dict=f"{data_root_dir}/wmt23_blind/blind_terminology_{src}_{trg}.txt.jsonl",
+        vocab=vocab_path, 
+        models=lambda wildcards: [f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models] 
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+    output: f'{eval_res_dir}/mixture-{mixture_hash}/blindset_terms.mixture.{trg}'
+    params:
+        models=lambda wildcards: " ".join([f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models]), 
+        res_prefix=f'{eval_res_dir}/mixture-{mixture_hash}/blindset_terms',
+        decoder_config=lambda wildcards: [f'{models_dir}/{model}/model.npz.decoder.yml'
+                            if "finetuned-term" in model
+                            else f'{models_dir}/{model}/{best_model}.decoder.yml' for model in mixture_of_models][0] 
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+    shell: '''bash pipeline/wmt23_termtask/term_mixture.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
+            "{params.decoder_config}" {input.vocab} {params.res_prefix} 8 {params.models} >> {log} 2>&1'''
+
+rule eval_mixture_termscore: 
+    message: "Scoring evalsets based on recognized terms using mixture of models"
+    log: f"{log_dir}/eval/eval_mixture-{mixture_hash}_termscore.log"
+    conda: "envs/base.yml"
+    threads: 16
+    resources: gpu=8
+    #group '{model}'
+    priority: 50
+    wildcard_constraints:
+        models="[+\w-]+"
+    input:
+        ancient(decoder),
+        eval_src=rules.annotate_evalsets.output.evalsets_terms_src,
+        eval_trg=rules.annotate_evalsets.output.evalsets_terms_trg,
+        eval_dict=rules.annotate_evalsets.output.evalsets_terms_jsonl,
+        vocab=vocab_path, 
+        models=lambda wildcards: [f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models] 
+                                    #TODO: handle ensembling better
+                                    #if wildcards.model != 'teacher-ensemble'
+                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
+    output: f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms.mixture.{trg}'
+    params:
+        models=lambda wildcards: " ".join([f'{models_dir}/{model}/model.npz'
+                                    if "finetuned-term" in model
+                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models]), 
+        res_prefix=f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms',
+        decoder_config=lambda wildcards: [f'{models_dir}/{model}/model.npz.decoder.yml'
+                            if "finetuned-term" in model
+                            else f'{models_dir}/{model}/{best_model}.decoder.yml' for model in mixture_of_models][0] 
+                            #if wildcards.model != 'teacher-ensemble'
+                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
+    shell: '''bash pipeline/wmt23_termtask/term_mixture.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
+            "{params.decoder_config}" {input.vocab} {params.res_prefix} 8 {params.models} >> {log} 2>&1'''
+
 rule align_evalsets:
     message: 'Training word alignment for evalsets'
     log: f"{log_dir}/evalset_alignments.log"
@@ -1487,8 +1604,6 @@ rule wmt23_termtask_score:
         ancient(decoder),
         wmt23_dev_src=f"{data_root_dir}/wmt23_term_devtest/dev/dev.{src}-{trg}.{src}",
         wmt23_dev_dict=f"{data_root_dir}/wmt23_term_devtest/dev/dev.{src}-{trg}.dict.jsonl",
-        wmt23_test_src=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.{src}",
-        wmt23_test_dict=f"{data_root_dir}/wmt23_term_devtest/test/test.{src}-{trg}.dict.jsonl",
         vocab=vocab_path, 
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
                                     if "finetuned-term" in wildcards.model

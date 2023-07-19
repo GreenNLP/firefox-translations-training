@@ -19,6 +19,10 @@ experiment:
     sents-per-term-sents: [10]
     train-term-teacher: False
     finetune-teacher-with-terms: True
+    mixture-of-models:
+      - 'teacher-base0-0'
+      - 'teacher-base-finetuned-term-surface-nonfac-int-append-2-10'
+      - 'teacher-base-finetuned-term-surface-nonfac-int-replace-2-10'
 
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000

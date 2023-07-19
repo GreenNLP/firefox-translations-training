@@ -29,7 +29,7 @@ if [[ $model_base_dir =~ $term_model_regex ]]; then
   annotation_scheme="${BASH_REMATCH[1]}"
   # Add term augmentation annotations to test set
   annotated_dev_src=${dev_src}.${annotation_scheme}
-  python 3rd_party/soft-term-constraints/src/annotate.py --source_file ${dev_src} --source_lang ${src} --target_lang ${trg} --terms_per_sentence ${dev_dict} --source_output_path ${annotated_dev_src} --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2
+  python 3rd_party/soft-term-constraints/src/annotate.py --annotation_method "${annotation_scheme}" --source_file ${dev_src} --source_lang ${src} --target_lang ${trg} --terms_per_sentence ${dev_dict} --source_output_path ${annotated_dev_src} --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2
   dev_src=${annotated_dev_src}
 fi
 

@@ -14,7 +14,7 @@ keep-going: false
 default-resources: ["mem_mb=128000","disk_mb=128000"]
 use-singularity: false
 use-conda: false
-resources: gpu=8
+resources: gpu=16
 cores: 32
 #cache: false
 reason: true

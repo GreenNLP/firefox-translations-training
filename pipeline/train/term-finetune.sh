@@ -34,7 +34,7 @@ echo "### Training ${model_dir}"
 # if doesn't fit in RAM, remove --shuffle-in-ram and add --shuffle batches
 
 "${MARIAN}"/marian \
-  --model "${model_dir}/model.npz" \
+  --model "${model_dir}/model_unfinished.npz" \
   -c "configs/model/${model_type}.yml" "configs/training/${model_type}.${training_type}.yml" \
   --train-sets "${train_set_prefix}".{"${src}","${trg}"}.gz \
   -T "${model_dir}/tmp" \
@@ -52,6 +52,10 @@ echo "### Training ${model_dir}"
   --log "${model_dir}/train.log" \
   --valid-log "${model_dir}/valid.log" \
   "${extra_params[@]}"
+
+
+cp "${model_dir}/model_unfinished.npz" "${model_dir}/model.npz"  
+cp "${model_dir}/model_unfinished.npz.decoder.yml" "${model_dir}/model.npz.decoder.npz"  
 
 echo "### Model training is completed: ${model_dir}"
 echo "###### Done: Training a model"
