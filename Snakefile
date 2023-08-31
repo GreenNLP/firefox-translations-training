@@ -34,6 +34,16 @@ src = config['experiment']['src']
 trg = config['experiment']['trg']
 src_three_letter = config['experiment'].get('src_three_letter')
 trg_three_letter = config['experiment'].get('trg_three_letter')
+dirname = config['experiment'].get('dirname')
+if not dirname:
+    dirname = {src}-{trg}
+
+# Read lanpairs from config; if not given, infer single langpair from source and target langs
+try:
+    langpairs = config['experiment'].get('langpairs')
+except KeyError:
+    langpairs = [{src}-{trg}]
+
 experiment = config['experiment']['name']
 
 mono_max_sent_src = config['experiment'].get('mono-max-sentences-src')
@@ -172,15 +182,22 @@ if config['gpus']:
 
 ### workflow options
 
-results = [
-    f'{exported_dir}/model.{src}{trg}.intgemm.alphas.bin.gz',
-    f'{exported_dir}/lex.50.50.{src}{trg}.s2t.bin.gz',
-    f'{exported_dir}/vocab.{src}{trg}.spm.gz',
-    f'{experiment_dir}/config.yml',
-    *expand(f'{eval_student_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-    *expand(f'{eval_student_finetuned_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-    *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
-    ]
+# Commented out for testing
+# results = [
+#     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
+#     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
+#     f'{exported_dir}/vocab.{dirname}.spm.gz',
+#     f'{experiment_dir}/config.yml',
+#     *expand(f'{eval_student_dir}/{{dataset}}.metrics',dataset=eval_datasets),
+#     *expand(f'{eval_student_finetuned_dir}/{{dataset}}.metrics',dataset=eval_datasets),
+#     *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
+#     ]
+
+# Added intermediate files to results for testing
+results = [*expand(f"{original}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target'])]
+results.extend(expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, langpair=langpairs, lang=['source', 'target']))
+results.extend(expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target']))
+
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -337,31 +354,33 @@ rule extract_lex:
     output: protected(f"{bin}/extract_lex")
     shell: 'bash pipeline/setup/compile-extract-lex.sh {extract_lex_build} {threads} >> {log} 2>&1'
 
-# data downloading
-# TODO: Tatoeba data has dev, test and train in same big tar, make a rule producing them all,
-# and use snakemake ruleorder to prioritize it over this
-ruleorder: download_tatoeba_corpus > download_corpus
+# Tatoeba download commented out for testing
 
-rule download_tatoeba_corpus:
-    message: "Downloading Tatoeba corpus"
-    log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}.log"
-    conda: "envs/base.yml"
-    threads: 1
-#    group: 'data'
-    output: multiext(f"{original}/corpus/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/devset/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/eval/tc_{{version}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents
-    shell: 'bash pipeline/data/download-tc-data.sh {src_three_letter} {trg_three_letter} {src} {trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
+# # data downloading
+# # TODO: Tatoeba data has dev, test and train in same big tar, make a rule producing them all,
+# # and use snakemake ruleorder to prioritize it over this
+# ruleorder: download_tatoeba_corpus > download_corpus
+#
+# rule download_tatoeba_corpus:
+#     message: "Downloading Tatoeba corpus"
+#     log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}.log"
+#     conda: "envs/base.yml"
+#     threads: 1
+# #    group: 'data'
+#     output: multiext(f"{original}/corpus/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/devset/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/eval/tc_{{version}}", f".{src}.gz", f".{trg}.gz")
+#     params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents
+#     shell: 'bash pipeline/data/download-tc-data.sh {src_three_letter} {trg_three_letter} {src} {trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
 
 rule download_corpus:
     message: "Downloading parallel corpus"
-    log: f"{log_dir}/download_corpus/{{kind}}/{{dataset}}.log"
+    log: f"{log_dir}/download_corpus/{{kind}}/{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: 1
 #    group: 'data'
     cache: False # caching is broken in snakemake
     wildcard_constraints: kind="corpus|devset|eval"
-    output: multiext(f"{original}/{{kind}}/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix=f"{original}/{{kind}}/{{dataset}}", dataset="{dataset}"
+    output: multiext(f"{original}/{{kind}}/{{dataset}}.{{langpair}}", ".source.gz", ".target.gz")
+    params: prefix=f"{original}/{{kind}}/{{dataset}}.{{langpair}}", dataset="{dataset}"
     shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}"  >> {log} 2>&1'
 
 rule download_mono:
