@@ -42,8 +42,12 @@ flores_code() {
 src_flores=$(flores_code "${src}")
 trg_flores=$(flores_code "${trg}")
 
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.${src}.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
+# Testing file names with 'source' and 'target' instead of language codes
+#${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.${src}.${ARTIFACT_EXT}"
+#${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.source.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.target.${ARTIFACT_EXT}"
+
 
 rm -rf "${tmp}"
 

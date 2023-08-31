@@ -28,10 +28,16 @@ wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${s
   wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${trg}-${src}.txt.zip"
 unzip -o "${archive_path}" -d "${tmp}"
 
-for lang in ${src} ${trg}; do
-  ${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}" ||
-    ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}"
-done
+# Testing file names with 'source' and 'target' instead of language codes
+#for lang in ${src} ${trg}; do
+#  ${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}" ||
+#    ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}"
+#done
+${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${src}" > "${output_prefix}.source.${ARTIFACT_EXT}" ||
+    ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${src}" > "${output_prefix}.source.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${trg}" > "${output_prefix}.target.${ARTIFACT_EXT}" ||
+    ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${trg}" > "${output_prefix}.target.${ARTIFACT_EXT}"
+
 
 rm -rf "${tmp}"
 
