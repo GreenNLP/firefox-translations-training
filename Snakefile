@@ -39,10 +39,9 @@ if not dirname:
     dirname = {src}-{trg}
 
 # Read lanpairs from config; if not given, infer single langpair from source and target langs
-try:
-    langpairs = config['experiment'].get('langpairs')
-except KeyError:
-    langpairs = [{src}-{trg}]
+langpairs = config['experiment'].get('langpairs')
+if not langpairs:
+    langpairs = [f"{src}-{trg}"]
 
 experiment = config['experiment']['name']
 dirname = config['experiment'].get('dirname')
