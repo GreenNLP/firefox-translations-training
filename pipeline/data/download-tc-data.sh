@@ -16,7 +16,7 @@ output_prefix=$5
 version=$6
 max_sents=$7
 
-tmp="$(dirname "${output_prefix}")/${version}"
+tmp="$(dirname "${output_prefix}")/${version}/${src}-${trg}"
 mkdir -p "${tmp}"
 
 archive_path="${tmp}/${version}-${src_three_letter}-${trg_three_letter}.tar"
@@ -36,18 +36,18 @@ tar -xf "${archive_path}" --directory ${tmp} --strip-components 4
 
 # if max sents not -1, get the first n sents (this is mainly used for testing to make translation and training go faster)
 if [ "${max_sents}" != "inf" ]; then
-   head -${max_sents} <(pigz -dc "${tmp}/train.src.gz") | pigz > "${output_prefix}/corpus/tc_${version}.${package_src}.gz"
-   head -${max_sents} <(pigz -dc "${tmp}/train.trg.gz") | pigz > "${output_prefix}/corpus/tc_${version}.${package_trg}.gz"
+   head -${max_sents} <(pigz -dc "${tmp}/train.src.gz") | pigz > "${output_prefix}/corpus/tc_${version}.${package_src}-${package_trg}.source.gz"
+   head -${max_sents} <(pigz -dc "${tmp}/train.trg.gz") | pigz > "${output_prefix}/corpus/tc_${version}.${package_src}-${package_trg}.target.gz"
 else
-   mv ${tmp}/train.src.gz ${output_prefix}/corpus/tc_${version}.${package_src}.gz
-   mv ${tmp}/train.trg.gz ${output_prefix}/corpus/tc_${version}.${package_trg}.gz
+   mv ${tmp}/train.src.gz ${output_prefix}/corpus/tc_${version}.${package_src}-${package_trg}.source.gz
+   mv ${tmp}/train.trg.gz ${output_prefix}/corpus/tc_${version}.${package_src}-${package_trg}.target.gz
 fi
 
-cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.${package_src}.gz
-cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.${package_trg}.gz
+cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.${package_src}-${package_trg}.source.gz
+cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.${package_src}-${package_trg}.target.gz
 
-cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.${package_src}.gz
-cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.${package_trg}.gz
+cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.${package_src}-${package_trg}.source.gz
+cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.${package_src}-${package_trg}.target.gz
 
 rm -rf "${tmp}"
 

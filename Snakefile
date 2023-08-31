@@ -4,7 +4,7 @@ import glob
 
 from snakemake.utils import min_version
 from pipeline.bicleaner import packs
-
+from langcodes import *
 
 min_version("6.6.1")
 
@@ -358,20 +358,25 @@ rule extract_lex:
 
 # Tatoeba download commented out for testing
 
-# # data downloading
-# # TODO: Tatoeba data has dev, test and train in same big tar, make a rule producing them all,
-# # and use snakemake ruleorder to prioritize it over this
-# ruleorder: download_tatoeba_corpus > download_corpus
-#
-# rule download_tatoeba_corpus:
-#     message: "Downloading Tatoeba corpus"
-#     log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}.log"
-#     conda: "envs/base.yml"
-#     threads: 1
-# #    group: 'data'
-#     output: multiext(f"{original}/corpus/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/devset/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/eval/tc_{{version}}", f".{src}.gz", f".{trg}.gz")
-#     params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents
-#     shell: 'bash pipeline/data/download-tc-data.sh {src_three_letter} {trg_three_letter} {src} {trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
+# data downloading
+# TODO: Tatoeba data has dev, test and train in same big tar, make a rule producing them all,
+# and use snakemake ruleorder to prioritize it over this
+ruleorder: download_tatoeba_corpus > download_corpus
+
+rule download_tatoeba_corpus:
+    message: "Downloading Tatoeba corpus"
+    log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}_{{langpair}}.log"
+    conda: "envs/base.yml"
+    threads: 1
+    output: multiext(f"{original}/corpus/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz"),
+            multiext(f"{original}/devset/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz"),
+            multiext(f"{original}/eval/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz")
+    params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents,
+            src_lang=lambda wildcards: wildcards.langpair.split('-')[0],
+            trg_lang=lambda wildcards: wildcards.langpair.split('-')[1],
+            src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(), 
+            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
+    shell: 'bash pipeline/data/download-tc-data.sh "{params.src_three_letter}" "{params.trg_three_letter}" "{params.src_lang}" "{params.trg_lang}" "{params.prefix}" "{params.version}" {params.max_sents}  >> {log} 2>&1'
 
 rule download_corpus:
     message: "Downloading parallel corpus"
@@ -703,7 +708,7 @@ if opusmt_teacher:
 
     #This is an optional rule that only applies when OPUS-MT model is used as teacher.
     #Required due to OPUS-MT models not using the integrated SentencePiece in Marian
-    rule opusmt_preprocess_corpus:
+    rule opusmt_preprocess_corpus: #TODO make sure it is run as many times as target languages we have
         message: "Preprocessing source file for OPUS-MT model"
         log: f"{log_dir}/opusmt_preprocess_corpus/{{corpus}}.{{part}}.{{model_index}}.log"
         conda: "envs/base.yml"
