@@ -45,6 +45,9 @@ except KeyError:
     langpairs = [{src}-{trg}]
 
 experiment = config['experiment']['name']
+dirname = config['experiment'].get('dirname')
+if not dirname:
+    dirname = {src}-{trg}
 
 mono_max_sent_src = config['experiment'].get('mono-max-sentences-src')
 mono_max_sent_trg = config['experiment'].get('mono-max-sentences-trg')
@@ -57,7 +60,7 @@ backward_pretrained_vocab = config['experiment'].get('backward-vocab')
 vocab_pretrained = config['experiment'].get('vocab')
 forward_pretrained = config['experiment'].get('forward-model')
 
-experiment_dir=f"{data_root_dir}/experiments/{src}-{trg}/{experiment}"
+experiment_dir=f"{data_root_dir}/experiments/{dirname}/{experiment}"
 
 # override marian cofings
 marian_args = {name: ' '.join([f'--{k} {v}' for k,v in conf.items() ])
@@ -93,8 +96,8 @@ ensemble = list(range(config['experiment'].get('teacher-ensemble',0)))
 split_length = config['experiment']['split-length']
 
 # logging
-log_dir = f"{data_root_dir}/logs/{src}-{trg}/{experiment}"
-reports_dir = f"{data_root_dir}/reports/{src}-{trg}/{experiment}"
+log_dir = f"{data_root_dir}/logs/{dirname}/{experiment}"
+reports_dir = f"{data_root_dir}/reports/{dirname}/{experiment}"
 
 # binaries
 cwd = os.getcwd()
@@ -123,7 +126,7 @@ bin = f'{cwd}/bin'
 deduper = f'{cwd}/bin/dedupe'
 
 # data
-data_dir = f"{data_root_dir}/data/{src}-{trg}/{experiment}"
+data_dir = f"{data_root_dir}/data/{dirname}/{experiment}"
 clean = f"{data_dir}/clean"
 biclean = f"{data_dir}/biclean"
 cache_dir = f"{data_dir}/cache"
@@ -135,7 +138,7 @@ filtered = f'{data_dir}/filtered'
 align_dir = f"{data_dir}/alignment"
 
 # models
-models_dir = f"{data_root_dir}/models/{src}-{trg}/{experiment}"
+models_dir = f"{data_root_dir}/models/{dirname}/{experiment}"
 teacher_base_dir = f"{models_dir}/teacher-base"
 teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
 student_dir = f"{models_dir}/student"
@@ -1002,9 +1005,9 @@ rule export:
         model=rules.quantize.output.model,shortlist=rules.alignments.output.shortlist,
         vocab=vocab_path,marian=bmt_converter
     output:
-        model=f'{exported_dir}/model.{src}{trg}.intgemm.alphas.bin.gz',
-        shortlist=f'{exported_dir}/lex.50.50.{src}{trg}.s2t.bin.gz',
-        vocab=f'{exported_dir}/vocab.{src}{trg}.spm.gz'
+        model=f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
+        shortlist=f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
+        vocab=f'{exported_dir}/vocab.{dirname}.spm.gz'
     shell:
         'bash pipeline/quantize/export.sh "{speed_dir}" "{input.shortlist}" "{input.vocab}" "{exported_dir}" >> {log} 2>&1'
 
