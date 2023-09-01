@@ -196,10 +196,8 @@ if config['gpus']:
 #     ]
 
 # Added intermediate files to results for testing
-# results = [*expand(f"{original}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target'])]
 results = [*expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, langpair=langpairs, lang=['source', 'target'])]
 results.extend(expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target']))
-results.extend(expand(f"{clean}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target']))
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -254,6 +252,7 @@ else:
 clean_corpus_src = f'{clean_corpus_prefix}.{src}.gz'
 clean_corpus_trg = f'{clean_corpus_prefix}.{trg}.gz'
 
+results.extend(expand(f"{clean_corpus_prefix}.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
 
 # augmentation
 
@@ -473,18 +472,17 @@ if use_bicleaner:
                     "{params.prefix_input}" "{params.prefix_output}" {params.threshold} {bicleaner_type} {threads} \
                     "{input.pack_dir}" >> {log} 2>&1'''
 
-
 rule merge_corpus:
     message: "Merging clean parallel datasets"
-    log: f"{log_dir}/merge_corpus.log"
+    log: f"{log_dir}/merge_corpus_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: workflow.cores
     # group: "clean_corpus"
-    input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=[src, trg]),
+    input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: src=clean_corpus_src,trg=clean_corpus_trg
-    params: prefix_output=clean_corpus_prefix, 
-            prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets),
+    output: src=f"{clean_corpus_prefix}.{{langpair}}.source.gz",trg=f"{clean_corpus_prefix}.{{langpair}}.target.gz"
+    params: prefix_output=f"{clean_corpus_prefix}.{{langpair}}",
+            prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}", dataset=train_datasets, allow_missing=True),
             max_sents=parallel_max_sents
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
 
