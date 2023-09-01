@@ -196,8 +196,7 @@ if config['gpus']:
 #     ]
 
 # Added intermediate files to results for testing
-results = [*expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, langpair=langpairs, lang=['source', 'target'])]
-results.extend(expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target']))
+results = [*expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target'])]
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -253,7 +252,7 @@ clean_corpus_src = f'{clean_corpus_prefix}.{src}.gz'
 clean_corpus_trg = f'{clean_corpus_prefix}.{trg}.gz'
 
 results.extend(expand(f"{clean_corpus_prefix}.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
-
+results.extend(expand(f"{original}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -488,14 +487,14 @@ rule merge_corpus:
 
 rule merge_devset:
     message: "Merging devsets"
-    log: f"{log_dir}/merge_devset.log"
+    log: f"{log_dir}/merge_devset_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: workflow.cores
     # group: "clean_corpus"
-    input:  expand(f"{original}/devset/{{dataset}}.{{lang}}.gz", dataset=valid_datasets, lang=[src, trg]),
+    input:  expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: multiext(f"{original}/devset", f".{src}.gz", f".{trg}.gz")
-    params: prefix_output=f"{original}/devset", prefixes=expand(f"{original}/devset/{{dataset}}", dataset=valid_datasets)
+    output: multiext(f"{original}/devset.{{langpair}}", f".source.gz", f".target.gz")
+    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
 
 rule merge_mono:
