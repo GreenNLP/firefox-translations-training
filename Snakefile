@@ -100,7 +100,7 @@ reports_dir = f"{data_root_dir}/reports/{dirname}/{experiment}"
 
 # binaries
 cwd = os.getcwd()
-third_party_dir = f'{cwd}/3rd_party'
+third_party_dir = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/3rd_party'
 
 if marian_version == 'lumi-marian':
     marian_dir = f'{third_party_dir}/lumi-marian/build/'
@@ -121,8 +121,8 @@ kenlm = f'{third_party_dir}/kenlm'
 fast_align_build = f'{third_party_dir}/fast_align/build'
 extract_lex_build = f'{third_party_dir}/extract-lex/build'
 preprocess_build_dir=f'{third_party_dir}/preprocess/build'
-bin = f'{cwd}/bin'
-deduper = f'{cwd}/bin/dedupe'
+bin = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/bin'
+deduper = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/bin/dedupe'
 
 # data
 data_dir = f"{data_root_dir}/data/{dirname}/{experiment}"
@@ -197,6 +197,8 @@ if config['gpus']:
 
 # Added intermediate files to results for testing
 results = [*expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target'])]
+results.extend(expand(f"{merged}/corpus.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
+results.extend(expand(f"{merged}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -251,8 +253,6 @@ else:
 clean_corpus_src = f'{clean_corpus_prefix}.{src}.gz'
 clean_corpus_trg = f'{clean_corpus_prefix}.{trg}.gz'
 
-results.extend(expand(f"{clean_corpus_prefix}.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
-results.extend(expand(f"{original}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -479,8 +479,8 @@ rule merge_corpus:
     # group: "clean_corpus"
     input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: src=f"{clean_corpus_prefix}.{{langpair}}.source.gz",trg=f"{clean_corpus_prefix}.{{langpair}}.target.gz"
-    params: prefix_output=f"{clean_corpus_prefix}.{{langpair}}",
+    output: src=f"{merged}/corpus.{{langpair}}.source.gz",trg=f"{merged}/corpus.{{langpair}}.target.gz"
+    params: prefix_output=f"{merged}/corpus.{{langpair}}",
             prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}", dataset=train_datasets, allow_missing=True),
             max_sents=parallel_max_sents
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
@@ -493,8 +493,8 @@ rule merge_devset:
     # group: "clean_corpus"
     input:  expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: multiext(f"{original}/devset.{{langpair}}", f".source.gz", f".target.gz")
-    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
+    output: multiext(f"{merged}/devset.{{langpair}}", f".source.gz", f".target.gz")
+    params: prefix_output=f"{merged}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
 
 rule merge_mono:
