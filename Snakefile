@@ -196,9 +196,8 @@ if config['gpus']:
 #     ]
 
 # Added intermediate files to results for testing
-results = [*expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target'])]
-results.extend(expand(f"{merged}/corpus.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
-results.extend(expand(f"{merged}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target']))
+results = [f"{merged}/corpus.source.gz",f"{merged}/corpus.source.gz"]
+results = [f"{merged}/devset.source.gz",f"{merged}/devset.source.gz"]
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -496,6 +495,19 @@ rule merge_devset:
     output: multiext(f"{merged}/devset.{{langpair}}", f".source.gz", f".target.gz")
     params: prefix_output=f"{merged}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
+
+if opusmt_teacher: #Should actually be changed to "if target is multilingual"
+    rule add_lang_tag:
+        message: "Adding language tag id for translation"
+        log: f"{log_dir}/add_langid_{{type}}.log"
+        conda: "envs/base.yml"
+        threads: 1
+        input: expand(f"{merged}/{{type}}.{{langpair}}.source.gz", type=["corpus","devset"], langpair=langpairs)
+        output: multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
+        params: output_dir=f"{merged}",
+                type="{type}",
+                prefixes=expand(f"{merged}/{{type}}.{{langpair}}", type=["corpus","devset"], langpair=langpairs),
+        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "{params.type}" "{params.prefixes}" >> {log} 2>&1'''
 
 rule merge_mono:
     message: "Merging clean monolingual datasets"
