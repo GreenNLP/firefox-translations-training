@@ -196,9 +196,10 @@ if config['gpus']:
 #     ]
 
 # Added intermediate files to results for testing
-results = [*expand(f"{original}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target'])]
-results.extend(expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, langpair=langpairs, lang=['source', 'target']))
+# results = [*expand(f"{original}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target'])]
+results = [*expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, langpair=langpairs, lang=['source', 'target'])]
 results.extend(expand(f"{original}/eval/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=eval_datasets, langpair=langpairs, lang=['source', 'target']))
+results.extend(expand(f"{clean}/corpus/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target']))
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -407,15 +408,15 @@ rule download_mono:
 
 rule clean_corpus:
     message: "Cleaning dataset"
-    log: f"{log_dir}/clean_corpus/{{dataset}}.log"
+    log: f"{log_dir}/clean_corpus/{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
 #    group: "clean_corpus"
     threads: workflow.cores
-    input: multiext(f"{original}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    output: multiext(f"{clean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix_input=f"{original}/corpus/{{dataset}}",prefix_output=f"{clean}/corpus/{{dataset}}",
-            dataset=lambda wildcards: dataset_norm(wildcards.dataset)
-    shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} \
+    input: multiext(f"{original}/corpus/{{dataset}}.{{langpair}}", f".source.gz", f".target.gz")
+    output: multiext(f"{clean}/corpus/{{dataset}}.{{langpair}}", f".source.gz", f".target.gz")
+    params: prefix_input=f"{original}/corpus/{{dataset}}.{{langpair}}",prefix_output=f"{clean}/corpus/{{dataset}}.{{langpair}}",
+            dataset=lambda wildcards: dataset_norm(wildcards.dataset), src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
+    shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} "{params.src_lang}" "{params.trg_lang}" \
                 >> {log} 2>&1'''
 
 rule clean_mono:

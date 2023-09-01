@@ -16,6 +16,11 @@ input_prefix=$1
 output_prefix=$2
 threads=$3
 dataset=$4
+src_code=$5
+trg_code=$6
+
+src_ext="source"
+trg_ext="target"
 
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
@@ -33,7 +38,7 @@ echo "### Cleaning ${input_prefix}"
 
 ######################################################################
 echo "### Basic preprocessing"
-for lng in "${SRC}" "${TRG}"; do
+for lng in "${src_ext}" "${trg_ext}"; do
   test -s "${output_prefix}.${lng}.nrm.${ARTIFACT_EXT}" ||
     ${COMPRESSION_CMD} -dc "${input_prefix}.${lng}.${ARTIFACT_EXT}" |
     parallel --no-notice --pipe -k -j "${threads}" --block 50M \
@@ -43,7 +48,7 @@ done
 
 #####################################################################
 echo "### Apply monolingual fixes"
-for lng in $SRC $TRG; do
+for lng in $src_ext $trg_ext; do
     if [[ ! -x fixes/${dataset}.${lng}.sh ]]; then
       test -s "${output_prefix}.${lng}.monofix.${ARTIFACT_EXT}" ||
         cp "${output_prefix}.${lng}.nrm.${ARTIFACT_EXT}" "${output_prefix}.${lng}.monofix.${ARTIFACT_EXT}"
@@ -58,52 +63,52 @@ done
 ######################################################################
 echo "### Apply bilingual fixes"
 if [[ -x fixes/${dataset}.sh ]]; then
-    FIX="fixes/${dataset}.sh ${SRC} ${TRG} ${threads}"
+    FIX="fixes/${dataset}.sh ${src_ext} ${trg_ext} ${threads}"
 else
     FIX="cat"
 fi
-test -s "${output_prefix}.${SRC}${TRG}.fix.${ARTIFACT_EXT}" ||
-  paste <(${COMPRESSION_CMD} -dc "${output_prefix}.${SRC}.monofix.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${output_prefix}.${TRG}.monofix.${ARTIFACT_EXT}") \
+test -s "${output_prefix}.${src_ext}${trg_ext}.fix.${ARTIFACT_EXT}" ||
+  paste <(${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}.monofix.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${output_prefix}.${trg_ext}.monofix.${ARTIFACT_EXT}") \
       | $FIX \
-      | ${COMPRESSION_CMD} > "${output_prefix}.${SRC}${TRG}.fix.${ARTIFACT_EXT}"
+      | ${COMPRESSION_CMD} > "${output_prefix}.${src_ext}${trg_ext}.fix.${ARTIFACT_EXT}"
 
 ######################################################################
 echo "### Rule-based filtering"
-test -s "${output_prefix}.${SRC}${TRG}.rule-based.${ARTIFACT_EXT}" ||
-  ${COMPRESSION_CMD} -dc "${output_prefix}.${SRC}${TRG}.fix.${ARTIFACT_EXT}" |
+test -s "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" ||
+  ${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.fix.${ARTIFACT_EXT}" |
   parallel --no-notice --pipe -k -j "${threads}" --block 50M \
-    "python3 tools/clean_parallel.py -l1 ${SRC} -l2 ${TRG} --debug" \
-    2>"${output_prefix}.${SRC}${TRG}.clean.debug.txt" |
-  ${COMPRESSION_CMD} >"${output_prefix}.${SRC}${TRG}.rule-based.${ARTIFACT_EXT}"
+    "python3 tools/clean_parallel.py -l1 ${src_code} -l2 ${trg_code} --debug" \
+    2>"${output_prefix}.${src_ext}${trg_ext}.clean.debug.txt" |
+  ${COMPRESSION_CMD} >"${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}"
 
 ######################################################################
 echo "### Language identification"
-test -s "${output_prefix}.${SRC}${TRG}.langid.${ARTIFACT_EXT}" ||
-  ${COMPRESSION_CMD} -dc "${output_prefix}.${SRC}${TRG}.rule-based.${ARTIFACT_EXT}" |
+test -s "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}" ||
+  ${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" |
   # memory intensive
   parallel --no-notice --pipe -k -j "$(echo "${threads}"/4 | bc)" --block 50M \
     "python3 -Wi tools/langid_fasttext.py -f 1 | python3 -Wi tools/langid_fasttext.py -f 1" |
-  grep -P "^${SRC}\t${TRG}\t" |
+  grep -P "^${src_code}\t${trg_code}\t" |
   cut -f3,4 |
-  ${COMPRESSION_CMD} >"${output_prefix}.${SRC}${TRG}.langid.${ARTIFACT_EXT}"
+  ${COMPRESSION_CMD} >"${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}"
 
 ######################################################################
 echo "### Removing leading and repetitive white spaces"
 
-${COMPRESSION_CMD} -dc "${output_prefix}.${SRC}${TRG}.langid.${ARTIFACT_EXT}" |
+${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}" |
 cut -f1 |
 sed -e 's/^[[:space:]]*//' |
 tr -s " " |
-${COMPRESSION_CMD} >"${output_prefix}.${SRC}.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} >"${output_prefix}.${src_ext}.${ARTIFACT_EXT}"
 
-${COMPRESSION_CMD} -dc "${output_prefix}.${SRC}${TRG}.langid.${ARTIFACT_EXT}" |
+${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}" |
 cut -f2 |
 sed -e 's/^[[:space:]]*//' |
 tr -s " " |
-${COMPRESSION_CMD} >"${output_prefix}.${TRG}.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} >"${output_prefix}.${trg_ext}.${ARTIFACT_EXT}"
 
-test -s "${output_prefix}.${SRC}.${ARTIFACT_EXT}" || exit 1
-test -s "${output_prefix}.${TRG}.${ARTIFACT_EXT}" || exit 1
+test -s "${output_prefix}.${src_ext}.${ARTIFACT_EXT}" || exit 1
+test -s "${output_prefix}.${trg_ext}.${ARTIFACT_EXT}" || exit 1
 
 echo "### Remove input_prefix from intermediate steps"
 rm -rf "${output_prefix}".*.nrm.${ARTIFACT_EXT} "${output_prefix}".*.langid.${ARTIFACT_EXT} \
