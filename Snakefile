@@ -197,10 +197,7 @@ if config['gpus']:
 #     *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
 #     ]
 
-# Added intermediate files to results for testing
-results = [f"{merged}/corpus.source.gz",f"{merged}/corpus.target.gz"]
-results.extend([f"{merged}/devset.source.gz",f"{merged}/devset.target.gz"])
-
+results=[]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -251,8 +248,13 @@ else:
     teacher_corpus = f'{clean}/corpus'
     use_bicleaner = False
 
-clean_corpus_src = f'{clean_corpus_prefix}.{src}.gz'
-clean_corpus_trg = f'{clean_corpus_prefix}.{trg}.gz'
+clean_corpus_src = f'{clean_corpus_prefix}.source.gz'
+clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
+
+
+# Added intermediate files to results for testing
+results.extend([expand(f"{clean}/corpus.{{direction}}.gz", direction=["source","target"])])
+results.extend([expand(f"{original}/devset.{{direction}}.gz", direction=["source","target"])])
 
 # augmentation
 
@@ -480,11 +482,11 @@ rule merge_corpus:
     # group: "clean_corpus"
     input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: src=f"{merged}/corpus.{{langpair}}.source.gz",trg=f"{merged}/corpus.{{langpair}}.target.gz"
-    params: prefix_output=f"{merged}/corpus.{{langpair}}",
+    output: src=f"{clean}/corpus.{{langpair}}.source.gz",trg=f"{clean}/corpus.{{langpair}}.target.gz"
+    params: prefix_output=f"{clean}/corpus.{{langpair}}",
             prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}", dataset=train_datasets, allow_missing=True),
-            max_sents=parallel_max_sents
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
+            max_sents=parallel_max_sents, multitarget=multitarget
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.multitarget} {params.prefixes} >> {log} 2>&1'''
 
 rule merge_devset:
     message: "Merging devsets"
@@ -494,9 +496,10 @@ rule merge_devset:
     # group: "clean_corpus"
     input:  expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: multiext(f"{merged}/devset.{{langpair}}", f".source.gz", f".target.gz")
-    params: prefix_output=f"{merged}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
+    output: multiext(f"{original}/devset.{{langpair}}", f".source.gz", f".target.gz")
+    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True),
+            multitarget=multitarget
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.multitarget} {params.prefixes} >> {log} 2>&1'''
 
 if multitarget:
     rule add_lang_tag_corpus:
@@ -504,10 +507,10 @@ if multitarget:
         log: f"{log_dir}/add_langid_corpus.log"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: expand(f"{merged}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{merged}/corpus.", "source.gz", "target.gz") 
-        params: output_dir=f"{merged}",
-                prefixes=expand(f"{merged}/corpus.{{langpair}}", langpair=langpairs)
+        input: expand(f"{clean}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+        output: multiext(f"{clean}/corpus.", "source.gz", "target.gz") 
+        params: output_dir=f"{clean}",
+                prefixes=expand(f"{clean}/corpus.{{langpair}}", langpair=langpairs)
         shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "corpus" "{params.prefixes}" >> {log} 2>&1'''
 
     rule add_lang_tag_devset:
@@ -515,12 +518,11 @@ if multitarget:
         log: f"{log_dir}/add_langid_devset.log"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: expand(f"{merged}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{merged}/devset.", "source.gz", "target.gz") 
-        params: output_dir=f"{merged}",
-                prefixes=expand(f"{merged}/devset.{{langpair}}", langpair=langpairs)
+        input: expand(f"{original}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+        output: multiext(f"{original}/devset.", "source.gz", "target.gz") 
+        params: output_dir=f"{original}",
+                prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs)
         shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "devset" "{params.prefixes}" >> {log} 2>&1'''
-    
 rule merge_mono:
     message: "Merging clean monolingual datasets"
     log: f"{log_dir}/merge_mono_{{lang}}.log"
