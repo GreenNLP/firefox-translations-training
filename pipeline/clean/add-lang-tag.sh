@@ -15,7 +15,7 @@ inputs=( "${@:3}" )
 src_lang="source"
 trg_lang="target"
 
-tmp="${output_dir}/{type}_tmp"
+tmp="${output_dir}/${type}_tmp"
 mkdir -p "${tmp}"
 echo $tmp
 
