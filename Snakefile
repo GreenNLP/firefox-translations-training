@@ -42,6 +42,8 @@ if not dirname:
 langpairs = config['experiment'].get('langpairs')
 if not langpairs:
     langpairs = [f"{src}-{trg}"]
+# Check if there are multiple targets
+multitarget=len([langpair.split("-")[1] for langpair in langpairs]) > 1
 
 experiment = config['experiment']['name']
 dirname = config['experiment'].get('dirname')
@@ -196,8 +198,8 @@ if config['gpus']:
 #     ]
 
 # Added intermediate files to results for testing
-results = [f"{merged}/corpus.source.gz",f"{merged}/corpus.source.gz"]
-results = [f"{merged}/devset.source.gz",f"{merged}/devset.source.gz"]
+results = [f"{merged}/corpus.source.gz",f"{merged}/corpus.target.gz"]
+results.extend([f"{merged}/devset.source.gz",f"{merged}/devset.target.gz"])
 
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -496,19 +498,29 @@ rule merge_devset:
     params: prefix_output=f"{merged}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
 
-if opusmt_teacher: #Should actually be changed to "if target is multilingual"
-    rule add_lang_tag:
-        message: "Adding language tag id for translation"
-        log: f"{log_dir}/add_langid_{{type}}.log"
+if multitarget: #Should actually be changed to "if target is multilingual"
+    rule add_lang_tag_corpus:
+        message: "Adding language tag id for corpus translation"
+        log: f"{log_dir}/add_langid_corpus.log"
         conda: "envs/base.yml"
         threads: 1
-        input: expand(f"{merged}/{{type}}.{{langpair}}.source.gz", type=["corpus","devset"], langpair=langpairs)
-        output: multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
+        input: expand(f"{merged}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+        output: multiext(f"{merged}/corpus.", "source.gz", "target.gz") #multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
         params: output_dir=f"{merged}",
-                type="{type}",
-                prefixes=expand(f"{merged}/{{type}}.{{langpair}}", type=["corpus","devset"], langpair=langpairs),
-        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "{params.type}" "{params.prefixes}" >> {log} 2>&1'''
+                prefixes=expand(f"{merged}/corpus.{{langpair}}", langpair=langpairs)
+        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "corpus" "{params.prefixes}" >> {log} 2>&1'''
 
+    rule add_lang_tag_devset:
+        message: "Adding language tag id for devset translation"
+        log: f"{log_dir}/add_langid_devset.log"
+        conda: "envs/base.yml"
+        threads: 1
+        input: expand(f"{merged}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+        output: multiext(f"{merged}/devset.", "source.gz", "target.gz") #multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
+        params: output_dir=f"{merged}",
+                prefixes=expand(f"{merged}/devset.{{langpair}}", langpair=langpairs)
+        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "devset" "{params.prefixes}" >> {log} 2>&1'''
+    
 rule merge_mono:
     message: "Merging clean monolingual datasets"
     log: f"{log_dir}/merge_mono_{{lang}}.log"

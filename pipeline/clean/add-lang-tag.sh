@@ -15,7 +15,7 @@ inputs=( "${@:3}" )
 src_lang="source"
 trg_lang="target"
 
-tmp="${output_dir}/tmp"
+tmp="${output_dir}/{type}_tmp"
 mkdir -p "${tmp}"
 echo $tmp
 
@@ -40,7 +40,7 @@ echo "###### Done: Adding language tag"
 
 echo "###### Merging "
 
-#rm ${output_dir}/${type}*gz
+rm ${output_dir}/${type}*gz
 
 cat `echo $tmp/source.* | tr ' ' '\n' | tr '\n' ' '` >"${output_dir}/${type}.source.${ARTIFACT_EXT}"
 cat `echo $tmp/target.* | tr ' ' '\n' | tr '\n' ' '` >"${output_dir}/${type}.target.${ARTIFACT_EXT}"
