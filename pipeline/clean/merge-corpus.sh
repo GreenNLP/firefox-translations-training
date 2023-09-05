@@ -50,4 +50,10 @@ ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f2
 
 rm -rf "${tmp}"
 
+if [ "${#inputs[@]}" -eq 1 ]; then # If there is only one language pair, create a soft link to fit the filename convention, e.g: corpus.source.gz
+  output_prefix_nolangpair=$(echo "${output_prefix}" | cut -f1 -d".")
+  ln -s  "${output_prefix}.${src_lang}.${ARTIFACT_EXT}"  "${output_prefix_nolangpair}.${src_lang}.${ARTIFACT_EXT}"
+  ln -s  "${output_prefix}.${trg_lang}.${ARTIFACT_EXT}"  "${output_prefix_nolangpair}.${trg_lang}.${ARTIFACT_EXT}"
+fi
+
 echo "###### Done: Merging parallel datasets"
