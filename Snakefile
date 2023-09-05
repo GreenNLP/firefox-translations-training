@@ -498,14 +498,14 @@ rule merge_devset:
     params: prefix_output=f"{merged}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
 
-if multitarget: #Should actually be changed to "if target is multilingual"
+if multitarget:
     rule add_lang_tag_corpus:
         message: "Adding language tag id for corpus translation"
         log: f"{log_dir}/add_langid_corpus.log"
         conda: "envs/base.yml"
         threads: 1
         input: expand(f"{merged}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{merged}/corpus.", "source.gz", "target.gz") #multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
+        output: multiext(f"{merged}/corpus.", "source.gz", "target.gz") 
         params: output_dir=f"{merged}",
                 prefixes=expand(f"{merged}/corpus.{{langpair}}", langpair=langpairs)
         shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "corpus" "{params.prefixes}" >> {log} 2>&1'''
@@ -516,7 +516,7 @@ if multitarget: #Should actually be changed to "if target is multilingual"
         conda: "envs/base.yml"
         threads: 1
         input: expand(f"{merged}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{merged}/devset.", "source.gz", "target.gz") #multiext(f"{merged}/{{type}}.", f"source.gz", f"target.gz")
+        output: multiext(f"{merged}/devset.", "source.gz", "target.gz") 
         params: output_dir=f"{merged}",
                 prefixes=expand(f"{merged}/devset.{{langpair}}", langpair=langpairs)
         shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "devset" "{params.prefixes}" >> {log} 2>&1'''
