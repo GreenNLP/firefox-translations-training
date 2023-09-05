@@ -102,7 +102,7 @@ reports_dir = f"{data_root_dir}/reports/{dirname}/{experiment}"
 
 # binaries
 cwd = os.getcwd()
-third_party_dir = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/3rd_party'
+third_party_dir = f'{cwd}/3rd_party'
 
 if marian_version == 'lumi-marian':
     marian_dir = f'{third_party_dir}/lumi-marian/build/'
@@ -123,8 +123,8 @@ kenlm = f'{third_party_dir}/kenlm'
 fast_align_build = f'{third_party_dir}/fast_align/build'
 extract_lex_build = f'{third_party_dir}/extract-lex/build'
 preprocess_build_dir=f'{third_party_dir}/preprocess/build'
-bin = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/bin'
-deduper = f'/home/degibert/Documents/0_Work/MTM23/firefox-translations-training/bin/dedupe'
+bin = f'{cwd}/bin'
+deduper = f'{cwd}/bin/dedupe'
 
 # data
 data_dir = f"{data_root_dir}/data/{dirname}/{experiment}"
@@ -253,8 +253,8 @@ clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
 
 
 # Added intermediate files to results for testing
-results.extend([expand(f"{clean}/corpus.{{direction}}.gz", direction=["source","target"])])
-results.extend([expand(f"{original}/devset.{{direction}}.gz", direction=["source","target"])])
+results.extend(expand(f"{clean}/corpus.{{direction}}.gz", direction=["source","target"]))
+results.extend(expand(f"{original}/devset.{{direction}}.gz", direction=["source","target"]))
 
 # augmentation
 
@@ -502,27 +502,40 @@ rule merge_devset:
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.multitarget} {params.prefixes} >> {log} 2>&1'''
 
 if multitarget:
-    rule add_lang_tag_corpus:
+    rule add_lang_tag_both:
         message: "Adding language tag id for corpus translation"
-        log: f"{log_dir}/add_langid_corpus.log"
+        log: f"{log_dir}/add_langid_{{directory_prefix}}.log"
+        wildcard_constraints: directory_prefix=f"{clean}/corpus|{original}/devset"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: expand(f"{clean}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{clean}/corpus.", "source.gz", "target.gz") 
-        params: output_dir=f"{clean}",
-                prefixes=expand(f"{clean}/corpus.{{langpair}}", langpair=langpairs)
-        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "corpus" "{params.prefixes}" >> {log} 2>&1'''
+        input: expand(f"{{directory_prefix}}.{{langpair}}.{{direction}}.gz",langpair=langpairs,direction=["source", "target"], allow_missing=True)
+        output: multiext(f"{{directory_prefix}}.","source.gz","target.gz")
+        params: output_dir=lambda wildcards: f"{clean}" if wildcards.directory_prefix == f"{clean}/corpus" else f"{original}", #{{directory_prefix}}"[:-7],
+                type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
+                prefixes=expand(f"{{directory_prefix}}.{{langpair}}",langpair=langpairs, allow_missing=True)
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.output_dir}" "{params.type}" "{params.prefixes}" >> {log} 2>&1'''
 
-    rule add_lang_tag_devset:
-        message: "Adding language tag id for devset translation"
-        log: f"{log_dir}/add_langid_devset.log"
-        conda: "envs/base.yml"
-        threads: workflow.cores
-        input: expand(f"{original}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
-        output: multiext(f"{original}/devset.", "source.gz", "target.gz") 
-        params: output_dir=f"{original}",
-                prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs)
-        shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "devset" "{params.prefixes}" >> {log} 2>&1'''
+    # rule add_lang_tag_corpus:
+    #     message: "Adding language tag id for corpus translation"
+    #     log: f"{log_dir}/add_langid_corpus.log"
+    #     conda: "envs/base.yml"
+    #     threads: workflow.cores
+    #     input: expand(f"{clean}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+    #     output: multiext(f"{clean}/corpus.", "source.gz", "target.gz")
+    #     params: output_dir=f"{clean}",
+    #             prefixes=expand(f"{clean}/corpus.{{langpair}}", langpair=langpairs)
+    #     shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "corpus" "{params.prefixes}" >> {log} 2>&1'''
+    #
+    # rule add_lang_tag_devset:
+    #     message: "Adding language tag id for devset translation"
+    #     log: f"{log_dir}/add_langid_devset.log"
+    #     conda: "envs/base.yml"
+    #     threads: workflow.cores
+    #     input: expand(f"{original}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
+    #     output: multiext(f"{original}/devset.", "source.gz", "target.gz")
+    #     params: output_dir=f"{original}",
+    #             prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs)
+    #     shell: '''bash pipeline/clean/add-lang-tag.sh  "{params.output_dir}" "devset" "{params.prefixes}" >> {log} 2>&1'''
 rule merge_mono:
     message: "Merging clean monolingual datasets"
     log: f"{log_dir}/merge_mono_{{lang}}.log"
