@@ -503,7 +503,7 @@ if multitarget:
         message: "Adding language tag id for corpus translation"
         log: f"{log_dir}/add_langid_corpus.log"
         conda: "envs/base.yml"
-        threads: 1
+        threads: workflow.cores
         input: expand(f"{merged}/corpus.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
         output: multiext(f"{merged}/corpus.", "source.gz", "target.gz") 
         params: output_dir=f"{merged}",
@@ -514,7 +514,7 @@ if multitarget:
         message: "Adding language tag id for devset translation"
         log: f"{log_dir}/add_langid_devset.log"
         conda: "envs/base.yml"
-        threads: 1
+        threads: workflow.cores
         input: expand(f"{merged}/devset.{{langpair}}.{{direction}}.gz", langpair=langpairs, direction=["source", "target"])
         output: multiext(f"{merged}/devset.", "source.gz", "target.gz") 
         params: output_dir=f"{merged}",
