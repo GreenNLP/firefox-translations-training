@@ -134,11 +134,11 @@ clean-meta:
 	  --configfile $(CONFIG) \
 	  --cleanup-metadata $(TARGET)
 
-dag: CONFIG=configs/config.test.yml
+dag: CONFIG=configs/config.mtm23.eng-fiu.yml
 dag:
 	$(CONDA_ACTIVATE) snakemake
 	$(SNAKEMAKE) \
-	  --profile=profiles/$(PROFILE) \
+	  --profile=profiles/local \
 	  --configfile $(CONFIG) \
 	  --dag \
 	  | dot -Tpdf > DAG.pdf

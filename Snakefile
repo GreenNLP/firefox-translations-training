@@ -248,11 +248,12 @@ else:
     teacher_corpus = f'{clean}/corpus'
     use_bicleaner = False
 
-clean_corpus_src = f'{clean_corpus_prefix}.source.gz'
-clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
+clean_corpus_src = f'{clean}/corpus.source.gz'
+clean_corpus_trg = f'{clean}/corpus.target.gz'
 
 
 # Added intermediate files to results for testing
+results.extend([f"{translated}/corpus/file.00.0.opusmt"])
 results.extend(expand(f"{clean}/corpus.{{direction}}.gz", direction=["source","target"]))
 results.extend(expand(f"{original}/devset.{{direction}}.gz", direction=["source","target"]))
 
