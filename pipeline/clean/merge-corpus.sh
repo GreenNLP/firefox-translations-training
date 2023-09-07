@@ -14,8 +14,7 @@ test -v BIN
 
 output_prefix=$1
 max_sents=$2
-multitarget=$3
-inputs=( "${@:4}" )
+inputs=( "${@:3}" )
 
 src_lang="source"
 trg_lang="target"
@@ -50,11 +49,5 @@ ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f1
 ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f2 | ${COMPRESSION_CMD} > "${output_prefix}.${trg_lang}.${ARTIFACT_EXT}"
 
 rm -rf "${tmp}"
-
-if [ $multitarget = "False" ]; then # If there is only one language pair, create a soft link to fit the filename convention, e.g: corpus.source.gz
-  output_prefix_nolangpair=$(echo "${output_prefix}" | cut -f1 -d".")
-  ln -s  "${output_prefix}.${src_lang}.${ARTIFACT_EXT}"  "${output_prefix_nolangpair}.${src_lang}.${ARTIFACT_EXT}"
-  ln -s  "${output_prefix}.${trg_lang}.${ARTIFACT_EXT}"  "${output_prefix_nolangpair}.${trg_lang}.${ARTIFACT_EXT}"
-fi
 
 echo "###### Done: Merging parallel datasets"

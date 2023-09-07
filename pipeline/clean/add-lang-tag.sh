@@ -20,5 +20,6 @@ if grep -q ">>id<<" "${model_dir}/README.md"; then
 
     echo "###### Done: Adding language tag"
 else
+    ln -s $file.source.gz $file.source.langtagged.gz
     echo "The model doesn't have multiple targets, so there is no need to add a language tag"
 fi

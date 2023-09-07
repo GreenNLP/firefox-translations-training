@@ -42,8 +42,6 @@ if not dirname:
 langpairs = config['experiment'].get('langpairs')
 if not langpairs:
     langpairs = [f"{src}-{trg}"]
-# Check if there are multiple targets
-multitarget=len([langpair.split("-")[1] for langpair in langpairs]) > 1
 
 experiment = config['experiment']['name']
 dirname = config['experiment'].get('dirname')
@@ -498,8 +496,8 @@ rule merge_corpus_langpair:
     output: src=f"{clean}/corpus.{{langpair}}.source.gz",trg=f"{clean}/corpus.{{langpair}}.target.gz"
     params: prefix_output=f"{clean}/corpus.{{langpair}}",
             prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}", dataset=train_datasets, allow_missing=True),
-            max_sents=parallel_max_sents, multitarget=multitarget
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.multitarget} {params.prefixes} >> {log} 2>&1'''
+            max_sents=parallel_max_sents
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
 
 rule merge_devset_langpair:
     message: "Merging devsets per langpair"
@@ -510,9 +508,8 @@ rule merge_devset_langpair:
     input:  expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
     output: multiext(f"{original}/devset.{{langpair}}", f".source.gz", f".target.gz")
-    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True),
-            multitarget=multitarget
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.multitarget} {params.prefixes} >> {log} 2>&1'''
+    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
  
 rule merge_mono:
     message: "Merging clean monolingual datasets"
