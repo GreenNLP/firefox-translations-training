@@ -255,12 +255,19 @@ clean_corpus_trg = f'{clean}/corpus.target.gz'
 # Added intermediate files to results for testing
 
 #For merging:
+results.extend(expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target']))
+results.extend(expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{direction}}.gz", dataset=valid_datasets, langpair=langpairs, direction=["source","target"]))
+results.extend([f'{teacher_base_dir}0-0/{best_model}'])
+
+#results.extend([f"{clean}/corpus.source.langtagged.gz",f"{original}/devset.source.langtagged.gz"])
 results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{original}/devset.source.gz",f"{original}/devset.target.gz"])
+
 # For spllitcorpus:
-results.extend([f"{translated}/corpus/file.00"])
-results.extend([f"{translated}/corpus/file.00.0.opusmt"])
-#results.extend(expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target']))
-#results.extend(expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{direction}}.gz", dataset=valid_datasets, langpair=langpairs, direction=["source","target"]))
+
+#results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
+#results.extend([f"{translated}/corpus/file.00.0.opusmt"])
+#results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
+#results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
 
 # augmentation
 
@@ -506,49 +513,7 @@ rule merge_devset_langpair:
     params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True),
             multitarget=multitarget
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.multitarget} {params.prefixes} >> {log} 2>&1'''
-
-rule add_lang_tag_both:
-    message: "Adding language tag id for corpus translation"
-    log: f"{log_dir}/add_langid_{{directory_prefix}}_{{langpair}}.log"
-    wildcard_constraints: directory_prefix=f"{clean}/corpus|{original}/devset"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input: expand(f"{{directory_prefix}}.{{langpair}}.source.gz", allow_missing=True)
-    output: expand(f"{{directory_prefix}}.{{langpair}}.source.langtagged.gz", allow_missing=True)
-    params: output_dir=lambda wildcards: f"{clean}" if wildcards.directory_prefix == f"{clean}/corpus" else f"{original}", #{{directory_prefix}}"[:-7],
-            type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
-            prefixes=expand(f"{{directory_prefix}}.{{langpair}}", allow_missing=True),
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" >> {log} 2>&1'''
-
-rule merge_corpus:
-    message: "Merging clean parallel datasets"
-    log: f"{log_dir}/merge_corpus.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input:  expand(f"{clean}/corpus.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
-            bin=ancient(deduper)
-    output: src=f"{clean}/corpus.source.gz",trg=f"{clean}/corpus.target.gz"
-    params: prefix_output=f"{clean}/corpus.",
-            prefixes=expand(f"{clean_corpus_prefix}/corpus.{{langpair}}", langpair=langpairs),
-            max_sents=parallel_max_sents
-    shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
-       cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
-
-rule merge_devset:
-    message: "Merging clean parallel datasets"
-    log: f"{log_dir}/merge_devset.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input:  expand(f"{original}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
-            bin=ancient(deduper)
-    output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
-    params: prefix_output=f"{original}/devset.",
-            prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs),
-            max_sents=parallel_max_sents
-    shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
-       cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
-
+ 
 rule merge_mono:
     message: "Merging clean monolingual datasets"
     log: f"{log_dir}/merge_mono_{{lang}}.log"
@@ -683,7 +648,50 @@ if 'opusmt-teacher' in config['experiment']:
                 teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)] 
         shell: '''bash pipeline/opusmt/download-model.sh \
                     "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {src_three_letter} {trg_three_letter} >> {log} 2>&1'''
-    
+
+    rule add_lang_tag_both:
+        message: "Adding language tag id for corpus translation"
+        log: f"{log_dir}/add_langid_{{directory_prefix}}_{{langpair}}.log"
+        wildcard_constraints: directory_prefix=f"{clean}/corpus|{original}/devset"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: expand(f"{{directory_prefix}}.{{langpair}}.source.gz", allow_missing=True),  model_dir=f'{teacher_base_dir}0-0'
+        output: expand(f"{{directory_prefix}}.{{langpair}}.source.langtagged.gz", allow_missing=True)
+        params: output_dir=lambda wildcards: f"{clean}" if wildcards.directory_prefix == f"{clean}/corpus" else f"{original}", #{{directory_prefix}}"[:-7],
+                type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
+                prefixes=expand(f"{{directory_prefix}}.{{langpair}}", allow_missing=True),
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" "{input.model_dir}" >> {log} 2>&1'''
+
+    rule merge_corpus:
+        message: "Merging clean parallel datasets"
+        log: f"{log_dir}/merge_corpus.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:  expand(f"{clean}/corpus.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+                bin=ancient(deduper)
+        output: src=f"{clean}/corpus.source.gz",trg=f"{clean}/corpus.target.gz"
+        params: prefix_output=f"{clean}/corpus.",
+                prefixes=expand(f"{clean_corpus_prefix}/corpus.{{langpair}}", langpair=langpairs),
+                max_sents=parallel_max_sents
+        shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
+        cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
+
+    rule merge_devset:
+        message: "Merging clean parallel datasets"
+        log: f"{log_dir}/merge_devset.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:  expand(f"{original}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+                bin=ancient(deduper)
+        output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
+        params: prefix_output=f"{original}/devset.",
+                prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs),
+                max_sents=parallel_max_sents
+        shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
+        cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
+
+
 elif not forward_pretrained:
     rule train_teacher:
         message: "Training teacher on all data"
