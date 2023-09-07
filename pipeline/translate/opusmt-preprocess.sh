@@ -29,12 +29,16 @@ if [ "${source_file##*.}" == "gz" ]; then #TODO: implement adding language tags 
 else
     echo "source file is not gzipped"
     out_file=$1${model_index_suffix}.opusmt
-    while IFS= read -r line; do
-        # Get the language tag
-        target_lang_token="$(echo "$line" | egrep -o "^>>.*<< ")"
-        # Remove it from the sentence
-        line="$(echo "$line" | sed "s/$target_lang_token//")"
-        # Encode and paste
-        echo $line | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | sed -e "s/^/${target_lang_token}/" >> $out_file
-    done < $source_file
+    if grep -q ">>id<<" "${model_dir}/README.md"; then
+        while IFS= read -r line; do
+                # Get the language tag
+                target_lang_token="$(echo "$line" | egrep -o "^>>.*<< ")"
+                # Remove it from the sentence
+                line="$(echo "$line" | sed "s/$target_lang_token//")"
+                # Encode and paste
+                echo $line | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | sed -e "s/^/${target_lang_token}/" >> $out_file
+        done < $source_file
+    else
+        pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" < $1 > $1${model_index_suffix}.opusmt
+    fi
 fi

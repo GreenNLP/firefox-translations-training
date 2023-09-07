@@ -261,7 +261,7 @@ results.extend([f'{teacher_base_dir}0-0/{best_model}'])
 results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{original}/devset.source.gz",f"{original}/devset.target.gz"])
 
 # For spllitcorpus:
-
+#results.extend([f"{translated}/corpus"])
 results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
 results.extend([f"{translated}/corpus/file.00.0.opusmt"])
 results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
