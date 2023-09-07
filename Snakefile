@@ -262,10 +262,10 @@ results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{origi
 
 # For spllitcorpus:
 
-#results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
-#results.extend([f"{translated}/corpus/file.00.0.opusmt"])
-#results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
-#results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
+results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
+results.extend([f"{translated}/corpus/file.00.0.opusmt"])
+results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
+results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
 
 # augmentation
 
@@ -657,8 +657,7 @@ if 'opusmt-teacher' in config['experiment']:
         params: output_dir=lambda wildcards: f"{clean}" if wildcards.directory_prefix == f"{clean}/corpus" else f"{original}", #{{directory_prefix}}"[:-7],
                 type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
                 prefixes=expand(f"{{directory_prefix}}.{{langpair}}", allow_missing=True),
-                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-                log_prefix=lambda wildcards.dire
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" "{input.model_dir}" >> {log} 2>&1'''
 
     rule merge_corpus:
