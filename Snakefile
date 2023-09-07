@@ -648,7 +648,7 @@ if 'opusmt-teacher' in config['experiment']:
 
     rule add_lang_tag_both:
         message: "Adding language tag id for corpus translation"
-        log: f"{log_dir}/add_langid_{{directory_prefix}}_{{langpair}}.log"
+        log: f"{log_dir}/add_langid_{{directory_prefix}}_{{langpair}}.log" #TO DO: this log needs to be fixed
         wildcard_constraints: directory_prefix=f"{clean}/corpus|{original}/devset"
         conda: "envs/base.yml"
         threads: workflow.cores
@@ -657,7 +657,8 @@ if 'opusmt-teacher' in config['experiment']:
         params: output_dir=lambda wildcards: f"{clean}" if wildcards.directory_prefix == f"{clean}/corpus" else f"{original}", #{{directory_prefix}}"[:-7],
                 type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
                 prefixes=expand(f"{{directory_prefix}}.{{langpair}}", allow_missing=True),
-                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+                log_prefix=lambda wildcards.dire
         shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" "{input.model_dir}" >> {log} 2>&1'''
 
     rule merge_corpus:
