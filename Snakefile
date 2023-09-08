@@ -262,11 +262,12 @@ results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{origi
 
 # For spllitcorpus:
 results.extend([f"{translated}/corpus/"])
-#results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
-#results.extend([f"{translated}/corpus/file.00.0.opusmt"])
-#results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
-#results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
-#results.extend([f"{translated}/corpus.0.target.gz"])
+results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
+results.extend([f"{translated}/corpus/file.00.0.opusmt"])
+results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
+results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
+results.extend([f"{translated}/corpus.0.target.gz"])
+results.extend([f'{student_dir}/{best_model}'])
 
 # augmentation
 
@@ -917,12 +918,12 @@ rule merge_translated:
     input:
         src1=clean_corpus_src,
         src2=f"{clean}/mono.{src}.gz",
-        trg1=lambda wildcards: expand(f"{translated}/corpus.{{model_index}}.{trg}.gz",model_index=model_indices),
+        trg1=lambda wildcards: expand(f"{translated}/corpus.{{model_index}}.target.gz",model_index=model_indices),
         trg2=lambda wildcards: expand(f"{translated}/mono.{{model_index}}.{trg}.gz",model_index=model_indices),
         bin=ancient(deduper)
-    output: res_src=f'{merged}/corpus.{src}.gz',res_trg=f'{merged}/corpus.{trg}.gz'
+    output: res_src=f'{merged}/corpus.source.gz',res_trg=f'{merged}/corpus.target.gz'
     params:
-        trg1_template=f"{translated}/corpus.model_index.{trg}.gz",
+        trg1_template=f"{translated}/corpus.model_index.target.gz",
         trg2_template=f"{translated}/mono.model_index.{trg}.gz"
     shell: '''bash pipeline/translate/merge-corpus.sh \
                 "{input.src1}" "{input.src2}" "{params.trg1_template}" "{params.trg2_template}" \
@@ -933,8 +934,8 @@ rule merge_translated:
 # preprocess source and target when scoring with opusmt model (note that deseg is not required, since
 # scoring produces just scores)
 if opusmt_backward:
-    score_source = f"{merged}/corpus.{src}.opusmt.gz"
-    score_target = f"{merged}/corpus.{trg}.opusmt.gz"
+    score_source = f"{merged}/corpus.source.opusmt.gz"
+    score_target = f"{merged}/corpus.target.opusmt.gz"
 else:    
     score_source = rules.merge_translated.output.res_src
     score_target = rules.merge_translated.output.res_trg
@@ -952,12 +953,13 @@ rule opusmt_preprocess_for_scoring:
         res_trg=rules.merge_translated.output.res_trg,
         model=f'{backward_dir}/{best_model}',
         spm_encoder=ancient(spm_encoder)
-    output: opusmt_source=f"{merged}/corpus.{src}.opusmt.gz",
-            opusmt_target=f"{merged}/corpus.{trg}.opusmt.gz"
+    output: opusmt_source=f"{merged}/corpus.source.opusmt.gz",
+            opusmt_target=f"{merged}/corpus.target.opusmt.gz"
+    # Only works for many to one models
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_src} {input.model} src "target.spm" {input.spm_encoder} {target_language_token} && \
+              {input.res_src} {input.model} "target.spm" {input.spm_encoder} && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} trg "source.spm" {input.spm_encoder} {source_language_token} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
@@ -983,7 +985,7 @@ rule ce_filter:
     input:
         src_corpus=rules.merge_translated.output.res_src,trg_corpus=rules.merge_translated.output.res_trg,
         scores=rules.score.output
-    output: src_corpus=f"{filtered}/corpus.{src}.gz",trg_corpus=f"{filtered}/corpus.{trg}.gz"
+    output: src_corpus=f"{filtered}/corpus.source.gz",trg_corpus=f"{filtered}/corpus.target.gz"
     params: input_prefix=f'{merged}/corpus',output_prefix=f'{filtered}/corpus'
     shell: '''bash pipeline/cefilter/ce-filter.sh \
                 "{params.input_prefix}" "{params.output_prefix}" "{input.scores}" >> {log} 2>&1'''
