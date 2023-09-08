@@ -261,11 +261,12 @@ results.extend([f'{teacher_base_dir}0-0/{best_model}'])
 results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{original}/devset.source.gz",f"{original}/devset.target.gz"])
 
 # For spllitcorpus:
-#results.extend([f"{translated}/corpus"])
-results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
-results.extend([f"{translated}/corpus/file.00.0.opusmt"])
-results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
-results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
+results.extend([f"{translated}/corpus/"])
+#results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
+#results.extend([f"{translated}/corpus/file.00.0.opusmt"])
+#results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
+#results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
+#results.extend([f"{translated}/corpus.0.target.gz"])
 
 # augmentation
 
@@ -736,9 +737,9 @@ checkpoint split_corpus:
     conda: "envs/base.yml"
     threads: 1
     input: corpus_src=clean_corpus_src,corpus_trg=clean_corpus_trg
-    output: directory(f"{translated}/corpus"), file=f"{translated}/corpus.00"
+    output: output_dir=directory(f"{translated}/corpus"), file=f"{translated}/corpus/file.00"
     shell: '''bash pipeline/translate/split-corpus.sh \
-                {input.corpus_src} {input.corpus_trg} {output} {split_length} >> {log} 2>&1'''
+                {input.corpus_src} {input.corpus_trg} {output.output_dir} {split_length} >> {log} 2>&1'''
 
 if opusmt_teacher:
     teacher_source_file = f'{translated}/corpus/file.{{part}}.{{model_index}}.opusmt'
@@ -813,7 +814,7 @@ rule translate_corpus:
     output: file=teacher_target_file
     params: args=get_args('decoding-teacher')
     shell: '''bash pipeline/translate/translate-nbest.sh \
-                "{input.file}" "{output.file}" "{input.vocab}" {input.teacher_models} {params.args} >> {log} 2>&1'''
+                "{input.file}" "{output.file}" "{input.vocab}" "{input.teacher_models}" {params.args} >> {log} 2>&1'''
 
 rule extract_best:
     message: "Extracting best translations for the corpus"
@@ -834,7 +835,7 @@ rule collect_corpus:
     threads: 4
     #group 'translate_corpus'
     input: lambda wildcards: expand(f"{translated}/corpus/file.{{part}}.nbest.{wildcards.model_index}.out", part=find_parts(wildcards, checkpoints.split_corpus))
-    output: trg_corpus=f'{translated}/corpus.{{model_index}}.{trg}.gz'
+    output: trg_corpus=f'{translated}/corpus.{{model_index}}.target.gz'
     params: src_corpus=clean_corpus_src
     shell: 'bash pipeline/translate/collect.sh {translated}/corpus {output} {params.src_corpus} {wildcards.model_index} >> {log} 2>&1'
 
