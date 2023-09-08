@@ -736,7 +736,7 @@ checkpoint split_corpus:
     conda: "envs/base.yml"
     threads: 1
     input: corpus_src=clean_corpus_src,corpus_trg=clean_corpus_trg
-    output: directory(f"{translated}/corpus")
+    output: directory(f"{translated}/corpus"), file=f"{translated}/corpus.00"
     shell: '''bash pipeline/translate/split-corpus.sh \
                 {input.corpus_src} {input.corpus_trg} {output} {split_length} >> {log} 2>&1'''
 
