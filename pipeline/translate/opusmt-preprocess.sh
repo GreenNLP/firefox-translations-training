@@ -25,7 +25,7 @@ fi
 
 if [ "${source_file##*.}" == "gz" ]; then #TODO: implement adding language tags if source file is gzipped
     echo "source file is gzipped"
-    zcat $1 |  sed "s/^>>.*<<//" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
+    zcat $1 |  sed "s/^>>.*<< //" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
 else
     echo "source file is not gzipped"
     out_file=$1${model_index_suffix}.opusmt

@@ -14,9 +14,7 @@ extra_params=( "${@:2}" )
 cd "$(dirname "${0}")"
 
 bash "train.sh" \
-  "${extra_params[@]}" \
-  --guided-alignment "${alignment}" \
-
+  "${extra_params[@]}"
 
 echo "###### Done: Training a student model"
 
