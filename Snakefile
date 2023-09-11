@@ -34,9 +34,6 @@ src = config['experiment']['src']
 trg = config['experiment']['trg']
 src_three_letter = config['experiment'].get('src_three_letter')
 trg_three_letter = config['experiment'].get('trg_three_letter')
-dirname = config['experiment'].get('dirname')
-if not dirname:
-    dirname = {src}-{trg}
 
 # Read lanpairs from config; if not given, infer single langpair from source and target langs
 langpairs = config['experiment'].get('langpairs')
@@ -267,7 +264,12 @@ results.extend([f"{translated}/corpus/file.00.0.opusmt"])
 results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
 results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
 results.extend([f"{translated}/corpus.0.target.gz"])
+results.extend([f"{align_dir}/corpus.aln.gz"])
 results.extend([f'{student_dir}/{best_model}'])
+results.extend([f"{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz"])
+results.extend([f'{student_finetuned_dir}/{best_model}'])
+results.extend([f'{speed_dir}/model.intgemm.alphas.bin'])
+results.extend([f"{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz"])
 
 # augmentation
 
@@ -1043,7 +1045,7 @@ rule finetune_student:
     params: prefix_train=rules.ce_filter.params.output_prefix,prefix_test=f"{original}/devset",
             args=get_args("training-student-finetuned")
     shell: '''bash pipeline/train/train-student.sh \
-                "{input.alignments}" student finetune {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+                "{input.alignments}" student finetune "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
                 "{student_finetuned_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.student_model}" {params.args} >> {log} 2>&1'''
 
 rule quantize:
@@ -1054,7 +1056,7 @@ rule quantize:
     input:
         ancient(bmt_decoder), ancient(bmt_converter),
         shortlist=rules.alignments.output.shortlist, model=rules.finetune_student.output.model,
-        vocab=vocab_path, devset=f"{original}/devset.{src}.gz"
+        vocab=vocab_path, devset=f"{original}/devset.source.gz"
     output: model=f'{speed_dir}/model.intgemm.alphas.bin'
     shell: '''bash pipeline/quantize/quantize.sh \
                 "{input.model}" "{input.vocab}" "{input.shortlist}" "{input.devset}" "{speed_dir}" >> {log} 2>&1'''
@@ -1073,7 +1075,7 @@ rule export:
         shortlist=f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
         vocab=f'{exported_dir}/vocab.{dirname}.spm.gz'
     shell:
-        'bash pipeline/quantize/export.sh "{speed_dir}" "{input.shortlist}" "{input.vocab}" "{exported_dir}" >> {log} 2>&1'
+        'bash pipeline/quantize/export.sh "{speed_dir}" "{input.shortlist}" "{input.vocab}" "{exported_dir}" {dirname} >> {log} 2>&1'
 
 
 ### evaluation

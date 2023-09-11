@@ -16,21 +16,22 @@ model_dir=$1
 shortlist=$2
 vocab=$3
 output_dir=$4
+dirname=$5
 
 mkdir -p "${output_dir}"
 
-model="${output_dir}/model.${SRC}${TRG}.intgemm.alphas.bin"
+model="${output_dir}/model.${dirname}.intgemm.alphas.bin"
 cp "${model_dir}/model.intgemm.alphas.bin" "${model}"
 pigz "${model}"
 
-shortlist_bin="${output_dir}/lex.50.50.${SRC}${TRG}.s2t.bin"
+shortlist_bin="${output_dir}/lex.50.50.${dirname}.s2t.bin"
 "${BMT_MARIAN}"/marian-conv \
   --shortlist "${shortlist}" 50 50 0 \
   --dump "${shortlist_bin}" \
   --vocabs "${vocab}" "${vocab}"
 pigz "${shortlist_bin}"
 
-vocab_out="${output_dir}/vocab.${SRC}${TRG}.spm"
+vocab_out="${output_dir}/vocab.${dirname}.spm"
 cp "${vocab}" "${vocab_out}"
 pigz "${vocab_out}"
 
