@@ -175,7 +175,7 @@ eval_speed_dir = f'{eval_res_dir}/speed'
 eval_teacher_ens_dir = f'{eval_res_dir}/teacher-ensemble'
 
 # set common environment variables
-envs = f'''SRC={src} TRG={trg} MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
+envs = f'''SRC="source" TRG="target" MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
 BIN="{bin}" CUDA_DIR="{cuda_dir}" CUDNN_DIR="{cudnn_dir}" ROCM_PATH="{rocm_dir}" COMPRESSION_CMD=pigz ARTIFACT_EXT=gz'''
 # CUDA_VISIBLE_DEVICES is used by bicleaner ai. slurm sets this variable
 # it can be overriden manually by 'gpus' config setting to split GPUs in local mode
@@ -1022,7 +1022,7 @@ rule train_student:
     params: prefix_train=rules.ce_filter.params.output_prefix,prefix_test=f"{original}/devset",
             args=get_args("training-student")
     shell: '''bash pipeline/train/train-student.sh \
-                "{input.alignments}" student train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+                "{input.alignments}" student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 # quantize
