@@ -182,17 +182,15 @@ if config['gpus']:
 ### workflow options
 
 # Commented out for testing
-# results = [
-#     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
-#     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
-#     f'{exported_dir}/vocab.{dirname}.spm.gz',
-#     f'{experiment_dir}/config.yml',
-#     *expand(f'{eval_student_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-#     *expand(f'{eval_student_finetuned_dir}/{{dataset}}.metrics',dataset=eval_datasets),
-#     *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
-#     ]
-
-results=[]
+results = [
+    f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
+    f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
+    f'{exported_dir}/vocab.{dirname}.spm.gz',
+    f'{experiment_dir}/config.yml',
+    *expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    *expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
+    ]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -245,31 +243,6 @@ else:
 
 clean_corpus_src = f'{clean}/corpus.source.gz'
 clean_corpus_trg = f'{clean}/corpus.target.gz'
-
-
-# Added intermediate files to results for testing
-
-#For merging:
-results.extend(expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, langpair=langpairs, lang=['source', 'target']))
-results.extend(expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{direction}}.gz", dataset=valid_datasets, langpair=langpairs, direction=["source","target"]))
-results.extend([f'{teacher_base_dir}0-0/{best_model}'])
-
-#results.extend([f"{clean}/corpus.source.langtagged.gz",f"{original}/devset.source.langtagged.gz"])
-results.extend([f"{clean}/corpus.source.gz",f"{clean}/corpus.target.gz",f"{original}/devset.source.gz",f"{original}/devset.target.gz"])
-
-# For spllitcorpus:
-results.extend([f"{translated}/corpus/"])
-results.extend([f"{translated}/corpus/file.00",f"{translated}/corpus/file.00.ref"])
-results.extend([f"{translated}/corpus/file.00.0.opusmt"])
-results.extend([f"{translated}/corpus/file.00.0.opusmt.nbest"])
-results.extend([f"{translated}/corpus/file.00.nbest.0.out"])
-results.extend([f"{translated}/corpus.0.target.gz"])
-results.extend([f"{align_dir}/corpus.aln.gz"])
-results.extend([f'{student_dir}/{best_model}'])
-results.extend([f"{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz"])
-results.extend([f'{student_finetuned_dir}/{best_model}'])
-results.extend([f'{speed_dir}/model.intgemm.alphas.bin'])
-results.extend([f"{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz"])
 
 # augmentation
 
