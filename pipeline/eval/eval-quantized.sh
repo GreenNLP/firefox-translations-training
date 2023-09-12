@@ -20,6 +20,7 @@ vocab=$5
 res_prefix=$6
 decoder_config=$7
 trg_langtag=$8
+o2m_student=$9
 
 cd "$(dirname "${0}")"
 
@@ -32,6 +33,7 @@ bash eval.sh \
       "${trg_langtag}" \
       "${BMT_MARIAN}" \
       "${decoder_config}" \
+      "${o2m_student} \
       -m "${model_path}" \
       -v "${vocab}" "${vocab}" \
       --shortlist "${shortlist}" false \

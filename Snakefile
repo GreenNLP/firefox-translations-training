@@ -1086,7 +1086,7 @@ rule evaluate:
                             if wildcards.model != 'teacher-ensemble'
                             else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/eval/eval-gpu.sh  "{wildcards.langpair}" "{params.res_prefix}" "{params.dataset_prefix}" \
-             {params.trg_three_letter} "{params.decoder_config}" {input.models} >> {log} 2>&1'''
+             {params.trg_three_letter} "{params.decoder_config}" {o2m_student} {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
     message: "Evaluating quantized student model"

@@ -19,7 +19,8 @@ res_prefix=$2
 dataset_prefix=$3
 trg_langtag=$4
 decoder_config=$5
-models=( "${@:6}" )
+o2m_student=$6
+models=( "${@:7}" )
 
 cd "$(dirname "${0}")"
 
@@ -32,6 +33,7 @@ bash eval.sh \
       "${trg_langtag}" \
       "${MARIAN}" \
       "${decoder_config}" \
+      "${o2m_student} \
       -w "${WORKSPACE}" \
       --devices ${GPUS} \
       -m "${models[@]}"
