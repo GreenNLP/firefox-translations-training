@@ -35,7 +35,12 @@ trg = config['experiment']['trg']
 src_three_letter = config['experiment'].get('src_three_letter')
 trg_three_letter = config['experiment'].get('trg_three_letter')
 
-# Read lanpairs from config; if not given, infer single langpair from source and target langs
+# multilinguality 
+o2m_teacher = config['experiment']['one2many-teacher']
+o2m_student = config['experiment']['one2many-student']
+
+
+# Read langpairs from config; if not given, infer single langpair from source and target langs
 langpairs = config['experiment'].get('langpairs')
 if not langpairs:
     langpairs = [f"{src}-{trg}"]
@@ -635,7 +640,7 @@ if 'opusmt-teacher' in config['experiment']:
                 type=lambda wildcards: wildcards.directory_prefix.split("/")[-1],
                 prefixes=expand(f"{{directory_prefix}}.{{langpair}}", allow_missing=True),
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" "{input.model_dir}" >> {log} 2>&1'''
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefixes}" "{input.model_dir}" "{o2m_teacher}" >> {log} 2>&1'''
 
     rule merge_corpus:
         message: "Merging clean parallel datasets"
