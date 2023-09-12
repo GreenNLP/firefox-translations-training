@@ -1084,7 +1084,7 @@ rule evaluate:
              {params.trg_three_letter} "{params.decoder_config}" {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
-    message: "Evaluating qunatized student model"
+    message: "Evaluating quantized student model"
     log: f"{log_dir}/eval_quantized_{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
     #group 'export'
