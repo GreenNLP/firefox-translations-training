@@ -33,7 +33,7 @@ bash eval.sh \
       "${trg_langtag}" \
       "${BMT_MARIAN}" \
       "${decoder_config}" \
-      "${o2m_student} \
+      "${o2m_student}" \
       -m "${model_path}" \
       -v "${vocab}" "${vocab}" \
       --shortlist "${shortlist}" false \
