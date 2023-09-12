@@ -8,22 +8,24 @@ set -euo pipefail
 
 echo "###### Evaluation of a model"
 
-res_prefix=$1
-dataset_prefix=$2
-src=$3
-trg=$4
-marian=$5
-decoder_config=$6
-args=( "${@:7}" )
+langpair=$1
+res_prefix="${2}.${langpair}"
+dataset_prefix="${3}.${langpair}"
+src=$4
+trg=$5
+trg_langtag=">>${6}<< "
+marian=$7
+decoder_config=$8
+args=( "${@:9}" )
 
 mkdir -p "$(basename "${res_prefix}")"
 
-echo "### Evaluating dataset: ${dataset_prefix}, pair: ${src}-${trg}, Results prefix: ${res_prefix}"
+echo "### Evaluating dataset: ${dataset_prefix}, pair: ${langpair}, Results prefix: ${res_prefix}"
 
 pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
 
-pigz -dc "${dataset_prefix}.${src}.gz" |
-  tee "${res_prefix}.${src}" |
+pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add language tag for decoding
+  tee "${res_prefix}.${src}" | 
   "${marian}"/marian-decoder \
     -c "${decoder_config}" \
     --quiet \

@@ -1085,23 +1085,26 @@ rule evaluate:
 
 rule eval_quantized:
     message: "Evaluating qunatized student model"
-    log: f"{log_dir}/eval_quantized_{{dataset}}.log"
+    log: f"{log_dir}/eval_quantized_{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
     #group 'export'
     threads: 1
     priority: 50
     input:
         ancient(bmt_decoder),
-        data=multiext(f'{eval_data_dir}/{{dataset}}',f".{src}.gz",f".{trg}.gz"),
+        data_src=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.source.gz', dataset=eval_datasets, langpair=langpairs),
+        data_trg=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.target.gz', dataset=eval_datasets, langpair=langpairs),
         model=rules.quantize.output.model,
         shortlist=rules.alignments.output.shortlist,
         vocab=vocab_path
     output:
-        report(f'{eval_speed_dir}/{{dataset}}.metrics', category='evaluation',
+        report(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics', category='evaluation',
             subcategory='quantized', caption='reports/evaluation.rst')
     params:
-        dataset_prefix=f'{eval_data_dir}/{{dataset}}',
-        res_prefix=f'{eval_speed_dir}/{{dataset}}',
+        dataset_prefix=expand(f'{eval_data_dir}/{{dataset}}', dataset=eval_datasets),
+        res_prefix=expand(f'{eval_speed_dir}/{{dataset}}', dataset=eval_datasets),
+        trg_lng=lambda wildcards: wildcards.langpair.split('-')[1],
+        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config='../quantize/decoder.yml'
-    shell: '''bash pipeline/eval/eval-quantized.sh "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
-            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" >> {log} 2>&1'''
+    shell: '''bash pipeline/eval/eval-quantized.sh "{wildcards.langpair}" "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
+            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" >> {log} 2>&1'''

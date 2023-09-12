@@ -12,20 +12,24 @@ test -v BMT_MARIAN
 test -v SRC
 test -v TRG
 
-model_path=$1
-shortlist=$2
-dataset_prefix=$3
-vocab=$4
-res_prefix=$5
-decoder_config=$6
+langpair=$1
+model_path=$2
+shortlist=$3
+dataset_prefix=$4
+vocab=$5
+res_prefix=$6
+decoder_config=$7
+trg_langtag=$8
 
 cd "$(dirname "${0}")"
 
 bash eval.sh \
+      "${langpair}" \
       "${res_prefix}" \
       "${dataset_prefix}" \
       "${SRC}" \
       "${TRG}" \
+      "${trg_langtag}" \
       "${BMT_MARIAN}" \
       "${decoder_config}" \
       -m "${model_path}" \
