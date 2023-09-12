@@ -11,6 +11,7 @@ source_file=$1
 opusmt_model=$2
 spm_name=$3
 spm_encoder=$4
+o2m_teacher=$5
 export PATH=$PATH:$(dirname ${spm_encoder})
 model_dir=$(dirname $opusmt_model)
 
@@ -23,13 +24,13 @@ else
 fi
 
 
-if [ "${source_file##*.}" == "gz" ]; then #TODO: implement adding language tags if source file is gzipped
+if [ "${source_file##*.}" == "gz" ]; then #This applies when scoring
     echo "source file is gzipped"
     zcat $1 |  sed "s/^>>.*<< //" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
 else
     echo "source file is not gzipped"
     out_file=$1${model_index_suffix}.opusmt
-    if grep -q ">>id<<" "${model_dir}/README.md"; then
+    if [ $o2m_teacher == "True" ]; then; then
         while IFS= read -r line; do
                 # Get the language tag
                 target_lang_token="$(echo "$line" | egrep -o "^>>.*<< ")"

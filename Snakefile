@@ -746,7 +746,7 @@ if opusmt_teacher:
 
     #This is an optional rule that only applies when OPUS-MT model is used as teacher.
     #Required due to OPUS-MT models not using the integrated SentencePiece in Marian
-    rule opusmt_preprocess_corpus: #TODO make sure it is run as many times as target languages we have
+    rule opusmt_preprocess_corpus:
         message: "Preprocessing source file for OPUS-MT model"
         log: f"{log_dir}/opusmt_preprocess_corpus/{{corpus}}.{{part}}.{{model_index}}.log"
         conda: "envs/base.yml"
@@ -757,7 +757,7 @@ if opusmt_teacher:
             spm_encoder=ancient(spm_encoder)
         output: f'{translated}/{{corpus}}/file.{{part}}.{{model_index}}.opusmt'
         shell: '''bash pipeline/translate/opusmt-preprocess.sh \
-                    {input.file} {input.teacher_model} "source.spm" {input.spm_encoder} {target_language_token} {wildcards.model_index} >> {log} 2>&1'''
+                    {input.file} {input.teacher_model} "source.spm" {input.spm_encoder} {o2m_teacher} {wildcards.model_index} >> {log} 2>&1'''
     
     rule opusmt_deseg_nbest:
         message: "Desegmenting OPUS-MT model nbest list"
