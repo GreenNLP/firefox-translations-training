@@ -33,7 +33,7 @@ bash eval.sh \
       "${trg_langtag}" \
       "${MARIAN}" \
       "${decoder_config}" \
-      "${o2m_student} \
+      "${o2m_student}" \
       -w "${WORKSPACE}" \
       --devices ${GPUS} \
       -m "${models[@]}"
