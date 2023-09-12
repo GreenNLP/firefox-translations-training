@@ -907,7 +907,7 @@ rule merge_translated:
         trg2_template=f"{translated}/mono.model_index.{trg}.gz"
     shell: '''bash pipeline/translate/merge-corpus.sh \
                 "{input.src1}" "{input.src2}" "{params.trg1_template}" "{params.trg2_template}" \
-                "{output.res_src}" "{output.res_trg}" {model_indices} >> {log} 2>&1'''
+                "{output.res_src}" "{output.res_trg}" {o2m_student} {model_indices} >> {log} 2>&1'''
 
 # train student 
 
@@ -937,9 +937,9 @@ rule opusmt_preprocess_for_scoring:
             opusmt_target=f"{merged}/corpus.target.opusmt.gz"
     # Only works for many to one models
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_src} {input.model} "target.spm" {input.spm_encoder} && \ 
+              {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
