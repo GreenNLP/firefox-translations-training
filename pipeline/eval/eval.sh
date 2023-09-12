@@ -33,7 +33,7 @@ pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add langua
     --log "${res_prefix}.log" \
     "${args[@]}" |
   tee "${res_prefix}.${trg}" |
-  sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${src}-${trg}" -m bleu chrf  |
+  sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf  |
   tee "${res_prefix}.metrics"
 
 echo "###### Done: Evaluation of a model"
