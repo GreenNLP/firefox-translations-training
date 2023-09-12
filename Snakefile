@@ -984,7 +984,7 @@ rule alignments:
     output: alignment=f'{align_dir}/corpus.aln.gz',shortlist=f'{align_dir}/lex.s2t.pruned.gz'
     params: input_prefix=f'{filtered}/corpus'
     shell: '''bash pipeline/alignment/generate-alignment-and-shortlist.sh \
-                "{params.input_prefix}" "{input.vocab}" "{align_dir}" {threads} >> {log} 2>&1'''
+                "{params.input_prefix}" "{input.vocab}" "{align_dir}" {o2m_student} {threads} >> {log} 2>&1'''
 
 rule train_student:
     message: "Training student"

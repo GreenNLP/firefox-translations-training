@@ -15,7 +15,8 @@ test -v TRG
 corpus_prefix=$1
 vocab_path=$2
 output_dir=$3
-threads=$4
+o2m_student=$4
+threads=$5
 
 cd "$(dirname "${0}")"
 
@@ -80,7 +81,7 @@ echo "### Deleting tmp dir"
 rm -rf "${dir}"
 
 # If there are language tags, we need to modify the alignments by adding index 1 to every source token
-if [ "$(zgrep -c '^>>.*<<' ${corpus_src})" ==  "$(zgrep -c $ ${corpus_src})" ]; then
+if [ $o2m_student == "True" ]; then
     echo "###### Correcting alignments taking into account language tags"
     pigz -dc "${output_dir}/corpus.aln.gz" | sed -E 's/([0-9]+)-([0-9]+)/echo $((\1+1))"-\2"/ge' |  sed 's/echo //g' | gzip > "${output_dir}/corpus.aln.fixed.gz"
     mv "${output_dir}/corpus.aln.fixed.gz" "${output_dir}/corpus.aln.gz"
