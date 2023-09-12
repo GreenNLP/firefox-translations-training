@@ -1055,7 +1055,7 @@ rule export:
 
 rule evaluate:
     message: "Evaluating a model"
-    log: f"{log_dir}/eval/eval_{{model}}_{{dataset}}.log"
+    log: f"{log_dir}/eval/eval_{{model}}_{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: gpus_num * 2
     resources: gpu=gpus_num
@@ -1065,23 +1065,23 @@ rule evaluate:
         model="[\w-]+"
     input:
         ancient(decoder),
-        data=multiext(f'{eval_data_dir}/{{dataset}}',f".{src}.gz",f".{trg}.gz"),
+        data_src=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.source.gz', dataset=eval_datasets, langpair=langpairs),
+        data_trg=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.target.gz', dataset=eval_datasets, langpair=langpairs),
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
                                     if wildcards.model != 'teacher-ensemble'
                                     else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
     output:
-        report(f'{eval_res_dir}/{{model}}/{{dataset}}.metrics',
+        report(f'{eval_res_dir}/{{model}}/{{dataset}}.{{langpair}}.metrics',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
     params:
         dataset_prefix=f'{eval_data_dir}/{{dataset}}',
         res_prefix=f'{eval_res_dir}/{{model}}/{{dataset}}',
-        src_lng=lambda wildcards: src if wildcards.model != 'backward' else trg,
-        trg_lng=lambda wildcards: trg if wildcards.model != 'backward' else src,
+        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
                             if wildcards.model != 'teacher-ensemble'
                             else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" \
-             {params.src_lng} {params.trg_lng} "{params.decoder_config}" {input.models} >> {log} 2>&1'''
+    shell: '''bash pipeline/eval/eval-gpu.sh  "{wildcards.langpair}" "{params.res_prefix}" "{params.dataset_prefix}" \
+             {params.trg_three_letter} "{params.decoder_config}" {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
     message: "Evaluating qunatized student model"
