@@ -18,7 +18,7 @@ The different possible distilling scenarios that we envision and that are covere
 Some things have changed in the configuration file:
 
 - Languages: you can either specify the languages you want to train by `src` and `trg` if the model is bilingual. If the model is multilingual of any kind, you need to specify `langpairs`, you can see how in [this example](configs/config.1.o2o.o2o.yml#L10). 
-- Mulilingual configuration: now you need to specify if either the teacher or the student is a one2many model, so that we can handle language tags appropietly. We created `one2many-teacher` and `one2many-student` options to hanlde this. You can see how in [this example]((configs/config.1.o2o.o2o.yml#L21).
+- Mulilingual configuration: now you need to specify if either the teacher or the student is a one2many model, so that we can handle language tags appropietly. We created `one2many-teacher` and `one2many-student` options to hanlde this. You can see how in [this example](configs/config.1.o2o.o2o.yml#L21).
 - `max-parallel-sents`: this allows you to define the maximum parallel sentences you want to download per language pair in the case of multilingual models.
 - `dirname`: usually the directory structure relies on the source and target languages, in case of a multilingual model of any kind, you can specify the name of the directory you want to use. You can see how in [this example](configs/config.1.o2o.o2o.yml#L8). 
 
