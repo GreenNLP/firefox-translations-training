@@ -33,7 +33,7 @@ experiment:
 
 datasets:
   train:
-    - opus_ELRC_2922/v1
+    - opus_ELRC-wikipedia_health/v1
   devtest:
     - flores_dev
   test:
