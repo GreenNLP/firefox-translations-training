@@ -30,8 +30,8 @@ marian_cmake = config['mariancmake']
 marian_version = config.get('marianversion','marian-dev')
 
 # experiment
-src = config['experiment']['src']
-trg = config['experiment']['trg']
+src = config['experiment'].get('src')
+trg = config['experiment'].get('trg')
 src_three_letter = config['experiment'].get('src_three_letter')
 trg_three_letter = config['experiment'].get('trg_three_letter')
 
@@ -1112,4 +1112,4 @@ rule eval_quantized:
         trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config='../quantize/decoder.yml'
     shell: '''bash pipeline/eval/eval-quantized.sh "{wildcards.langpair}" "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
-            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" >> {log} 2>&1'''
+            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" {o2m_student} >> {log} 2>&1'''
