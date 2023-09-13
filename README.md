@@ -11,7 +11,7 @@ The different possible distilling scenarios that we envision and that are covere
 | 4 | m2o - bilingual       | fiu-eng | et-en   | [Config file](configs/config.4.m2o.o2o.yml) | y       |
 | 5 | m2o - m2o             | fiu-eng | fiu-eng | [Config file](configs/config.5.m2o.m2o.yml) | n       |
 | 6 | m2m - bilingual       | fiu-gmw | et-en   | [Config file](configs/config.6.m2m.o2o.yml) | y       |
-| 7 | m2m - o2m             | gmw-fiu | eng-fiu | [Config file](configs/config.7.m2m.o2m.yml) | n       |
+| 7 | m2m - o2m             | gmw-fiu | eng-fiu | [Config file](configs/config.7.m2m.o2m.yml) | y       |
 | 8 | m2m - m2o             | fiu-gmw | fiu-eng | [Config file](configs/config.8.m2m.m2o.yml) | n       |
 | 9 | m2m - m2m             | gmw-fiu | gmw-fiu | [Config file](configs/config.9.m2m.m2m.yml) | n       |
 
