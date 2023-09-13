@@ -1,3 +1,36 @@
+# Multilingual Training
+
+This branch is based on the main branch and allows for the distilling multilingual students from OPUS-MT models.
+The different possible distilling scenarios that we envision and that are covered are the following (o2m: one2many, m2o: many2one, m2m: many2many):
+
+|ID | Configuration         | Teacher | Student | Example config                              | Tested? |
+|---|-----------------------|---------|---------|---------------------------------------------|---------|  
+| 1 | bilingual - bilingual | en-et   | en-et   | [Config file](configs/config.1.o2o.o2o.yml) | y       | 
+| 2 | o2m - bilingual       | eng-fiu | en-et   | [Config file](configs/config.2.o2m.o2o.yml) | y       |
+| 3 | o2m - o2m             | eng-fiu | eng-fiu | [Config file](configs/config.3.o2m.o2m.yml) | y       |
+| 4 | m2o - bilingual       | fiu-eng | et-en   | [Config file](configs/config.4.m2o.o2o.yml) | n       |
+| 5 | m2o - m2o             | fiu-eng | fiu-eng | [Config file](configs/config.5.m2o.m2o.yml) | n       |
+| 6 | m2m - bilingual       | fiu-gmw | et-en   | [Config file](configs/config.6.m2m.o2o.yml) | n       |
+| 7 | m2m - o2m             | gmw-fiu | eng-fiu | [Config file](configs/config.7.m2m.o2m.yml) | n       |
+| 8 | m2m - m2o             | fiu-gmw | fiu-eng | [Config file](configs/config.8.m2m.m2o.yml) | n       |
+| 9 | m2m - m2m             | gmw-fiu | gmw-fiu | [Config file](configs/config.9.m2m.m2m.yml) | n       |
+
+Some things have changed in the configuration file:
+
+- Languages: you can either specify the languages you want to train by `src` and `trg` if the model is bilingual. If the model is multilingual of any kind, you need to specify `langpairs`, you can see how in [this example](configs/config.1.o2o.o2o.yml#L10). 
+- Mulilingual configuration: now you need to specify if either the teacher or the student is a one2many model, so that we can handle language tags appropietly. We created `one2many-teacher` and `one2many-student` options to hanlde this. You can see how in [this example]((configs/config.1.o2o.o2o.yml#L21).
+- `max-parallel-sents`: this allows you to define the maximum parallel sentences you want to download per language pair in the case of multilingual models.
+- `dirname`: usually the directory structure relies on the source and target languages, in case of a multilingual model of any kind, you can specify the name of the directory you want to use. You can see how in [this example](configs/config.1.o2o.o2o.yml#L8). 
+
+TO DO:
+- OpusTrainer: it would be really nice to implement OpusTrainer to specify curriculum training for multilingual models.
+- Vocabulary: we need to fix the train vocab script so that when we train a one2many student, it takes the language tags as controll symbols.
+- When you have multiple sources, the scoring is not working right now.
+
+Not implemented:
+- Backward model: the backward model for scoring can only be a bilingual or a many2one model right now.
+- The use of monolingual data is not implemented, currently only supports the use of bilingual data.
+
 # OPUS-MT integration
 
 This fork makes it possible to use OPUS-MT models as teacher and backward models in the _firefox-translations-training_ pipeline (FTT). Other additions are profiles for running jobs on CSC supercomputers (*puhti*, *lumi* and *mahti*) and code for monitoring the power usage of jobs.

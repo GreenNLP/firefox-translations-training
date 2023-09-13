@@ -5,27 +5,26 @@
 ###
 
 experiment:
-  dirname: en-et
-  name: mtm23_bi
-  src: en
-  trg: et
+  dirname: fiu-eng
+  name: et-en
   langpairs:
-    - en-et
-
-  teacher-ensemble: 1
+    - et-en
 
   #URL to the OPUS-MT model to use as the teacher
-  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip"
-  #URL to the OPUS-MT model to use as the backward model
-  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
+  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
   
   # Specify if the teacher and the student are many2one
   one2many-teacher: False
   one2many-student: False
 
+  #URL to the OPUS-MT model to use as the backward model
+  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip"
+
+  teacher-ensemble: 1
+  
   parallel-max-sentences: 100000
   split-length: 10000
-  spm-vocab-size: 400
+  spm-vocab-size: 400 #Because we are dealing with very little data
 
   best-model: perplexity
 

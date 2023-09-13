@@ -6,9 +6,7 @@
 
 experiment:
   dirname: eng-fiu
-  name: mtm23
-  src: en
-  trg: fi
+  name: eng-fiu
   langpairs:
     - en-fi
     - en-et
