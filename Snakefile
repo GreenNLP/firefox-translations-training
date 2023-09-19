@@ -517,8 +517,9 @@ if not vocab_pretrained:
         threads: 2
         input: bin=ancient(spm_trainer), corpus_src=clean_corpus_src, corpus_trg=clean_corpus_trg
         output: vocab_path
-        params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset"
-        shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" {spm_sample_size} \
+        params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset",
+                trgs = [Language.get(langpair.split('-')[1]).to_alpha3() for langpair in langpairs]
+        shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" "{params.trgs}" {spm_sample_size} \
                    {threads} {spm_vocab_size} >> {log} 2>&1'''
 
 if do_train_backward: 
