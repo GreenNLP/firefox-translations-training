@@ -1,0 +1,91 @@
+#WMT23 term task experiment, ces-eng
+
+experiment:
+  name: wmt23-termtask-eng-jpn
+  src: en
+  trg: ja
+
+  teacher-type: 'baseteacher'
+  teacher-ensemble: 1
+  # path to a pretrained backward model (optional)
+  backward-model: ""
+  # path to a pretrained vocabulary (optional)
+  vocab: ""
+
+  # limits per downloaded dataset
+  mono-max-sentences-src: 100000000
+  mono-max-sentences-trg: 20000000
+  # split corpus to parallelize translation
+  split-length: 1000000
+  # vocab training sample
+  spm-sample-size: 10000000
+
+  best-model: chrf
+
+  bicleaner:
+    default-threshold: 0.5
+    dataset-thresholds: []
+    
+marian-args:
+# these configs override pipeline/train/configs
+  training-backward:
+    # change based on available training data
+    after: 10e
+  training-teacher-base:
+    early-stopping: 10
+    #student training has a very flat increase in metrics, so early stopping  
+  ##takes too much time
+  training-term-teacher:
+    after: 50e
+  finetune-teacher-with-terms:
+    after: 1e
+  training-student:
+    after: 100e
+# these configs override pipeline/translate/decoder.yml
+  decoding-backward:
+    # 12 Gb GPU, s2s model
+    mini-batch-words: 2000
+    beam-size: 12
+  decoding-teacher:
+    # 12 Gb GPU, ensemble of 2 teachers
+    mini-batch-words: 1000
+    # 2080ti or newer
+    precision: float16
+
+
+datasets:
+  # parallel training corpus
+  train:
+    - opus_CCMatrix/v1
+    - opus_NLLB/v1
+    - opus_CCAligned/v1
+    - opus_JParaCrawl/v3.0
+    - opus_LinguaTools-WikiTitles/v2014
+    - opus_XLEnt/v1.2
+    - opus_WikiMatrix/v1
+    - opus_JESC/v2019-12-05
+    - opus_OpenSubtitles/v2018
+    - opus_QED/v2.0a
+    - opus_GNOME/v1
+    - opus_KFTT/v1.0
+    - opus_TED2020/v1
+    - opus_wikimedia/v20230407
+    - opus_NeuLab-TedTalks/v1
+    - opus_KDE4/v2
+    - opus_Tanzil/v1
+    - opus_PHP/v1
+    - opus_Mozilla-I10n/v1
+    - opus_Tatoeba/v2023-04-12
+    - opus_News-Commentary/v16
+    - opus_EUbookshop/v2
+
+  # datasets to merge for validation while training
+  devtest:
+    - flores_dev
+    - sacrebleu_wmt20/dev
+    - sacrebleu_wmt20
+  # datasets for evaluation
+  test:
+    - flores_devtest
+    - sacrebleu_wmt21
+    - sacrebleu_wmt22
