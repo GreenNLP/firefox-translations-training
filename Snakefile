@@ -420,7 +420,7 @@ rule clean_corpus:
     shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} "{params.src_lang}" "{params.trg_lang}" \
                 >> {log} 2>&1'''
 
-rule clean_mono:
+rule clean_mono: # TODO
     message: "Cleaning monolingual dataset"
     log: f"{log_dir}/clean_mono/{{dataset}}.{{lang}}.log"
     conda: "envs/base.yml"
@@ -435,7 +435,7 @@ rule clean_mono:
     shell: '''bash pipeline/clean/clean-mono.sh {wildcards.lang} "{params.prefix_input}" "{params.prefix_output}" \
                 {threads} {params.dataset} >> {log} 2>&1'''
 
-if use_bicleaner:
+if use_bicleaner: # TODO
     rule kenlm:
         message: "Installing kenlm"
         log: f"{log_dir}/kenlm.log"
