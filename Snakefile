@@ -390,7 +390,7 @@ rule download_corpus:
             dataset="{dataset}", src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}" "{params.src_lang}" "{params.trg_lang}"  >> {log} 2>&1'
 
-rule download_mono:
+rule download_mono: # TO DO
     message: "Downloading monolingual dataset"
     log: f"{log_dir}/download_mono/{{dataset}}.{{lang}}.log"
     conda: "envs/base.yml"
