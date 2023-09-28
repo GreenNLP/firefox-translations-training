@@ -199,8 +199,6 @@ if config['gpus']:
 
 results = [f'{original}/eo-yi/corpus/tc_Tatoeba-Challenge-v2021-08-07.source.gz']
 results = [f'{original}/eo-yi/corpus/opus_GNOME/v1.source.gz']
-results = [f'{original}/eo-yi/devset/flores_dev.source.gz']
-results = [f'{original}/eo-yi/eval/flores_devtest.source.gz']
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -371,7 +369,7 @@ rule download_tatoeba_corpus:
     output: multiext(f"{original}/{{langpair}}/corpus/tc_{{version}}", ".source.gz", ".target.gz"),
             multiext(f"{original}/{{langpair}}/devset/tc_{{version}}", ".source.gz", ".target.gz"),
             multiext(f"{original}/{{langpair}}/eval/tc_{{version}}", ".source.gz", ".target.gz")
-    params: prefix=expand(f"{original}/{{langpair}}",langpair=langpairs),
+    params: prefix=f"{original}/{{langpair}}",
             version="{version}",max_sents=parallel_max_sents,
             src_lang=lambda wildcards: wildcards.langpair.split('-')[0],
             trg_lang=lambda wildcards: wildcards.langpair.split('-')[1],
