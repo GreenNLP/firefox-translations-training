@@ -187,15 +187,17 @@ if config['gpus']:
 ### workflow options
 
 # Commented out for testing
-results = [
-    f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
-    f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
-    f'{exported_dir}/vocab.{dirname}.spm.gz',
-    f'{experiment_dir}/config.yml',
-    *expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-    *expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-    *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
-    ]
+# results = [
+#     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
+#     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
+#     f'{exported_dir}/vocab.{dirname}.spm.gz',
+#     f'{experiment_dir}/config.yml',
+#     *expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+#     *expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+#     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
+#     ]
+
+results = [f'{original}/eo-yi/corpus/tc_Tatoeba-Challenge-v2021-08-07.source.gz']
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -363,10 +365,11 @@ rule download_tatoeba_corpus:
     log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: 1
-    output: multiext(f"{original}/corpus/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz"),
-            multiext(f"{original}/devset/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz"),
-            multiext(f"{original}/eval/tc_{{version}}.{{langpair}}", ".source.gz", ".target.gz")
-    params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents,
+    output: multiext(f"{original}/{{langpair}}/corpus/tc_{{version}}", ".source.gz", ".target.gz"),
+            multiext(f"{original}/{{langpair}}/devset/tc_{{version}}", ".source.gz", ".target.gz"),
+            multiext(f"{original}/{{langpair}}/eval/tc_{{version}}", ".source.gz", ".target.gz")
+    params: prefix=expand(f"{original}/{{langpair}}",langpair=langpairs),
+            version="{version}",max_sents=parallel_max_sents,
             src_lang=lambda wildcards: wildcards.langpair.split('-')[0],
             trg_lang=lambda wildcards: wildcards.langpair.split('-')[1],
             src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(), 
@@ -933,7 +936,7 @@ rule opusmt_preprocess_for_scoring:
         res_src=rules.merge_translated.output.res_src,
         res_trg=rules.merge_translated.output.res_trg,
         model=f'{backward_dir}/{best_model}',
-        spm_encoder=ancient(spm_encoder)
+        spm_encoder=ancient(spm_encoder),
         srcs = [Language.get(langpair.split('-')[0]).to_alpha3() for langpair in langpairs]
     output: opusmt_source=f"{merged}/corpus.source.opusmt.gz",
             opusmt_target=f"{merged}/corpus.target.opusmt.gz"
