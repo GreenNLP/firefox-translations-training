@@ -388,7 +388,7 @@ rule download_corpus:
     cache: False # caching is broken in snakemake
     wildcard_constraints: kind="corpus|devset|eval"
     output: multiext(f"{original}/{{langpair}}/{{kind}}/{{dataset}}", ".source.gz", ".target.gz")
-    params: prefix=expand(f"{original}/{{langpair}}/{{kind}}/{{dataset}}",langpair=langpairs, allow_missing=True),
+    params: prefix=f"{original}/{{langpair}}/{{kind}}/{{dataset}}",
             dataset="{dataset}", src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}" "{params.src_lang}" "{params.trg_lang}"  >> {log} 2>&1'
 
