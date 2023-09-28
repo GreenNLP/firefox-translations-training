@@ -205,6 +205,8 @@ results.extend([expand(f'{clean}/{{langpair}}/corpus.{{lang}}.gz', langpair=lang
 results.extend([expand(f'{original}/{{langpair}}/devset.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
 results.extend([expand(f'{clean}/{{langpair}}/corpus.source.langtagged.gz', langpair=langpairs, lang=["source","target"])])
 results.extend([expand(f'{original}/{{langpair}}/devset.source.langtagged.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{clean}/corpus.source.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{original}/devset.source.gz', langpair=langpairs, lang=["source","target"])])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -667,28 +669,24 @@ if 'opusmt-teacher' in config['experiment']:
         log: f"{log_dir}/merge_corpus.log"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input:  expand(f"{clean}/corpus.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+        input:  expand(f"{clean}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
                 bin=ancient(deduper)
         output: src=f"{clean}/corpus.source.gz",trg=f"{clean}/corpus.target.gz"
-        params: prefix_output=f"{clean}/corpus.",
-                prefixes=expand(f"{clean_corpus_prefix}/corpus.{{langpair}}", langpair=langpairs),
-                max_sents=parallel_max_sents
-        shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
-        cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
+        params: prefix_input=f"{clean}/*/corpus", prefix_output=f"{clean}/corpus"
+        shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+        cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
     rule merge_devset:
         message: "Merging clean parallel datasets"
         log: f"{log_dir}/merge_devset.log"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input:  expand(f"{original}/devset.{{langpair}}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+        input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
                 bin=ancient(deduper)
         output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
-        params: prefix_output=f"{original}/devset.",
-                prefixes=expand(f"{original}/devset.{{langpair}}", langpair=langpairs),
-                max_sents=parallel_max_sents
-        shell: '''cat $(echo {params.prefix_output}*-*.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}source.gz"
-        cat $(echo {params.prefix_output}*-*.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}target.gz" '''
+        params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
+        shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+        cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
 
 elif not forward_pretrained:
