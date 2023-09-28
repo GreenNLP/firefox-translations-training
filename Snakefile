@@ -934,13 +934,14 @@ rule opusmt_preprocess_for_scoring:
         res_trg=rules.merge_translated.output.res_trg,
         model=f'{backward_dir}/{best_model}',
         spm_encoder=ancient(spm_encoder)
+        srcs = [Language.get(langpair.split('-')[0]).to_alpha3() for langpair in langpairs]
     output: opusmt_source=f"{merged}/corpus.source.opusmt.gz",
             opusmt_target=f"{merged}/corpus.target.opusmt.gz"
     # Only works for many to one models
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
               {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.srcs} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
