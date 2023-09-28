@@ -502,7 +502,7 @@ rule merge_devset_langpair:
     params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
  
-rule merge_mono:
+rule merge_mono: # TO DO
     message: "Merging clean monolingual datasets"
     log: f"{log_dir}/merge_mono_{{lang}}.log"
     conda: "envs/base.yml"
