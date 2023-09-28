@@ -197,8 +197,10 @@ if config['gpus']:
 #     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
 #     ]
 
-results = [f'{original}/eo-yi/corpus/tc_Tatoeba-Challenge-v2021-08-07.source.gz']
-results = [f'{original}/eo-yi/corpus/opus_GNOME/v1.source.gz']
+results = [expand(f'{original}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz', langpair=langpairs, lang=["source","target"])]
+results.extend([expand(f'{original}/{{langpair}}/devset/flores_dev.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{original}/{{langpair}}/eval/flores_devtest.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{clean}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -411,9 +413,9 @@ rule clean_corpus:
     conda: "envs/base.yml"
 #    group: "clean_corpus"
     threads: workflow.cores
-    input: multiext(f"{original}/corpus/{{dataset}}.{{langpair}}", f".source.gz", f".target.gz")
-    output: multiext(f"{clean}/corpus/{{dataset}}.{{langpair}}", f".source.gz", f".target.gz")
-    params: prefix_input=f"{original}/corpus/{{dataset}}.{{langpair}}",prefix_output=f"{clean}/corpus/{{dataset}}.{{langpair}}",
+    input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
+    output: multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
+    params: prefix_input=f"{original}/{{langpair}}/corpus/{{dataset}}",prefix_output=f"{clean}/{{langpair}}/corpus/{{dataset}}",
             dataset=lambda wildcards: dataset_norm(wildcards.dataset), src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} "{params.src_lang}" "{params.trg_lang}" \
                 >> {log} 2>&1'''
