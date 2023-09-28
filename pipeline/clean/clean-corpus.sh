@@ -112,7 +112,8 @@ test -s "${output_prefix}.${trg_ext}.${ARTIFACT_EXT}" || exit 1
 
 echo "### Remove input_prefix from intermediate steps"
 rm -rf "${output_prefix}".*.nrm.${ARTIFACT_EXT} "${output_prefix}".*.langid.${ARTIFACT_EXT} \
-  "${output_prefix}".*.rule-based.${ARTIFACT_EXT} "${output_prefix}".*.*fix.${ARTIFACT_EXT}
+  "${output_prefix}".*.rule-based.${ARTIFACT_EXT} "${output_prefix}".*.*fix.${ARTIFACT_EXT} \
+  "${output_prefix}.${src_ext}${trg_ext}.clean.debug.txt"
 
 echo "### Clean ${input_prefix} is written to  ${output_prefix}"
 
