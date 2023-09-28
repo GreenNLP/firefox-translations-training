@@ -26,8 +26,8 @@ mtdata get -l "${src}-${trg}" -tr "${dataset}" -o "${tmp}"
 
 find "${tmp}"
 
-cat "${tmp}/train-parts/${dataset}.${src_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.${src}.${ARTIFACT_EXT}"
-cat "${tmp}/train-parts/${dataset}.${trg_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
+cat "${tmp}/train-parts/${dataset}.${src_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.source.${ARTIFACT_EXT}"
+cat "${tmp}/train-parts/${dataset}.${trg_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.target.${ARTIFACT_EXT}"
 
 rm -rf "${tmp}"
 

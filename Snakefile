@@ -198,6 +198,9 @@ if config['gpus']:
 #     ]
 
 results = [f'{original}/eo-yi/corpus/tc_Tatoeba-Challenge-v2021-08-07.source.gz']
+results = [f'{original}/eo-yi/corpus/opus_GNOME/v1.source.gz']
+results = [f'{original}/eo-yi/devset/flores_dev.source.gz']
+results = [f'{original}/eo-yi/eval/flores_devtest.source.gz']
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -384,8 +387,9 @@ rule download_corpus:
 #    group: 'data'
     cache: False # caching is broken in snakemake
     wildcard_constraints: kind="corpus|devset|eval"
-    output: multiext(f"{original}/{{kind}}/{{dataset}}.{{langpair}}", ".source.gz", ".target.gz")
-    params: prefix=f"{original}/{{kind}}/{{dataset}}.{{langpair}}", dataset="{dataset}", src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
+    output: multiext(f"{original}/{{langpair}}/{{kind}}/{{dataset}}", ".source.gz", ".target.gz")
+    params: prefix=expand(f"{original}/{{langpair}}/{{kind}}/{{dataset}}",langpair=langpairs, allow_missing=True),
+            dataset="{dataset}", src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}" "{params.src_lang}" "{params.trg_lang}"  >> {log} 2>&1'
 
 rule download_mono:
