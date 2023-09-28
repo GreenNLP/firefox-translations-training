@@ -201,6 +201,8 @@ results = [expand(f'{original}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz
 results.extend([expand(f'{original}/{{langpair}}/devset/flores_dev.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
 results.extend([expand(f'{original}/{{langpair}}/eval/flores_devtest.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
 results.extend([expand(f'{clean}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{clean}/{{langpair}}/corpus.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f'{original}/{{langpair}}/devset.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -480,11 +482,11 @@ rule merge_corpus_langpair:
     conda: "envs/base.yml"
     threads: workflow.cores
     # group: "clean_corpus"
-    input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
+    input:  expand(f"{clean}/{{langpair}}/corpus/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: src=f"{clean}/corpus.{{langpair}}.source.gz",trg=f"{clean}/corpus.{{langpair}}.target.gz"
-    params: prefix_output=f"{clean}/corpus.{{langpair}}",
-            prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}.{{langpair}}", dataset=train_datasets, allow_missing=True),
+    output: src=f"{clean}/{{langpair}}/corpus.source.gz",trg=f"{clean}/{{langpair}}/corpus.target.gz"
+    params: prefix_output=f"{clean}/{{langpair}}/corpus",
+            prefixes=expand(f"{clean}/{{langpair}}/corpus/{{dataset}}", dataset=train_datasets, allow_missing=True),
             max_sents=parallel_max_sents
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
 
@@ -494,10 +496,10 @@ rule merge_devset_langpair:
     conda: "envs/base.yml"
     threads: workflow.cores
     # group: "clean_corpus"
-    input:  expand(f"{original}/devset/{{dataset}}.{{langpair}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
+    input:  expand(f"{original}/{{langpair}}/devset/{{dataset}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: multiext(f"{original}/devset.{{langpair}}", f".source.gz", f".target.gz")
-    params: prefix_output=f"{original}/devset.{{langpair}}", prefixes=expand(f"{original}/devset/{{dataset}}.{{langpair}}", dataset=valid_datasets, allow_missing=True)
+    output: multiext(f"{original}/{{langpair}}/devset", f".source.gz", f".target.gz")
+    params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True)
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
  
 rule merge_mono:
