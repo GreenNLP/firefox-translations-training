@@ -24,10 +24,12 @@ Some things have changed in the configuration file:
 
 TO DO:
 - OpusTrainer: it would be really nice to implement OpusTrainer to specify curriculum training for multilingual models.
-- Vocabulary: we need to fix the train vocab script so that when we train a one2many student, it takes the language tags as controll symbols.
 - When you have multiple sources, the scoring is not working right now.
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
 - Include OpusFilter
+
+DONE:
+- Vocabulary: when we train a one2many student, it takes the language tags as control symbols so that this are not tokenized.
 
 Not implemented:
 - Backward model: the backward model for scoring can only be a bilingual or a many2one model right now.
