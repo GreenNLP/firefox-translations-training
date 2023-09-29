@@ -13,9 +13,10 @@ corpus_src=$1
 corpus_trg=$2
 vocab_output=$3
 trgs=$4
-sample_size=$5
-threads=$6
-vocab_size="${7:-32000}"
+o2m_student=$5
+sample_size=$6
+threads=$7
+vocab_size="${8:-32000}"
 
 if [ "$threads" = "auto" ]; then
   threads=$(nproc)
@@ -30,7 +31,7 @@ ${COMPRESSION_CMD} -dc "${corpus_src}" >"${vocab_dir}/data.src.txt"
 ${COMPRESSION_CMD} -dc "${corpus_trg}" >"${vocab_dir}/data.trg.txt"
 
 # if multiple targets, add language token as control token so that the tokenization maintains this as onepiece
-if [ "${#trgs}" -gt 3 ]; then
+if [ "${#o2m_student}" == "True" ]; then
   langtags=">>$(echo "$trgs" | sed 's/ /<<,>>/g')<<" # This creates a list with the target language tags such as >>fin<<,>>est<<
   echo $langtags
   

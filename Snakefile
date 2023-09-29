@@ -526,8 +526,9 @@ if not vocab_pretrained:
         output: vocab_path
         params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset",
                 trgs = [Language.get(langpair.split('-')[1]).to_alpha3() for langpair in langpairs]
-        shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" "{params.trgs}" {spm_sample_size} \
-                   {threads} {spm_vocab_size} >> {log} 2>&1'''
+        shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" \
+                "{params.trgs}" "{o2m_student}" {spm_sample_size} {threads} "{spm_vocab_size}" >> {log} 2>&1'''
+                # o2m_student should be modified in case teacher trianing is included
 
 if do_train_backward: 
     mono_trg_file = f'{translated}/mono_trg/file.{{part}}'
