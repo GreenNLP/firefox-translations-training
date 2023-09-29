@@ -197,8 +197,8 @@ if config['gpus']:
 #     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
 #     ]
 
-results = [f"{translated}/en-et/corpus/file.00"]#,f"{translated}/corpus/file.00.nbest.0.out"]
-results.extend([f"{translated}/en-fi/corpus/file.00"])#,f"{translated}/corpus/file.00.nbest.0.out"]
+results = [expand(f"{translated}/{{langpair}}/corpus/file.00",langpair=langpairs)]
+results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt",langpair=langpairs)]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -758,14 +758,14 @@ if opusmt_teacher:
     #Required due to OPUS-MT models not using the integrated SentencePiece in Marian
     rule opusmt_preprocess_corpus:
         message: "Preprocessing source file for OPUS-MT model"
-        log: f"{log_dir}/opusmt_preprocess_corpus/{{corpus}}.{{part}}.{{model_index}}.log"
+        log: f"{log_dir}/opusmt_preprocess_corpus/{{langpair}}/{{corpus}}.{{part}}.{{model_index}}.log"
         conda: "envs/base.yml"
         threads: 1
         input: 
-            file=f'{translated}/{{corpus}}/file.{{part}}', 
+            file=f'{translated}/{{langpair}}/{{corpus}}/file.{{part}}', 
             teacher_model=f"{final_teacher_dir}{{model_index}}-0/{best_model}",
             spm_encoder=ancient(spm_encoder)
-        output: f'{translated}/{{corpus}}/file.{{part}}.{{model_index}}.opusmt'
+        output: f'{translated}/{{langpair}}/{{corpus}}/file.{{part}}.{{model_index}}.opusmt'
         shell: '''bash pipeline/translate/opusmt-preprocess.sh \
                     {input.file} {input.teacher_model} "source.spm" {input.spm_encoder} {o2m_teacher} {wildcards.model_index} >> {log} 2>&1'''
     
