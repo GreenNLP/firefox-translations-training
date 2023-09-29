@@ -12,13 +12,15 @@ opusmt_model=$2
 spm_name=$3
 spm_encoder=$4
 o2m_teacher=$5
+src=$6
+m2o_teacher=$7
 export PATH=$PATH:$(dirname ${spm_encoder})
 model_dir=$(dirname $opusmt_model)
 
 # When splits are preprocessed, different models need different preprocessing,
 # so model index is given. Check for unset parameter.
-if [ $# -ge 6 ]; then
-    model_index_suffix=".$6"
+if [ $# -ge 8 ]; then
+    model_index_suffix=".$8"
 else
     model_index_suffix=""
 fi
@@ -28,6 +30,8 @@ if [ "${source_file##*.}" == "gz" ]; then #This applies when scoring
     echo "source file is gzipped"
     if [ $o2m_teacher == "True" ]; then
         zcat $1 |  sed "s/^>>.*<< //" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
+    elif [ "${m2o_teacher}" == "True" ]; then # In case the are multiple source languages, we need to add langtag for scoring
+        zcat $1 | sed "s/^/>>${src}<< //" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
     else
         zcat $1 | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
     fi

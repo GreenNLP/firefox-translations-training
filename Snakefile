@@ -769,7 +769,7 @@ if opusmt_teacher:
             spm_encoder=ancient(spm_encoder)
         output: f'{translated}/{{langpair}}/{{corpus}}/file.{{part}}.{{model_index}}.opusmt'
         shell: '''bash pipeline/translate/opusmt-preprocess.sh \
-                    {input.file} {input.teacher_model} "source.spm" {input.spm_encoder} {o2m_teacher} {wildcards.model_index} >> {log} 2>&1'''
+                    {input.file} {input.teacher_model} "source.spm" {input.spm_encoder} {o2m_teacher} "" "" {wildcards.model_index} >> {log} 2>&1'''
     
     rule opusmt_deseg_nbest:
         message: "Desegmenting OPUS-MT model nbest list"
@@ -909,7 +909,7 @@ rule merge_translated:
     resources: mem_mb=64000
     #group 'mono_src'
     input:
-        src1=f"{clean}/{{langpair}}/corpus.source.gz",
+        src1=f"{clean}/{{langpair}}/corpus.source.langtagged.gz",
         src2=f"{clean}/{{langpair}}/mono.{src}.gz",
         trg1=lambda wildcards: expand(f"{translated}/{{langpair}}/corpus.{{model_index}}.target.gz",model_index=model_indices, allow_missing=True),
         trg2=lambda wildcards: expand(f"{translated}/{{langpair}}/mono.{{model_index}}.{trg}.gz",model_index=model_indices, allow_missing=True),
@@ -949,12 +949,13 @@ rule opusmt_preprocess_for_scoring:
     output: opusmt_source=f"{merged}/{{langpair}}/corpus.source.opusmt.gz",
             opusmt_target=f"{merged}/{{langpair}}/corpus.target.opusmt.gz"
     params:
-            src = lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3()
+            src = lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+            m2o_teacher = False if all(pair.split('-')[0] == langpairs[0].split('-')[0] for pair in langpairs) else True #Ideally this would be fixed
     # Only works for many to one models
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} && \ 
+              {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} "" "" && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {src} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.src} {params.m2o_teacher} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"

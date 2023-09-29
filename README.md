@@ -27,6 +27,8 @@ TO DO:
 - When you have multiple sources, the scoring is not working right now.
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
 - Include OpusFilter
+- Downloading monolingual datasets
+- Modify o2m_teacher and o2m_student to record the overall configs
 
 DONE:
 - Vocabulary: when we train a one2many student, it takes the language tags as control symbols so that this are not tokenized.
@@ -34,6 +36,7 @@ DONE:
 Not implemented:
 - Backward model: the backward model for scoring can only be a bilingual or a many2one model right now.
 - The use of monolingual data is not implemented, currently only supports the use of bilingual data.
+- Multilingual Teacher training, at the moment only takes opusmt as teacher
 
 # OPUS-MT integration
 
