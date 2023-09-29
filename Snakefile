@@ -199,6 +199,7 @@ if config['gpus']:
 
 results = [expand(f"{translated}/{{langpair}}/corpus/file.00",langpair=langpairs)]
 results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt",langpair=langpairs)]
+results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt.nbest",langpair=langpairs)]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -733,8 +734,8 @@ checkpoint split_corpus:
                 {input.corpus_src} {input.corpus_trg} {output.output_dir} {split_length} >> {log} 2>&1'''
 
 if opusmt_teacher:
-    teacher_source_file = f'{translated}/corpus/file.{{part}}.{{model_index}}.opusmt'
-    teacher_target_file = f'{translated}/corpus/file.{{part}}.{{model_index}}.opusmt.nbest'
+    teacher_source_file = f'{translated}/{{langpair}}/corpus/file.{{part}}.{{model_index}}.opusmt'
+    teacher_target_file = f'{translated}/{{langpair}}/corpus/file.{{part}}.{{model_index}}.opusmt.nbest'
     teacher_mono_source_file = f'{translated}/mono_src/file.{{part}}.{{model_index}}.opusmt'
     teacher_mono_target_file = f'{translated}/mono_src/file.{{part}}.{{model_index}}.opusmt.out'
     translated_mono_src_extension = "opusmt.out"
@@ -771,7 +772,7 @@ if opusmt_teacher:
     
     rule opusmt_deseg_nbest:
         message: "Desegmenting OPUS-MT model nbest list"
-        log: f"{log_dir}/opusmt_deseg_nbest/{{part}}.{{model_index}}.log"
+        log: f"{log_dir}/opusmt_deseg_nbest/{{langpair}}/{{part}}.{{model_index}}.log"
         threads: 1
         input: nbest=f"{teacher_source_file}.nbest"
         output: temp(deseg_nbest_file)
@@ -793,7 +794,7 @@ else:
      
 rule translate_corpus:
     message: "Translating corpus with teacher"
-    log: f"{log_dir}/translate_corpus/{{part}}.{{model_index}}.log"
+    log: f"{log_dir}/translate_corpus/{{langpair}}/{{part}}.{{model_index}}.log"
     conda: "envs/base.yml"
     threads: gpus_num*2
     resources: gpu=gpus_num
