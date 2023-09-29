@@ -199,6 +199,8 @@ if config['gpus']:
 
 results = [expand(f"{translated}/{{langpair}}/corpus.0.target.gz",langpair=langpairs)]
 results.extend([expand(f"{translated}/{{langpair}}/mono.0.None.gz",langpair=langpairs)])
+results.extend([expand(f"{merged}/{{langpair}}/corpus.source.gz",langpair=langpairs)])
+results.extend([expand(f"{merged}/{{langpair}}/corpus.source.opusmt.gz",langpair=langpairs)])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -901,21 +903,21 @@ else:
 
 rule merge_translated:
     message: "Merging translated datasets"
-    log: f"{log_dir}/merge_translated.log"
+    log: f"{log_dir}/{{langpair}}/merge_translated.log"
     conda: "envs/base.yml"
     threads: 4
     resources: mem_mb=64000
     #group 'mono_src'
     input:
-        src1=clean_corpus_src,
-        src2=f"{clean}/mono.{src}.gz",
-        trg1=lambda wildcards: expand(f"{translated}/corpus.{{model_index}}.target.gz",model_index=model_indices),
-        trg2=lambda wildcards: expand(f"{translated}/mono.{{model_index}}.{trg}.gz",model_index=model_indices),
+        src1=f"{clean}/{{langpair}}/corpus.source.gz",
+        src2=f"{clean}/{{langpair}}/mono.{src}.gz",
+        trg1=lambda wildcards: expand(f"{translated}/{{langpair}}/corpus.{{model_index}}.target.gz",model_index=model_indices, allow_missing=True),
+        trg2=lambda wildcards: expand(f"{translated}/{{langpair}}/mono.{{model_index}}.{trg}.gz",model_index=model_indices, allow_missing=True),
         bin=ancient(deduper)
-    output: res_src=f'{merged}/corpus.source.gz',res_trg=f'{merged}/corpus.target.gz'
+    output: res_src=f'{merged}/{{langpair}}/corpus.source.gz',res_trg=f'{merged}/{{langpair}}/corpus.target.gz'
     params:
-        trg1_template=f"{translated}/corpus.model_index.target.gz",
-        trg2_template=f"{translated}/mono.model_index.{trg}.gz"
+        trg1_template=f"{translated}/{{langpair}}/corpus.model_index.target.gz",
+        trg2_template=f"{translated}/{{langpair}}/mono.model_index.{trg}.gz"
     shell: '''bash pipeline/translate/merge-corpus.sh \
                 "{input.src1}" "{input.src2}" "{params.trg1_template}" "{params.trg2_template}" \
                 "{output.res_src}" "{output.res_trg}" {o2m_student} {model_indices} >> {log} 2>&1'''
@@ -925,17 +927,17 @@ rule merge_translated:
 # preprocess source and target when scoring with opusmt model (note that deseg is not required, since
 # scoring produces just scores)
 if opusmt_backward:
-    score_source = f"{merged}/corpus.source.opusmt.gz"
-    score_target = f"{merged}/corpus.target.opusmt.gz"
+    score_source = f"{merged}/{{langpair}}/corpus.source.opusmt.gz"
+    score_target = f"{merged}/{{langpair}}/corpus.target.opusmt.gz"
 else:    
-    score_source = rules.merge_translated.output.res_src
-    score_target = rules.merge_translated.output.res_trg
+    score_source = f"{merged}/{{langpair}}/corpus.source.gz"
+    score_target = f"{merged}/{{langpair}}/corpus.target.gz"
 
 #preprocess corpus before scoring, note that since the scoring is done with the
 #backward model, source should be segmented with target.spm and vice versa
 rule opusmt_preprocess_for_scoring:
     message: "Preprocessing source file for OPUS-MT model"
-    log: f"{log_dir}/opusmt_preprocess_corpus/preprocess_for_scoring.log"
+    log: f"{log_dir}/opusmt_preprocess_corpus/{{langpair}}/preprocess_for_scoring.log"
     conda: "envs/base.yml"
     threads: 1
     resources: mem_mb=64000
@@ -943,15 +945,16 @@ rule opusmt_preprocess_for_scoring:
         res_src=rules.merge_translated.output.res_src,
         res_trg=rules.merge_translated.output.res_trg,
         model=f'{backward_dir}/{best_model}',
-        spm_encoder=ancient(spm_encoder),
-        srcs = [Language.get(langpair.split('-')[0]).to_alpha3() for langpair in langpairs]
-    output: opusmt_source=f"{merged}/corpus.source.opusmt.gz",
-            opusmt_target=f"{merged}/corpus.target.opusmt.gz"
+        spm_encoder=ancient(spm_encoder)
+    output: opusmt_source=f"{merged}/{{langpair}}/corpus.source.opusmt.gz",
+            opusmt_target=f"{merged}/{{langpair}}/corpus.target.opusmt.gz"
+    params:
+            src = lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3()
     # Only works for many to one models
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
               {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.srcs} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {src} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
@@ -975,7 +978,7 @@ rule ce_filter:
     threads: workflow.cores
     resources: mem_mb=workflow.cores*5000
     input:
-        src_corpus=rules.merge_translated.output.res_src,trg_corpus=rules.merge_translated.output.res_trg,
+        src_corpus=score_source, trg_corpus=score_target,
         scores=rules.score.output
     output: src_corpus=f"{filtered}/corpus.source.gz",trg_corpus=f"{filtered}/corpus.target.gz"
     params: input_prefix=f'{merged}/corpus',output_prefix=f'{filtered}/corpus'
