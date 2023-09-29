@@ -200,6 +200,7 @@ if config['gpus']:
 results = [expand(f"{translated}/{{langpair}}/corpus/file.00",langpair=langpairs)]
 results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt",langpair=langpairs)]
 results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt.nbest",langpair=langpairs)]
+results = [expand(f"{translated}/{{langpair}}/corpus/file.00.nbest.0.out",langpair=langpairs)]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -810,12 +811,12 @@ rule translate_corpus:
 
 rule extract_best:
     message: "Extracting best translations for the corpus"
-    log: f"{log_dir}/extract_best/{{part}}.{{model_index}}.log"
+    log: f"{log_dir}/extract_best/{{langpair}}/{{part}}.{{model_index}}.log"
     conda: "envs/base.yml"
     threads: 1
     #group 'translate_corpus'
-    input: nbest=deseg_nbest_file, ref=f"{translated}/corpus/file.{{part}}.ref"
-    output: f"{translated}/corpus/file.{{part}}.nbest.{{model_index}}.out"
+    input: nbest=deseg_nbest_file, ref=f"{translated}/{{langpair}}/corpus/file.{{part}}.ref"
+    output: f"{translated}/{{langpair}}/corpus/file.{{part}}.nbest.{{model_index}}.out"
     shell: 'python pipeline/translate/bestbleu.py -i {input.nbest} -r {input.ref} -m bleu -o {output} >> {log} 2>&1'
 
 model_indices = list(range(len(opusmt_teacher))) if opusmt_teacher else [0]
