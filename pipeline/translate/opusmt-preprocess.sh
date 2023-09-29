@@ -31,7 +31,7 @@ if [ "${source_file##*.}" == "gz" ]; then #This applies when scoring
     if [ $o2m_teacher == "True" ]; then
         zcat $1 |  sed "s/^>>.*<< //" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
     elif [ "${m2o_teacher}" == "True" ]; then # In case the are multiple source languages, we need to add langtag for scoring
-        zcat $1 | sed "s/^/>>${src}<< /" | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
+        zcat $1 | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | sed "s/^/>>${src}<< /" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
     else
         zcat $1 | pipeline/translate/preprocess.sh "${model_dir}/${spm_name}" | gzip > ${source_file%%.gz}${model_index_suffix}.opusmt.gz
     fi
