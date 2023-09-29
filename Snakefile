@@ -198,6 +198,7 @@ if config['gpus']:
 #     ]
 
 results = [expand(f"{translated}/{{langpair}}/corpus.0.target.gz",langpair=langpairs)]
+results.extend([expand(f"{translated}/{{langpair}}/mono.0.None.gz",langpair=langpairs)])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -864,21 +865,21 @@ rule translate_mono_src:
 if mono_src_datasets is None:
     rule collect_mono_src_dummy:
         message: "Collecting translated mono src dataset (dummy rule, used in case where no mono src datasets)"
-        log: f"{log_dir}/collect_mono_src.{{model_index}}.log"
+        log: f"{log_dir}/collect_mono_src.{{langpair}}.{{model_index}}.log"
         conda: "envs/base.yml"
         threads: 1
         #group 'mono_src'
-        params: src_mono=f"{clean}/mono.{src}.gz",dir=f'{translated}/mono_src'
-        output: trg_mono=f'{translated}/mono.{{model_index}}.{trg}.gz'
+        params: src_mono=f"{clean}/{{langpair}}/mono.{src}.gz",dir=f'{translated}/{{langpair}}/mono_src'
+        output: trg_mono=f'{translated}/{{langpair}}/mono.{{model_index}}.{trg}.gz'
         shell: 'touch {output.trg_mono}  >> {log} 2>&1'
     rule mono_src_dummy:
         message: "Creating mono src dataset (dummy rule, used in case where no mono src datasets)"
-        log: f"{log_dir}/create_mono_src.log"
+        log: f"{log_dir}/create_mono_src.{{langpair}}.log"
         conda: "envs/base.yml"
         threads: 1
         #group 'mono_src'
-        params: src_mono=f"{clean}/mono.{src}.gz",dir=f'{translated}/mono_src'
-        output: src_mono=f"{clean}/mono.{src}.gz"
+        params: src_mono=f"{clean}/{{langpair}}/mono.{src}.gz",dir=f'{translated}/{{langpair}}/mono_src'
+        output: src_mono=f"{clean}/{{langpair}}/mono.{src}.gz"
         shell: 'touch {output.src_mono} >> {log} 2>&1'
 else:
     rule collect_mono_src:
