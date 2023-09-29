@@ -197,10 +197,7 @@ if config['gpus']:
 #     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
 #     ]
 
-results = [expand(f"{translated}/{{langpair}}/corpus/file.00",langpair=langpairs)]
-results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt",langpair=langpairs)]
-results = [expand(f"{translated}/{{langpair}}/corpus/file.00.0.opusmt.nbest",langpair=langpairs)]
-results = [expand(f"{translated}/{{langpair}}/corpus/file.00.nbest.0.out",langpair=langpairs)]
+results = [expand(f"{translated}/{{langpair}}/corpus.0.target.gz",langpair=langpairs)]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -823,14 +820,15 @@ model_indices = list(range(len(opusmt_teacher))) if opusmt_teacher else [0]
 
 rule collect_corpus:
     message: "Collecting translated corpus"
-    log: f"{log_dir}/collect_corpus_{{model_index}}.log"
+    log: f"{log_dir}/collect_corpus_{{langpair}}_{{model_index}}.log"
     conda: "envs/base.yml"
     threads: 4
     #group 'translate_corpus'
-    input: lambda wildcards: expand(f"{translated}/corpus/file.{{part}}.nbest.{wildcards.model_index}.out", part=find_parts(wildcards, checkpoints.split_corpus))
-    output: trg_corpus=f'{translated}/corpus.{{model_index}}.target.gz'
-    params: src_corpus=clean_corpus_src
-    shell: 'bash pipeline/translate/collect.sh {translated}/corpus {output} {params.src_corpus} {wildcards.model_index} >> {log} 2>&1'
+    input: lambda wildcards: expand(f"{translated}/{{langpair}}/corpus/file.{{part}}.nbest.{wildcards.model_index}.out", part=find_parts(wildcards, checkpoints.split_corpus), allow_missing=True)
+    output: trg_corpus=f'{translated}/{{langpair}}/corpus.{{model_index}}.target.gz'
+    params: src_corpus=f'{clean}/{{langpair}}/corpus.source.langtagged.gz',
+            dir=f'{translated}/{{langpair}}/corpus'
+    shell: 'bash pipeline/translate/collect.sh {params.dir} {output} {params.src_corpus} {wildcards.model_index} >> {log} 2>&1'
 
 # mono
 
