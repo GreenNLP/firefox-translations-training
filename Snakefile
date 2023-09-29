@@ -197,16 +197,8 @@ if config['gpus']:
 #     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
 #     ]
 
-results = [expand(f'{original}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz', langpair=langpairs, lang=["source","target"])]
-results.extend([expand(f'{original}/{{langpair}}/devset/flores_dev.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{original}/{{langpair}}/eval/flores_devtest.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{clean}/{{langpair}}/corpus/opus_ELRC_2922/v1.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{clean}/{{langpair}}/corpus.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{original}/{{langpair}}/devset.{{lang}}.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{clean}/{{langpair}}/corpus.source.langtagged.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{original}/{{langpair}}/devset.source.langtagged.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{clean}/corpus.source.gz', langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f'{original}/devset.source.gz', langpair=langpairs, lang=["source","target"])])
+results = [f"{translated}/en-et/corpus/file.00"]#,f"{translated}/corpus/file.00.nbest.0.out"]
+results.extend([f"{translated}/en-fi/corpus/file.00"])#,f"{translated}/corpus/file.00.nbest.0.out"]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -732,11 +724,11 @@ if augment_corpus:
 
 checkpoint split_corpus:
     message: "Splitting the corpus to translate"
-    log: f"{log_dir}/split_corpus.log"
+    log: f"{log_dir}/split_corpus_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: 1
-    input: corpus_src=clean_corpus_src,corpus_trg=clean_corpus_trg
-    output: output_dir=directory(f"{translated}/corpus"), file=f"{translated}/corpus/file.00"
+    input: corpus_src=f"{clean}/{{langpair}}/corpus.source.langtagged.gz",corpus_trg=f"{clean}/{{langpair}}/corpus.target.gz"
+    output: output_dir=directory(f"{translated}/{{langpair}}/corpus"), file=f"{translated}/{{langpair}}/corpus/file.00"
     shell: '''bash pipeline/translate/split-corpus.sh \
                 {input.corpus_src} {input.corpus_trg} {output.output_dir} {split_length} >> {log} 2>&1'''
 
