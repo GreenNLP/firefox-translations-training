@@ -188,24 +188,15 @@ if config['gpus']:
 ### workflow options
 
 # Commented out for testing
-# results = [
-#     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
-#     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
-#     f'{exported_dir}/vocab.{dirname}.spm.gz',
-#     f'{experiment_dir}/config.yml',
-#     *expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-#     *expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-#     *expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
-#     ]
-
-results = [expand(f"{translated}/{{langpair}}/corpus.0.target.gz",langpair=langpairs)]
-results.extend([expand(f"{translated}/{{langpair}}/mono.0.None.gz",langpair=langpairs)])
-results.extend([expand(f"{merged}/{{langpair}}/corpus.source.gz",langpair=langpairs)])
-results.extend([expand(f"{merged}/{{langpair}}/corpus.source.opusmt.gz",langpair=langpairs)])
-results.extend([expand(f"{filtered}/{{langpair}}/scores.txt",langpair=langpairs)])
-results.extend([expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz",langpair=langpairs, lang=["source","target"])])
-results.extend([expand(f"{filtered}/corpus.{{lang}}.gz", lang=["source","target"])])
-results.extend([f"{align_dir}/corpus.aln.gz"])
+results = [
+    f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
+    f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
+    f'{exported_dir}/vocab.{dirname}.spm.gz',
+    f'{experiment_dir}/config.yml'#,
+    #*expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    #*expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    #*expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
+    ]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -1025,12 +1016,12 @@ rule train_student:
     resources: gpu=gpus_num
     #group 'student'
     input:
-        rules.merge_devset.output, ancient(trainer),
-        train_src=rules.ce_filter.output.src_corpus, train_trg=rules.ce_filter.output.trg_corpus,
+        ancient(trainer),
+        train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment,
         vocab=vocab_path
     output: model=f'{student_dir}/{best_model}'
-    params: prefix_train=rules.ce_filter.params.output_prefix,prefix_test=f"{original}/devset",
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
             args=get_args("training-student")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
@@ -1047,11 +1038,11 @@ rule finetune_student:
     #group 'student-finetuned'
     input:
         rules.merge_devset.output, ancient(trainer),
-        train_src=rules.ce_filter.output.src_corpus, train_trg=rules.ce_filter.output.trg_corpus,
+        train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment, student_model=rules.train_student.output.model,
         vocab=vocab_path
     output: model=f'{student_finetuned_dir}/{best_model}'
-    params: prefix_train=rules.ce_filter.params.output_prefix,prefix_test=f"{original}/devset",
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
             args=get_args("training-student-finetuned")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student finetune "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
