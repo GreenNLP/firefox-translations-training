@@ -27,7 +27,6 @@ TO DO:
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
 - Include OpusFilter
 - Downloading monolingual datasets
-- Modify o2m_teacher and o2m_student to record the overall configs
 - Train vocab for student after ce_filter
 
 DONE:
