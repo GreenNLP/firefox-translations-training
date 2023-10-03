@@ -9,8 +9,8 @@ set -euo pipefail
 echo "###### Evaluation of a model"
 
 langpair=$1
-res_prefix="${2}.${langpair}"
-dataset_prefix="${3}.${langpair}"
+res_prefix=${2}
+dataset_prefix=${3}
 src=$4
 trg=$5
 trg_langtag=">>${6}<< "

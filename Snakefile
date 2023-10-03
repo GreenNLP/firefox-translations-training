@@ -169,7 +169,7 @@ else:
    backward_vocab = vocab_path
 
 #evaluation
-eval_data_dir = f"{original}/eval"
+eval_data_dir = f"{original}/{{langpair}}/eval"
 eval_res_dir = f"{models_dir}/evaluation"
 eval_backward_dir = f'{eval_res_dir}/backward'
 eval_student_dir = f'{eval_res_dir}/student'
@@ -192,10 +192,10 @@ results = [
     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
     f'{exported_dir}/vocab.{dirname}.spm.gz',
-    f'{experiment_dir}/config.yml'#,
-    #*expand(f'{eval_student_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-    #*expand(f'{eval_student_finetuned_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs),
-    #*expand(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics',dataset=eval_datasets, langpair=langpairs)
+    f'{experiment_dir}/config.yml',
+    *expand(f'{eval_student_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    *expand(f'{eval_student_finetuned_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs),
+    *expand(f'{eval_speed_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs)
     ]
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
@@ -1092,17 +1092,17 @@ rule evaluate:
         model="[\w-]+"
     input:
         ancient(decoder),
-        data_src=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.source.gz', dataset=eval_datasets, langpair=langpairs),
-        data_trg=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.target.gz', dataset=eval_datasets, langpair=langpairs),
+        data_src=expand(f'{eval_data_dir}/{{dataset}}.source.gz', dataset=eval_datasets, langpair=langpairs),
+        data_trg=expand(f'{eval_data_dir}/{{dataset}}.target.gz', dataset=eval_datasets, langpair=langpairs),
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}'
                                     if wildcards.model != 'teacher-ensemble'
                                     else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
     output:
-        report(f'{eval_res_dir}/{{model}}/{{dataset}}.{{langpair}}.metrics',
+        report(f'{eval_res_dir}/{{model}}/{{langpair}}/{{dataset}}.metrics',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
     params:
         dataset_prefix=f'{eval_data_dir}/{{dataset}}',
-        res_prefix=f'{eval_res_dir}/{{model}}/{{dataset}}',
+        res_prefix=f'{eval_res_dir}/{{model}}/{{langpair}}/{{dataset}}',
         trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
                             if wildcards.model != 'teacher-ensemble'
@@ -1119,17 +1119,17 @@ rule eval_quantized:
     priority: 50
     input:
         ancient(bmt_decoder),
-        data_src=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.source.gz', dataset=eval_datasets, langpair=langpairs),
-        data_trg=expand(f'{eval_data_dir}/{{dataset}}.{{langpair}}.target.gz', dataset=eval_datasets, langpair=langpairs),
+        data_src=expand(f'{eval_data_dir}/{{dataset}}.source.gz', dataset=eval_datasets, langpair=langpairs),
+        data_trg=expand(f'{eval_data_dir}/{{dataset}}.target.gz', dataset=eval_datasets, langpair=langpairs),
         model=rules.quantize.output.model,
         shortlist=rules.alignments.output.shortlist,
         vocab=vocab_path
     output:
-        report(f'{eval_speed_dir}/{{dataset}}.{{langpair}}.metrics', category='evaluation',
+        report(f'{eval_speed_dir}/{{langpair}}/{{dataset}}.metrics', category='evaluation',
             subcategory='quantized', caption='reports/evaluation.rst')
     params:
-        dataset_prefix=expand(f'{eval_data_dir}/{{dataset}}', dataset=eval_datasets),
-        res_prefix=expand(f'{eval_speed_dir}/{{dataset}}', dataset=eval_datasets),
+        dataset_prefix=expand(f'{eval_data_dir}/{{dataset}}', dataset=eval_datasets, allow_missing=True),
+        res_prefix=expand(f'{eval_speed_dir}/{{langpair}}/{{dataset}}', dataset=eval_datasets, allow_missing=True),
         trg_lng=lambda wildcards: wildcards.langpair.split('-')[1],
         trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config='../quantize/decoder.yml'
