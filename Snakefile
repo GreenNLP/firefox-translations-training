@@ -204,6 +204,8 @@ results.extend([expand(f"{merged}/{{langpair}}/corpus.source.gz",langpair=langpa
 results.extend([expand(f"{merged}/{{langpair}}/corpus.source.opusmt.gz",langpair=langpairs)])
 results.extend([expand(f"{filtered}/{{langpair}}/scores.txt",langpair=langpairs)])
 results.extend([expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz",langpair=langpairs, lang=["source","target"])])
+results.extend([expand(f"{filtered}/corpus.{{lang}}.gz", lang=["source","target"])])
+results.extend([f"{align_dir}/corpus.aln.gz"])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -988,6 +990,17 @@ rule ce_filter:
     shell: '''bash pipeline/cefilter/ce-filter.sh \
                 "{params.input_prefix}" "{params.output_prefix}" "{input.scores}" >> {log} 2>&1'''
 
+rule merge_filtered:
+    message: "Merging filtered parallel datasets"
+    log: f"{log_dir}/merge_filtered_corpus.log"
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
+    output: src=f"{filtered}/corpus.source.gz",trg=f"{filtered}/corpus.target.gz"
+    params: prefix_input=f"{filtered}/*/corpus", prefix_output=f"{filtered}/corpus"
+    shell: '''cat $(echo {params.prefix_input}.source.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
+
 rule alignments:
     message: 'Training word alignment and lexical shortlists'
     log: f"{log_dir}/alignments.log"
@@ -995,7 +1008,7 @@ rule alignments:
     threads: workflow.cores
     input:
         ancient(spm_encoder), ancient(spm_exporter),
-        src_corpus=rules.ce_filter.output.src_corpus,trg_corpus=rules.ce_filter.output.trg_corpus,
+        src_corpus=rules.merge_filtered.output.src,trg_corpus=rules.merge_filtered.output.trg,
         vocab=vocab_path,
         fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
         extract_lex=ancient(rules.extract_lex.output)
