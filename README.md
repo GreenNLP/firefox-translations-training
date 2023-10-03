@@ -27,7 +27,6 @@ TO DO:
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
 - Include OpusFilter
 - Downloading monolingual datasets
-- Train vocab for student after ce_filter
 
 DONE:
 - Vocabulary: when we train a one2many student, it takes the language tags as control symbols so that this are not tokenized.

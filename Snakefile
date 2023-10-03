@@ -518,7 +518,7 @@ if not vocab_pretrained:
         log: f"{log_dir}/train_vocab.log"
         conda: "envs/base.yml"
         threads: 2
-        input: bin=ancient(spm_trainer), corpus_src=clean_corpus_src, corpus_trg=clean_corpus_trg
+        input: bin=ancient(spm_trainer), corpus_src=f"{filtered}/corpus.source.gz",corpus_trg=f"{filtered}/corpus.target.gz"
         output: vocab_path
         params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset",
                 trgs = [Language.get(langpair.split('-')[1]).to_alpha3() for langpair in langpairs]
