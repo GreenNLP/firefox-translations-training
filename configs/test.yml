@@ -5,14 +5,12 @@
 ###
 
 experiment:
-  dirname: ga-yi
-  name: mtm23
+  dirname: test
+  name: test
   src: ga #en
   trg: yi #gv #et #,fi
-  src_three_letter: gle #eng
-  trg_three_letter: yid #glv #est #,fin
   langpairs:
-    - ga-yi #en-et
+    - eo-yi #en-et
     #- ga-gv
     
   #URL to the OPUS-MT model to use as the teacher
@@ -25,6 +23,10 @@ experiment:
   
   best-model: perplexity
 
+  # Specify if the teacher and the student are many2one
+  one2many-teacher: False
+  one2many-student: False
+
 #marian-args: # not working
 #  decoding-backward:
 #    mini-batch-words: 2000
@@ -36,9 +38,10 @@ experiment:
 datasets:
   train:
     - tc_Tatoeba-Challenge-v2021-08-07 #en-et
+    - opus_GNOME/v1
   # datasets to merge for validation while training. Translations by teacher
   devtest:
-    - flores_dev
+    - tc_Tatoeba-Challenge-v2021-08-07
   # datasets for evaluation
   test:
-    - flores_devtest
+    - tc_Tatoeba-Challenge-v2021-08-07

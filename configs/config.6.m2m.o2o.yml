@@ -19,6 +19,7 @@ experiment:
 
   #URL to the OPUS-MT model to use as the backward model
   opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip"
+  one2many-backward: False
 
   teacher-ensemble: 1
   

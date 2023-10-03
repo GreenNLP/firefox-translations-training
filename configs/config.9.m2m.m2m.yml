@@ -21,7 +21,8 @@ experiment:
   one2many-student: True
 
   #URL to the OPUS-MT model to use as the backward model
-  opusmt-backward: #NOT IMPLEMENTED "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  one2many-backward: True
 
   teacher-ensemble: 1
   

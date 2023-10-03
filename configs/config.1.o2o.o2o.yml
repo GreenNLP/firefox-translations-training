@@ -16,7 +16,8 @@ experiment:
   opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-est/opusTCv20210807+bt_transformer-big_2022-03-13.zip"
   #URL to the OPUS-MT model to use as the backward model
   opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
-  
+  one2many-backward: False
+
   # Specify if the teacher and the student are many2one
   one2many-teacher: False
   one2many-student: False
