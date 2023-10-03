@@ -202,6 +202,7 @@ results = [expand(f"{translated}/{{langpair}}/corpus.0.target.gz",langpair=langp
 results.extend([expand(f"{translated}/{{langpair}}/mono.0.None.gz",langpair=langpairs)])
 results.extend([expand(f"{merged}/{{langpair}}/corpus.source.gz",langpair=langpairs)])
 results.extend([expand(f"{merged}/{{langpair}}/corpus.source.opusmt.gz",langpair=langpairs)])
+results.extend([expand(f"{filtered}/{{langpair}}/scores.txt",langpair=langpairs)])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -959,7 +960,7 @@ rule opusmt_preprocess_for_scoring:
 
 rule score:
     message: "Scoring"
-    log: f"{log_dir}/score.log"
+    log: f"{log_dir}/score_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: gpus_num*2
     resources: gpu=gpus_num
@@ -967,7 +968,7 @@ rule score:
         ancient(scorer),
         model=f'{backward_dir}/{best_model}', vocab=backward_vocab,
         src_corpus=score_source, trg_corpus=score_target
-    output: f"{filtered}/scores.txt"
+    output: f"{filtered}/{{langpair}}/scores.txt"
     params: input_prefix=f'{merged}/corpus'
     shell: '''bash pipeline/cefilter/score.sh \
                 "{input.model}" "{input.vocab}" "{input.src_corpus}" "{input.trg_corpus}" "{output}" >> {log} 2>&1'''
