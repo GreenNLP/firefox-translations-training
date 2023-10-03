@@ -203,6 +203,7 @@ results.extend([expand(f"{translated}/{{langpair}}/mono.0.None.gz",langpair=lang
 results.extend([expand(f"{merged}/{{langpair}}/corpus.source.gz",langpair=langpairs)])
 results.extend([expand(f"{merged}/{{langpair}}/corpus.source.opusmt.gz",langpair=langpairs)])
 results.extend([expand(f"{filtered}/{{langpair}}/scores.txt",langpair=langpairs)])
+results.extend([expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz",langpair=langpairs, lang=["source","target"])])
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
@@ -975,15 +976,15 @@ rule score:
 
 rule ce_filter:
     message: "Cross entropy filtering"
-    log: f"{log_dir}/ce_filter.log"
+    log: f"{log_dir}/ce_filter_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: workflow.cores
     resources: mem_mb=workflow.cores*5000
     input:
         src_corpus=score_source, trg_corpus=score_target,
         scores=rules.score.output
-    output: src_corpus=f"{filtered}/corpus.source.gz",trg_corpus=f"{filtered}/corpus.target.gz"
-    params: input_prefix=f'{merged}/corpus',output_prefix=f'{filtered}/corpus'
+    output: src_corpus=f"{filtered}/{{langpair}}/corpus.source.gz",trg_corpus=f"{filtered}/{{langpair}}/corpus.target.gz"
+    params: input_prefix=f'{merged}/{{langpair}}/corpus',output_prefix=f'{filtered}/{{langpair}}/corpus'
     shell: '''bash pipeline/cefilter/ce-filter.sh \
                 "{params.input_prefix}" "{params.output_prefix}" "{input.scores}" >> {log} 2>&1'''
 
