@@ -24,7 +24,6 @@ Some things have changed in the configuration file:
 
 TO DO:
 - OpusTrainer: it would be really nice to implement OpusTrainer to specify curriculum training for multilingual models.
-- When you have multiple sources, the scoring is not working right now.
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
 - Include OpusFilter
 - Downloading monolingual datasets
