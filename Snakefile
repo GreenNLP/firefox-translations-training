@@ -38,6 +38,7 @@ trg_three_letter = config['experiment'].get('trg_three_letter')
 # multilinguality 
 o2m_teacher = config['experiment']['one2many-teacher']
 o2m_student = config['experiment']['one2many-student']
+o2m_backward = config['experiment']['one2many-backward']
 
 
 # Read langpairs from config; if not given, infer single langpair from source and target langs
@@ -950,13 +951,11 @@ rule opusmt_preprocess_for_scoring:
     output: opusmt_source=f"{merged}/{{langpair}}/corpus.source.opusmt.gz",
             opusmt_target=f"{merged}/{{langpair}}/corpus.target.opusmt.gz"
     params:
-            src = lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-            m2o_teacher = False if all(pair.split('-')[0] == langpairs[0].split('-')[0] for pair in langpairs) else True #Ideally this would be fixed
-    # Only works for many to one models
+            src = lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3()
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
               {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} "" "" && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.src} {params.m2o_teacher} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.src} {o2m_backward} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
