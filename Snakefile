@@ -187,7 +187,6 @@ if config['gpus']:
 
 ### workflow options
 
-# Commented out for testing
 results = [
     f'{exported_dir}/model.{dirname}.intgemm.alphas.bin.gz',
     f'{exported_dir}/lex.50.50.{dirname}.s2t.bin.gz',
