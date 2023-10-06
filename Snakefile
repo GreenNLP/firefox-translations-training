@@ -256,6 +256,8 @@ if 'opusfilter' in config['experiment']:
     if not opusfilter_config:
         opusfilter_config = "default"
     use_opusfilter = True
+else:
+    use_opusfilter = False
 
 # augmentation
 
