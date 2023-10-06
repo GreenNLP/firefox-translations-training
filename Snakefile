@@ -481,7 +481,9 @@ if use_bicleaner: # TODO
 
 if use_opusfilter:
     ruleorder: run_opusfilter > clean_corpus
-
+else:
+    ruleorder: clean_corpus > run_opusfilter
+    
 rule run_opusfilter:
     message: "Cleaning dataset with opusfilter"
     log: f"{log_dir}/opusfilter/{{dataset}}_{{langpair}}.log"
