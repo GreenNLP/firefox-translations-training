@@ -249,6 +249,14 @@ else:
 clean_corpus_src = f'{clean}/corpus.source.gz'
 clean_corpus_trg = f'{clean}/corpus.target.gz'
 
+# opusfilter
+
+if 'opusfilter' in config['experiment']:
+    opusfilter_config = config['experiment']['opusfilter'].get('config')
+    if not opusfilter_config:
+        opusfilter_config = "default"
+    use_opusfilter = True
+
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -468,6 +476,22 @@ if use_bicleaner: # TODO
         shell: '''bash pipeline/bicleaner/bicleaner.sh \
                     "{params.prefix_input}" "{params.prefix_output}" {params.threshold} {bicleaner_type} {threads} \
                     "{input.pack_dir}" >> {log} 2>&1'''
+
+if use_opusfilter:
+    ruleorder: run_opusfilter > clean_corpus
+
+rule run_opusfilter:
+    message: "Cleaning dataset with opusfilter"
+    log: f"{log_dir}/opusfilter/{{dataset}}_{{langpair}}.log"
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
+    output: multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
+    params: input_prefixes=multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
+            output_prefixes=multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
+            src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
+    shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" "{opusfilter_config}"\
+                >> {log} 2>&1'''
 
 rule merge_corpus_langpair:
     message: "Merging clean parallel datasets per langpair"

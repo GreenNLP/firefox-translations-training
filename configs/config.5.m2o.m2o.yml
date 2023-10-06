@@ -30,6 +30,9 @@ experiment:
 
   best-model: perplexity
 
+  opusfilter:
+    config: default #/home/degibert/Documents/0_Work/multi-ftt/firefox-translations-training/configs/config.opusfilter.yml
+
 datasets:
   train:
     - opus_ELRC_2922/v1
