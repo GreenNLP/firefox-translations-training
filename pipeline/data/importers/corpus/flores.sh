@@ -42,12 +42,18 @@ flores_code() {
 src_flores=$(flores_code "${src}")
 trg_flores=$(flores_code "${trg}")
 
-# Testing file names with 'source' and 'target' instead of language codes
-#${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.${src}.${ARTIFACT_EXT}"
-#${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.source.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.target.${ARTIFACT_EXT}"
+# Check if both files exist
+src_file="${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}"
+trg_file="${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}"
 
+if [ -e "$src_file" ] && [ -e "$trg_file" ]; then
+  ${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.source.${ARTIFACT_EXT}"
+  ${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.target.${ARTIFACT_EXT}"
+else #Otherwise create fake dummy empty files
+    touch "${output_prefix}.source.${ARTIFACT_EXT}"
+    touch "${output_prefix}.target.${ARTIFACT_EXT}" 
+    echo "Fake touch files created since dataset doesn't exist: ${output_prefix}.source.${ARTIFACT_EXT}"
+fi
 
 rm -rf "${tmp}"
 

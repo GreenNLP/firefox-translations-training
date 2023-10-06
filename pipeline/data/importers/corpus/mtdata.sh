@@ -22,12 +22,18 @@ mkdir -p "${tmp}"
 src_iso=$(python3 -c "from mtdata.iso import iso3_code; print(iso3_code('${src}', fail_error=True))")
 trg_iso=$(python3 -c "from mtdata.iso import iso3_code; print(iso3_code('${trg}', fail_error=True))")
 
-mtdata get -l "${src}-${trg}" -tr "${dataset}" -o "${tmp}"
+if ! mtdata get -l "${src}-${trg}" -tr "${dataset}" -o "${tmp}"; then
+    touch "${output_prefix}.source.${ARTIFACT_EXT}"
+    touch "${output_prefix}.target.${ARTIFACT_EXT}" 
+    echo "Fake touch files created since dataset doesn't exist: ${output_prefix}.source.${ARTIFACT_EXT}"
+else #Otherwise create fake dummy empty files
+    mtdata get -l "${src}-${trg}" -tr "${dataset}" -o "${tmp}"
 
-find "${tmp}"
+    find "${tmp}"
 
-cat "${tmp}/train-parts/${dataset}.${src_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.source.${ARTIFACT_EXT}"
-cat "${tmp}/train-parts/${dataset}.${trg_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.target.${ARTIFACT_EXT}"
+    cat "${tmp}/train-parts/${dataset}.${src_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.source.${ARTIFACT_EXT}"
+    cat "${tmp}/train-parts/${dataset}.${trg_iso}" | ${COMPRESSION_CMD} -c > "${output_prefix}.target.${ARTIFACT_EXT}"
+fi
 
 rm -rf "${tmp}"
 
