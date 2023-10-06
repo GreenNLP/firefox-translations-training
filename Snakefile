@@ -665,22 +665,22 @@ if 'opusmt-teacher' in config['experiment']:
         log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" #TO DO: this log needs to be fixed
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{clean}/{{langpair}}/corpus.source.gz",  model_dir=f'{teacher_base_dir}0-0'
+        input: f"{clean}/{{langpair}}/corpus.source.gz"
         output: f"{clean}/{{langpair}}/corpus.source.langtagged.gz"
         params: output_dir=f"{clean}/{{langpair}}/", prefix=f"{clean}/{{langpair}}/corpus",
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{input.model_dir}" "{o2m_teacher}" >> {log} 2>&1'''
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
     
     rule add_lang_tag_devset:
         message: "Adding language tag id for devset"
         log: f"{log_dir}/add_langid_devset_{{langpair}}.log" #TO DO: this log needs to be fixed
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{original}/{{langpair}}/devset.source.gz",  model_dir=f'{teacher_base_dir}0-0'
+        input: f"{original}/{{langpair}}/devset.source.gz"
         output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
         params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{input.model_dir}" "{o2m_teacher}" >> {log} 2>&1'''
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
 
     rule merge_corpus:
         message: "Merging clean parallel datasets"

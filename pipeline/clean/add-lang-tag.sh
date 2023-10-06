@@ -10,8 +10,7 @@ echo "###### Adding language tag"
 
 target_lang_token=$1
 file=$2
-model_dir=$3
-o2m_teacher=$4
+o2m_teacher=$3
 
 # Target_lang_token needs to be provided only for multilingual many2one teacher models
 # First check whether model is multilingual AND preprocessing is done on source side (never language tags on target side)
