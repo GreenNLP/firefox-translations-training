@@ -24,12 +24,12 @@ Some things have changed in the configuration file:
 
 TO DO:
 - OpusTrainer: it would be really nice to implement OpusTrainer to specify curriculum training for multilingual models.
-- Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it crashes.
-- Include OpusFilter
+- Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it creates dummy files.
 - Downloading monolingual datasets
 
 DONE:
 - Vocabulary: when we train a one2many student, it takes the language tags as control symbols so that this are not tokenized.
+- Include OpusFilter
 
 Not implemented:
 - Multiple teachers or backward models: currenlty only multilingual models can be used, not individual models.
