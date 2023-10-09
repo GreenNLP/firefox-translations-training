@@ -131,6 +131,7 @@ deduper = f'{cwd}/bin/dedupe'
 data_dir = f"{data_root_dir}/data/{dirname}/{experiment}"
 clean = f"{data_dir}/clean"
 biclean = f"{data_dir}/biclean"
+opusfiltered = f"{data_dir}/opusfilter"
 cache_dir = f"{data_dir}/cache"
 original = f"{data_dir}/original"
 translated = f"{data_dir}/translated"
@@ -246,8 +247,6 @@ else:
     teacher_corpus = f'{clean}/corpus'
     use_bicleaner = False
 
-clean_corpus_src = f'{clean}/corpus.source.gz'
-clean_corpus_trg = f'{clean}/corpus.target.gz'
 
 # opusfilter
 
@@ -256,9 +255,15 @@ if 'opusfilter' in config['experiment']:
     if not opusfilter_config:
         opusfilter_config = "default"
     use_opusfilter = True
+    clean_corpus_prefix=f'{opusfiltered}/{{langpair}}/corpus'
+    clean_merged = f'{opusfiltered}/corpus'
 else:
     use_opusfilter = False
+    clean_corpus_prefix = f'{clean}/{{langpair}}/corpus'
+    clean_merged = f'{clean}/corpus'
 
+clean_corpus_src = f'{clean}/corpus.source.gz'
+clean_corpus_trg = f'{clean}/corpus.target.gz'
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -419,8 +424,8 @@ rule clean_corpus:
 #    group: "clean_corpus"
     threads: workflow.cores
     input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
-    output: multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
-    params: prefix_input=f"{original}/{{langpair}}/corpus/{{dataset}}",prefix_output=f"{clean}/{{langpair}}/corpus/{{dataset}}",
+    output: multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz")
+    params: prefix_input=f"{original}/{{langpair}}/corpus/{{dataset}}",prefix_output=f"{clean_corpus_prefix}/{{dataset}}",
             dataset=lambda wildcards: dataset_norm(wildcards.dataset), src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} "{params.src_lang}" "{params.trg_lang}" \
                 >> {log} 2>&1'''
@@ -481,18 +486,16 @@ if use_bicleaner: # TODO
 
 if use_opusfilter:
     ruleorder: run_opusfilter > clean_corpus
-else:
-    ruleorder: clean_corpus > run_opusfilter
-    
+        
 rule run_opusfilter:
     message: "Cleaning dataset with opusfilter"
     log: f"{log_dir}/opusfilter/{{dataset}}_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: workflow.cores
-    input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
-    output: multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz")
+    input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz",)
+    output: multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz")
     params: input_prefixes=multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
-            output_prefixes=multiext(f"{clean}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
+            output_prefixes=multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz"),
             src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
     shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" "{opusfilter_config}"\
                 >> {log} 2>&1'''
@@ -503,11 +506,11 @@ rule merge_corpus_langpair:
     conda: "envs/base.yml"
     threads: workflow.cores
     # group: "clean_corpus"
-    input:  expand(f"{clean}/{{langpair}}/corpus/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
+    input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
-    output: src=f"{clean}/{{langpair}}/corpus.source.gz",trg=f"{clean}/{{langpair}}/corpus.target.gz"
-    params: prefix_output=f"{clean}/{{langpair}}/corpus",
-            prefixes=expand(f"{clean}/{{langpair}}/corpus/{{dataset}}", dataset=train_datasets, allow_missing=True),
+    output: src=f"{clean_corpus_prefix}.source.gz",trg=f"{clean_corpus_prefix}.target.gz"
+    params: prefix_output=f"{clean_corpus_prefix}",
+            prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
             max_sents=parallel_max_sents
     shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
 
@@ -545,9 +548,9 @@ if not vocab_pretrained:
         log: f"{log_dir}/train_vocab.log"
         conda: "envs/base.yml"
         threads: 2
-        input: bin=ancient(spm_trainer), corpus_src=f"{filtered}/corpus.source.gz",corpus_trg=f"{filtered}/corpus.target.gz"
+        input: bin=ancient(spm_trainer), corpus_src=f"{clean_merged}.source.gz",corpus_trg=f"{clean_merged}.target.gz"
         output: vocab_path
-        params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset",
+        params: prefix_test=f"{original}/devset", 
                 trgs = [Language.get(langpair.split('-')[1]).to_alpha3() for langpair in langpairs]
         shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" \
                 "{params.trgs}" "{o2m_student}" {spm_sample_size} {threads} "{spm_vocab_size}" >> {log} 2>&1'''
@@ -568,7 +571,7 @@ if do_train_backward:
             rules.merge_devset.output, train_src=clean_corpus_src,train_trg=clean_corpus_trg,
             bin=ancient(trainer), vocab=vocab_path,
         output:  model=f'{backward_dir}/{best_model}'
-        params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset",
+        params: prefix_train=f"{clean}/corpus",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
                 args=get_args("training-backward")
         shell: '''bash pipeline/train/train.sh \
                     backward train {trg} {src} "{params.prefix_train}" "{params.prefix_test}" "{backward_dir}" \
@@ -662,18 +665,18 @@ if 'opusmt-teacher' in config['experiment']:
 
     rule add_lang_tag_corpus_src:
         message: "Adding language tag id for corpus translation"
-        log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" #TO DO: this log needs to be fixed
+        log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{clean}/{{langpair}}/corpus.source.gz"
-        output: f"{clean}/{{langpair}}/corpus.source.langtagged.gz"
-        params: output_dir=f"{clean}/{{langpair}}/", prefix=f"{clean}/{{langpair}}/corpus",
+        input: f"{clean_corpus_prefix}.source.gz"
+        output: f"{clean_corpus_prefix}.source.langtagged.gz"
+        params: prefix=f"{clean_corpus_prefix}",
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
     
     rule add_lang_tag_devset:
         message: "Adding language tag id for devset"
-        log: f"{log_dir}/add_langid_devset_{{langpair}}.log" #TO DO: this log needs to be fixed
+        log: f"{log_dir}/add_langid_devset_{{langpair}}.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
         input: f"{original}/{{langpair}}/devset.source.gz"
@@ -682,15 +685,15 @@ if 'opusmt-teacher' in config['experiment']:
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
 
-    rule merge_corpus:
+    rule merge_corpus: 
         message: "Merging clean parallel datasets"
         log: f"{log_dir}/merge_corpus.log"
         conda: "envs/base.yml"
         threads: workflow.cores
-        input:  expand(f"{clean}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+        input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
                 bin=ancient(deduper)
-        output: src=f"{clean}/corpus.source.gz",trg=f"{clean}/corpus.target.gz"
-        params: prefix_input=f"{clean}/*/corpus", prefix_output=f"{clean}/corpus"
+        output: src=f"{clean_merged}.source.gz",trg=f"{clean_merged}.target.gz"
+        params: prefix_input = f"{opusfiltered}/*/corpus", prefix_output=f"{clean_merged}" # This is an issue, should take clean
         shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
         cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
@@ -739,7 +742,7 @@ if augment_corpus:
             train_src=clean_corpus_src, train_trg=clean_corpus_trg,
             bin=ancient(trainer), vocab=vocab_path
         output: model=f'{teacher_finetuned_dir}0-{{ens}}/{best_model}'
-        params: prefix_train=clean_corpus_prefix, prefix_test=f"{original}/devset",
+        params: prefix_train=f"{clean}/corpus", prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
                 dir=directory(f'{teacher_finetuned_dir}0-{{ens}}'),
                 args=get_args("training-teacher-finetuned")
         shell: '''bash pipeline/train/train.sh \
@@ -753,7 +756,7 @@ checkpoint split_corpus:
     log: f"{log_dir}/split_corpus_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: 1
-    input: corpus_src=f"{clean}/{{langpair}}/corpus.source.langtagged.gz",corpus_trg=f"{clean}/{{langpair}}/corpus.target.gz"
+    input: corpus_src=f"{clean_corpus_prefix}.source.langtagged.gz",corpus_trg=f"{clean_corpus_prefix}.target.gz"
     output: output_dir=directory(f"{translated}/{{langpair}}/corpus"), file=f"{translated}/{{langpair}}/corpus/file.00"
     shell: '''bash pipeline/translate/split-corpus.sh \
                 {input.corpus_src} {input.corpus_trg} {output.output_dir} {split_length} >> {log} 2>&1'''
@@ -853,7 +856,7 @@ rule collect_corpus:
     #group 'translate_corpus'
     input: lambda wildcards: expand(f"{translated}/{{langpair}}/corpus/file.{{part}}.nbest.{wildcards.model_index}.out", part=find_parts(wildcards, checkpoints.split_corpus), allow_missing=True)
     output: trg_corpus=f'{translated}/{{langpair}}/corpus.{{model_index}}.target.gz'
-    params: src_corpus=f'{clean}/{{langpair}}/corpus.source.langtagged.gz',
+    params: src_corpus=f'{clean_corpus_prefix}.source.langtagged.gz',
             dir=f'{translated}/{{langpair}}/corpus'
     shell: 'bash pipeline/translate/collect.sh {params.dir} {output} {params.src_corpus} {wildcards.model_index} >> {log} 2>&1'
 
@@ -933,7 +936,7 @@ rule merge_translated:
     resources: mem_mb=64000
     #group 'mono_src'
     input:
-        src1=f"{clean}/{{langpair}}/corpus.source.langtagged.gz",
+        src1=f"{clean_corpus_prefix}.source.langtagged.gz",
         src2=f"{clean}/{{langpair}}/mono.{src}.gz",
         trg1=lambda wildcards: expand(f"{translated}/{{langpair}}/corpus.{{model_index}}.target.gz",model_index=model_indices, allow_missing=True),
         trg2=lambda wildcards: expand(f"{translated}/{{langpair}}/mono.{{model_index}}.{trg}.gz",model_index=model_indices, allow_missing=True),
