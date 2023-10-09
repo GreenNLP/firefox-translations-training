@@ -34,21 +34,43 @@ fi
 #extract all in same directory, saves the trouble of parsing directory structure
 tar -xf "${archive_path}" --directory ${tmp} --strip-components 4 
 
-
-# if max sents not -1, get the first n sents (this is mainly used for testing to make translation and training go faster)
-if [ "${max_sents}" != "inf" ]; then
-   head -${max_sents} <(pigz -dc "${tmp}/train.src.gz") | pigz > "${output_prefix}/corpus/tc_${version}.source.gz"
-   head -${max_sents} <(pigz -dc "${tmp}/train.trg.gz") | pigz > "${output_prefix}/corpus/tc_${version}.target.gz"
+if [ -e "${tmp}/train.src" ]; then
+   # if max sents not -1, get the first n sents (this is mainly used for testing to make translation and training go faster)
+   if [ "${max_sents}" != "inf" ]; then
+      head -${max_sents} <(pigz -dc "${tmp}/train.src.gz") | pigz > "${output_prefix}/corpus/tc_${version}.source.gz"
+      head -${max_sents} <(pigz -dc "${tmp}/train.trg.gz") | pigz > "${output_prefix}/corpus/tc_${version}.target.gz"
+   else
+      mv ${tmp}/train.src.gz ${output_prefix}/corpus/tc_${version}.source.gz
+      mv ${tmp}/train.trg.gz ${output_prefix}/corpus/tc_${version}.target.gz
+   fi
 else
-   mv ${tmp}/train.src.gz ${output_prefix}/corpus/tc_${version}.source.gz
-   mv ${tmp}/train.trg.gz ${output_prefix}/corpus/tc_${version}.target.gz
+   # If source file does not exist, create a dummy file
+   touch "${output_prefix}/corpus/tc_${version}.source.gz"
+   touch "${output_prefix}/corpus/tc_${version}.target.gz"
+   echo "Fake touch corpus files created since dataset doesn't exist: ${output_prefix}/corpus/tc_${version}.source.gz"
 fi
 
-cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.source.gz
-cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.target.gz
+# Check if source file exists
+if [ -e "${tmp}/dev.src" ]; then
+   cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.source.gz
+   cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.target.gz
+else
+   # If source file does not exist, create a dummy file
+   touch "${output_prefix}/devset/tc_${version}.source.gz"
+   touch "${output_prefix}/devset/tc_${version}.target.gz"
+   echo "Fake touch devset files created since dataset doesn't exist: ${output_prefix}/corpus/tc_${version}.source.gz"
+fi
 
-cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.source.gz
-cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.target.gz
+if [ -e "${tmp}/test.src" ]; then
+   cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.source.gz
+   cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.target.gz
+else
+   # If source file does not exist, create a dummy file
+   touch "${output_prefix}/eval/tc_${version}.source.gz"
+   touch "${output_prefix}/eval/tc_${version}.target.gz"
+   echo "Fake touch eval files created since dataset doesn't exist: ${output_prefix}/corpus/tc_${version}.source.gz"
+fi
+
 
 rm -rf "${tmp}"
 
