@@ -23,7 +23,16 @@ mkdir -p "$(basename "${res_prefix}")"
 
 echo "### Evaluating dataset: ${dataset_prefix}, pair: ${langpair}, Results prefix: ${res_prefix}"
 
-pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
+
+if [ -s "${dataset_prefix}.${trg}.gz" ]; then
+    pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
+else
+    echo "File ${dataset_prefix}.${trg}.gz is empty. We assume that the dataset ${dataset_prefix} does not exist for the language pair ${langpair}. Creating dummy file and exiting the script."
+    touch "${res_prefix}.metrics"
+    exit 0
+fi
+
+# Rest of your script continues here...
 
 if [ $o2m_student == "True" ]; then # If the student is multitarget, add language tag for decoding
   pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add language tag for decoding
