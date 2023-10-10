@@ -26,7 +26,6 @@ experiment:
   teacher-ensemble: 1
   
   split-length: 100000
-  spm-vocab-size: 400 #Because we are dealing with very little data
 
   best-model: perplexity
 
@@ -35,69 +34,13 @@ experiment:
 
 datasets:
   train:
-    #- tc_Tatoeba-Challenge-v2021-08-07
+    - tc_Tatoeba-Challenge-v2021-08-07
     - opus_ELRC_2922/v1
     - opus_liv4ever/v1
   devtest:
     - flores_dev
     - custom-corpus_/home/degibert/Documents/0_Work/multi-ftt/data/data/liv-en/wmt22
-    #- tc_Tatoeba-Challenge-v2021-08-07
+    - tc_Tatoeba-Challenge-v2021-08-07
   test:
     - flores_devtest
-    #- tc_Tatoeba-Challenge-v2021-08-07
-    
-  # train:
-  #   tc_Tatoeba-Challenge-v2021-08-07: fi-en, et-en
-  #   opus_liv4ever/v1: liv-en
-  # devtest:
-  #   flores_dev: fi-en, et-en
-  #   generaltest22: liv-en
-  # test:
-  #   flores_dev: fi-en, et-en
-  #   tc_Tatoeba-Challenge-v2021-08-07: liv-en
-  #  train:
-  #  - fi-en_tc_Tatoeba-Challenge-v2021-08-07
-  #  - et-en_tc_Tatoeba-Challenge-v2021-08-07
-  #  - liv-en_opus_liv4ever/v1
-  #  devtest:
-  #  - fi-en_flores_dev
-  #  - et-en_flores_dev
-  #  - liv-en_generaltest22
-  #  test:
-  #  - fi-en_flores_devtest
-  #  - et-en_flores_devtest
-  #  - liv-en_tc_Tatoeba-Challenge-v2021-08-07
-
-#  corpus:
-#    fi-en: opus_ELRC_2922/v1
-#    et-en: opus_ELRC_2922/v1
-#    liv-en: opus_liv4ever/v1
-#  devset:
-#    fi-en: flores_dev
-#    et-en: flores_dev
-#    liv-en: generaltest22
-#  eval:
-#    fi-en: flores_devtest
-#    et-en: flores_devtest
-#    liv-en: tc_Tatoeba-Challenge-v2021-08-07
-  # - langpair: et-en
-  #     train:
-  #       - tc_Tatoeba-Challenge-v2021-08-07 
-  #     devtest:
-  #       - flores_dev
-  #     test:
-  #       - flores_devtest
-  # - langpair: fi-en
-  #     train:
-  #       - tc_Tatoeba-Challenge-v2021-08-07 
-  #     devtest:
-  #       - flores_dev
-  #     test:
-  #       - flores_devtest
-  # - langpair: en-es
-  #     train:
-  #       - opus_liv4ever/v1
-  #     devtest:
-  #       - flores_dev
-  #     test:
-  #       - generaltest22
+    - tc_Tatoeba-Challenge-v2021-08-07
