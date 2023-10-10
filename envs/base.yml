@@ -13,3 +13,4 @@ dependencies:
     - regex==2019.8.19
     - sacremoses==0.0.43
     - langcodes==3.3.0
+    - opusfilter==3.0.0rc2
