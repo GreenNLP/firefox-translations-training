@@ -102,7 +102,7 @@ log_dir = f"{data_root_dir}/logs/{dirname}/{experiment}"
 reports_dir = f"{data_root_dir}/reports/{dirname}/{experiment}"
 
 # binaries
-cwd = '/home/degibert/Documents/0_Work/MTM23/firefox-translations-training' #os.getcwd()
+cwd = os.getcwd()
 third_party_dir = f'{cwd}/3rd_party'
 
 if marian_version == 'lumi-marian':
@@ -205,8 +205,8 @@ if not (opusmt_teacher or forward_pretrained):
 if len(ensemble) > 1:
     results.extend(expand(f'{eval_teacher_ens_dir}/{{dataset}}.metrics', dataset=eval_datasets))
 
-#if install_deps:
-#    results.append("/tmp/flags/setup.done")
+if install_deps:
+    results.append("/tmp/flags/setup.done")
 
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:

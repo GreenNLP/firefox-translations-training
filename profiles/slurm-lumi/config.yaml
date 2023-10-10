@@ -11,7 +11,7 @@ local-cores: 1
 latency-wait: 60
 rerun-incomplete: true  # recomended for cluster submissions
 keep-going: false
-default-resources: "mem_mb=64000"
+default-resources: ["mem_mb=128000","disk_mb=128000"]
 use-singularity: true
 use-conda: true
 resources: gpu=1
@@ -19,13 +19,14 @@ cores: 8
 #cache: false
 reason: true
 
-singularity-args: "--bind $ROCM_PATH,$PWD/../data,$PWD/../data/tmp:/tmp --rocm --containall"
+singularity-args: "--bind /scratch/project_462000088/members/degibert/data,/scratch/project_462000088/members/degibert/data/tmp:/tmp,/usr/share/libdrm --rocm --containall"
 config:
   - deps=false
-    #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data
-    #- rocm=/opt/rocm
-  - workspace=20000
+  - root="/scratch/project_462000088/members/degibert/data"
+  - rocm=/opt/rocm
+  - workspace=40000
   - numgpus=1
   - mariancmake=""
   - gpus=""
   - marianversion="lumi-marian"
+
