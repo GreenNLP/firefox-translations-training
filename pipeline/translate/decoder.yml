@@ -1,12 +1,13 @@
 normalize: 1.0
 word-penalty: 0
-mini-batch: 8
+mini-batch: 512
 #mini-batch-words: 2000
 maxi-batch: 1000
 maxi-batch-sort: src
 max-length: 200
 max-length-crop: true
-beam-size: 1
+beam-size: 8
 quiet-translation: true
-cpu-threads: 10
+precision: float16
+  #cpu-threads: 10
 log-level: debug
