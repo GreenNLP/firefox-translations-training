@@ -76,6 +76,9 @@ mono_trg_datasets = config['datasets'].get('mono-trg')
 mono_datasets = {src: mono_src_datasets, trg: mono_trg_datasets}
 mono_max_sent = {src: mono_max_sent_src, trg: mono_max_sent_trg}
 
+
+
+
 # parallelization
 
 ensemble = list(range(config['experiment'].get('teacher-ensemble',0)))
@@ -203,9 +206,12 @@ else:
     results.extend(expand(f'{eval_backward_dir}/{{dataset}}.metrics',dataset=eval_datasets))
     do_train_backward=True
 
+# option to skip monolingual cleaning
+skip_mono_cleaning = config['experiment'].get('skip-mono-cleaning',False)
+if skip_mono_cleaning:
+    clean = original
+
 # bicleaner
-
-
 if 'bicleaner' in config['experiment']:
     bicl_default_threshold = config['experiment']['bicleaner']['default-threshold']
     bicl_dataset_thresholds = config['experiment']['bicleaner']['dataset-thresholds']
@@ -252,6 +258,10 @@ else:
 def find_parts(wildcards, checkpoint):
     checkpoint_output = checkpoint.get(**wildcards).output[0]
     return glob_wildcards(os.path.join(checkpoint_output,"file.{part,\d+}")).part
+
+def find_bicleaner_parts(wildcards, checkpoint):
+    checkpoint_output = checkpoint.get(**wildcards).output[0]
+    return glob_wildcards(os.path.join(checkpoint_output,"file.{part,\d+}.gz")).part
 
 def dataset_norm(name: str):
     return name.replace('/','_')
@@ -427,18 +437,29 @@ if use_bicleaner:
         output: directory(f"{biclean}/pack")
         shell: '''bash pipeline/bicleaner/download-pack.sh "{output}" {bicleaner_type} >> {log} 2>&1'''
 
+    
+    checkpoint split_bicleaner_input:
+        message: "Splitting input corpus for bicleaner"
+        log: f"{log_dir}/split_for_bicleaner_{{dataset}}.log"
+        conda: "envs/base.yml"
+        threads: 1
+        input: source=f"{clean}/corpus/{{dataset}}.{src}.gz", target=f"{clean}/corpus/{{dataset}}.{trg}.gz"
+        output: temp(directory(f"{biclean}/{{dataset}}_split"))
+        shell: 'bash pipeline/bicleaner/split-dataset.sh {input.source} {input.target} {output} {split_length} >> {log} 2>&1'
+    
+
     rule bicleaner:
         message: f"Cleaning corpus using {bicleaner_type}"
-        log: f"{log_dir}/bicleaner/{{dataset}}.log"
+        log: f"{log_dir}/bicleaner/{{dataset}}.{{part}}.log"
         conda: bicleaner_env
 #       group: "bicleaner"
         threads: gpus_num * 2 if bicleaner_type == "bicleaner-ai" else workflow.cores
         resources: gpu=gpus_num if bicleaner_type == "bicleaner-ai" else 0, mem_mb=128000
-        input: ancient(rules.kenlm.output), multiext(f"{clean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz"),
+        input: ancient(rules.kenlm.output), f"{biclean}/{{dataset}}_split/file.{{part}}.gz",
                 pack_dir=rules.bicleaner_pack.output
-        output: multiext(f"{biclean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
+        output: temp(f"{biclean}/{{dataset}}_split/bicleaned.file.{{part}}.scored.gz")
         params:
-            prefix_input=f"{clean}/corpus/{{dataset}}",prefix_output=f"{biclean}/corpus/{{dataset}}",
+            prefix_input=f"{biclean}/{{dataset}}_split/file.{{part}}",prefix_output=f"{biclean}/{{dataset}}_split/bicleaned.file.{{part}}",
             threshold=lambda wildcards: bicl_dataset_thresholds[wildcards.dataset]
                                             if wildcards.dataset in bicl_dataset_thresholds
                                             else bicl_default_threshold
@@ -446,6 +467,33 @@ if use_bicleaner:
                     "{params.prefix_input}" "{params.prefix_output}" {params.threshold} {bicleaner_type} {threads} \
                     "{input.pack_dir}" >> {log} 2>&1'''
 
+    rule collect_bicleaner_output:
+        message: "Collecting bicleaner output"
+        log: f"{log_dir}/collect_bicleaner_output_{{dataset}}.log"
+        conda: "envs/base.yml"
+        threads: 4
+        input:  
+            scores=lambda wildcards: expand(f"{biclean}/{{dataset}}_split/bicleaned.file.{{part}}.scored.gz", part=find_bicleaner_parts(wildcards, checkpoints.split_bicleaner_input),dataset=wildcards.dataset)
+        output: 
+            score=f"{biclean}/corpus/{{dataset}}.scored.gz"
+        params: 
+            parts_dir=f"{biclean}/{{dataset}}_split"
+        shell: 'bash pipeline/bicleaner/collect-bicleaner.sh {params.parts_dir} {output.score} >> {log} 2>&1'
+
+
+    rule filter_bicleaner_output:
+        message: "Filtering bicleaner output"
+        log: f"{log_dir}/filter_bicleaner_output_{{dataset}}.log"
+        conda: "envs/base.yml"
+        threads: 4
+        input:  
+            score=f"{biclean}/corpus/{{dataset}}.scored.gz"
+        output: multiext(f"{biclean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
+        params: prefix_output=f"{biclean}/corpus/{{dataset}}",
+            	threshold=lambda wildcards: bicl_dataset_thresholds[wildcards.dataset]
+                                            if wildcards.dataset in bicl_dataset_thresholds
+                                            else bicl_default_threshold
+        shell: 'bash pipeline/bicleaner/filter-bicleaner.sh {input.score} {params.prefix_output} {params.threshold} >> {log} 2>&1'
 
 rule merge_corpus:
     message: "Merging clean parallel datasets"

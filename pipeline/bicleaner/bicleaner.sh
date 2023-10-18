@@ -36,8 +36,7 @@ mkdir -p "${output_dir}"
 
 if [ "${bicleaner_threshold}" == "0" ]; then
   echo "Threshold is 0, skipping filtering"
-  cp "${corpus_prefix}.${SRC}.${ARTIFACT_EXT}" "${output_prefix}.${SRC}.${ARTIFACT_EXT}"
-  cp "${corpus_prefix}.${TRG}.${ARTIFACT_EXT}" "${output_prefix}.${TRG}.${ARTIFACT_EXT}"
+  cp "${corpus_prefix}.${ARTIFACT_EXT}" "${output_prefix}.scored.${ARTIFACT_EXT}"
 else
   if [ "${type}" == 'bicleaner-ai' ]; then
     echo "### Using bicleaner-ai"
@@ -78,35 +77,21 @@ else
        }
        export -f biclean
        # {%} is a 1-indexed job slot number from GNU parallel.  We use that as the 1-indexed offset in CUDA_VISIBLE_ARRAY
-       paste <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${SRC}.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${TRG}.${ARTIFACT_EXT}") |
+       ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
        parallel -j ${#CUDA_VISIBLE_ARRAY[@]} --pipe -k --block 10M biclean "${pack_dir}"/*.yaml {%} |
        ${COMPRESSION_CMD} >"${output_prefix}.scored.${ARTIFACT_EXT}"
   elif [[ "${type}" == 'bicleaner-ai' ]]; then
    #Turn on tensorflow logging in bicleaner-ai
    export TF_CPP_MIN_LOG_LEVEL=0
-   paste <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${SRC}.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${TRG}.${ARTIFACT_EXT}") |
+   ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
      ${cmd} --scol ${scol} --tcol ${tcol} - - "${pack_dir}"/*.yaml |
      ${COMPRESSION_CMD} >"${output_prefix}.scored.${ARTIFACT_EXT}"
   else
-   paste <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${SRC}.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${corpus_prefix}.${TRG}.${ARTIFACT_EXT}") |
+   ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
      ${cmd} --scol ${scol} --tcol ${tcol} --processes "${threads}"  - - "${pack_dir}"/*.yaml |
      ${COMPRESSION_CMD} >"${output_prefix}.scored.${ARTIFACT_EXT}"
   fi
 
-  echo "### Filtering"
-  ${COMPRESSION_CMD} -dc "${output_prefix}.scored.${ARTIFACT_EXT}" |
-    awk -v threshold=${bicleaner_threshold} -F"\t" '{if ($3>threshold) {print $0}}' |
-    ${COMPRESSION_CMD} >"${output_prefix}.best.${ARTIFACT_EXT}"
-
-  echo "Lines before filtering: $(${COMPRESSION_CMD} -dc "${output_prefix}.scored.${ARTIFACT_EXT}" | wc -l)"
-  echo "Lines after filtering: $(${COMPRESSION_CMD} -dc "${output_prefix}.best.${ARTIFACT_EXT}" | wc -l)"
-
-  echo "### Writing output corpus"
-  ${COMPRESSION_CMD} -dc "${output_prefix}.best.${ARTIFACT_EXT}" |
-    tee >(cut -f1 | ${COMPRESSION_CMD} >"${output_prefix}.${SRC}.${ARTIFACT_EXT}") |
-    cut -f2 | ${COMPRESSION_CMD} >"${output_prefix}.${TRG}.${ARTIFACT_EXT}"
-
-  # do not delete intermediate files to inspect them and tune the threshold
 fi
 
 echo "###### Done: Bicleaner filtering"
