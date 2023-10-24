@@ -487,18 +487,18 @@ if use_bicleaner: # TODO
 if use_opusfilter:
     ruleorder: run_opusfilter > clean_corpus
         
-rule run_opusfilter:
-    message: "Cleaning dataset with opusfilter"
-    log: f"{log_dir}/opusfilter/{{dataset}}_{{langpair}}.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz",)
-    output: multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz")
-    params: input_prefixes=multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
-            output_prefixes=multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz"),
-            src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
-    shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" "{opusfilter_config}"\
-                >> {log} 2>&1'''
+    rule run_opusfilter:
+        message: "Cleaning dataset with opusfilter"
+        log: f"{log_dir}/opusfilter/{{dataset}}_{{langpair}}.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz",)
+        output: multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz")
+        params: input_prefixes=multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
+                output_prefixes=multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz"),
+                src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
+        shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" "{opusfilter_config}"\
+                    >> {log} 2>&1'''
 
 rule merge_corpus_langpair:
     message: "Merging clean parallel datasets per langpair"
