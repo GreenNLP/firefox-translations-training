@@ -24,11 +24,11 @@ archive_path="${tmp}/${version}-${src_three_letter}-${trg_three_letter}.tar"
 
 #try both combinations of language codes 
 if wget -O "${archive_path}" "https://object.pouta.csc.fi/${version}/${src_three_letter}-${trg_three_letter}.tar"; then
-   package_src=${src}
-   package_trg=${trg} 
+   package_src="source"
+   package_trg="target"
 elif wget -O "${archive_path}" "https://object.pouta.csc.fi/${version}/${trg_three_letter}-${src_three_letter}.tar"; then
-   package_src=${trg}
-   package_trg=${src}
+   package_src="target"
+   package_trg="source"
 fi
 
 #extract all in same directory, saves the trouble of parsing directory structure
@@ -72,6 +72,6 @@ else
 fi
 
 echo "${tmp}"
-#rm -rf "${tmp}"
+rm -rf "${tmp}"
 
 echo "###### Done: Downloading Tatoeba-Challenge data"
