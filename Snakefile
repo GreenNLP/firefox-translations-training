@@ -1158,8 +1158,8 @@ rule eval_quantized:
         report(f'{eval_speed_dir}/{{langpair}}/{{dataset}}.metrics', category='evaluation',
             subcategory='quantized', caption='reports/evaluation.rst')
     params:
-        dataset_prefix=expand(f'{eval_data_dir}/{{dataset}}', dataset=eval_datasets, allow_missing=True),
-        res_prefix=expand(f'{eval_speed_dir}/{{langpair}}/{{dataset}}', dataset=eval_datasets, allow_missing=True),
+        dataset_prefix=f'{eval_data_dir}/{{dataset}}', #, dataset=eval_datasets, allow_missing=True),
+        res_prefix=f'{eval_speed_dir}/{{langpair}}/{{dataset}}', #, dataset=eval_datasets, allow_missing=True),
         trg_lng=lambda wildcards: wildcards.langpair.split('-')[1],
         trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
         decoder_config='../quantize/decoder.yml'
