@@ -106,7 +106,7 @@ log_dir = f"{data_root_dir}/logs/{dirname}/{experiment}"
 reports_dir = f"{data_root_dir}/reports/{dirname}/{experiment}"
 
 # binaries
-cwd = '/home/degibert/Documents/0_Work/MTM23/firefox-translations-training' #os.getcwd()
+cwd = os.getcwd()
 third_party_dir = f'{cwd}/3rd_party'
 
 if marian_version == 'lumi-marian':
@@ -204,13 +204,13 @@ results = [
 
 #don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
 if not (opusmt_teacher or forward_pretrained):
-    results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/{{dataset}}.metrics',ens=ensemble, dataset=eval_datasets))
+    results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/{{langpair}}/{{dataset}}.metrics',ens=ensemble, dataset=eval_datasets, langpair=langpairs))
 
 if len(ensemble) > 1:
-    results.extend(expand(f'{eval_teacher_ens_dir}/{{dataset}}.metrics', dataset=eval_datasets))
+    results.extend(expand(f'{eval_teacher_ens_dir}/{{langpair}}/{{dataset}}.metrics', dataset=eval_datasets, langpair=langpairs))
 
-#if install_deps:
-#    results.append("/tmp/flags/setup.done")
+if install_deps:
+    results.append("/tmp/flags/setup.done")
 
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:
@@ -561,7 +561,7 @@ if not vocab_pretrained:
                 # o2m_student should be modified in case teacher trianing is included
 
 if do_train_backward: 
-    mono_trg_file = f'{translated}/mono_trg/file.{{part}}'
+    mono_trg_file = f'{translated}/{{langpair}}/mono_trg/file.{{part}}'
     deseg_mono_trg_outfile = f'{mono_trg_file}.out'
     
     rule train_backward:
@@ -582,7 +582,7 @@ if do_train_backward:
                     "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 elif opusmt_backward:
-    mono_trg_file = f'{translated}/mono_trg/file.{{part}}.{{model_index}}.opusmt'
+    mono_trg_file = f'{translated}/{{langpair}}/mono_trg/file.{{part}}.{{model_index}}.opusmt'
     deseg_mono_trg_outfile = f'{mono_trg_file}.out.deseg'
     
     rule download_opusmt_backward:
@@ -769,8 +769,8 @@ checkpoint split_corpus:
 if opusmt_teacher:
     teacher_source_file = f'{translated}/{{langpair}}/corpus/file.{{part}}.{{model_index}}.opusmt'
     teacher_target_file = f'{translated}/{{langpair}}/corpus/file.{{part}}.{{model_index}}.opusmt.nbest'
-    teacher_mono_source_file = f'{translated}/mono_src/file.{{part}}.{{model_index}}.opusmt'
-    teacher_mono_target_file = f'{translated}/mono_src/file.{{part}}.{{model_index}}.opusmt.out'
+    teacher_mono_source_file = f'{translated}/{{langpair}}/mono_src/file.{{part}}.{{model_index}}.opusmt'
+    teacher_mono_target_file = f'{translated}/{{langpair}}/mono_src/file.{{part}}.{{model_index}}.opusmt.out'
     translated_mono_src_extension = "opusmt.out"
     deseg_nbest_file = f'{teacher_target_file}.deseg'
     
@@ -816,15 +816,13 @@ if opusmt_teacher:
                     line_split[1] = line_split[1].replace(" ","").replace("▁"," ")
                     outfile.write(" ||| ".join(line_split))
 else:    
-    teacher_source_file = f'{translated}/corpus/file.{{part}}'
-    teacher_target_file = f'{translated}/corpus/file.{{part}}.{{model_index}}.nbest'
-    teacher_mono_source_file = f'{translated}/mono_src/file.{{part}}'
-    teacher_mono_target_file = f'{translated}/mono_src/file.{{part}}.{{model_index}}.out'
+    teacher_source_file = f'{translated}/{{langpair}}/corpus/file.{{part}}'
+    teacher_target_file = f'{translated}/{{langpair}}/corpus/file.{{part}}.{{model_index}}.nbest'
+    teacher_mono_source_file = f'{translated}/{{langpair}}/mono_src/file.{{part}}'
+    teacher_mono_target_file = f'{translated}/{{langpair}}/mono_src/file.{{part}}.{{model_index}}.out'
     translated_mono_src_extension = ".out"
     deseg_nbest_file = teacher_target_file
 
-
-     
 rule translate_corpus:
     message: "Translating corpus with teacher"
     log: f"{log_dir}/translate_corpus/{{langpair}}/{{part}}.{{model_index}}.log"
@@ -878,7 +876,7 @@ checkpoint split_mono_src:
     
 rule translate_mono_src:
     message: "Translating monolingual src dataset with teacher"
-    log: f"{log_dir}/translate_mono_src/{{part}}.{{model_index}}.log"
+    log: f"{log_dir}/translate_mono_src/{{langpair}}/{{part}}.{{model_index}}.log"
     conda: "envs/base.yml"
     threads: gpus_num*2
     wildcard_constraints:
