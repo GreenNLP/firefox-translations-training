@@ -51,6 +51,10 @@ dirname = config['experiment'].get('dirname')
 if not dirname:
     dirname = {src}-{trg}
 
+# Modified variables to fit naming
+src="source"
+trg="target"
+
 mono_max_sent_src = config['experiment'].get('mono-max-sentences-src')
 mono_max_sent_trg = config['experiment'].get('mono-max-sentences-trg')
 parallel_max_sents = config['experiment'].get('parallel-max-sentences',"inf")
