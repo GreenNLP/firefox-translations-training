@@ -260,11 +260,11 @@ if 'opusfilter' in config['experiment']:
         opusfilter_config = "default"
     use_opusfilter = True
     clean_corpus_prefix=f'{opusfiltered}/{{langpair}}/corpus'
-    clean_merged = f'{opusfiltered}/corpus'
+    teacher_corpus = f'{opusfiltered}/corpus'
 else:
     use_opusfilter = False
     clean_corpus_prefix = f'{clean}/{{langpair}}/corpus'
-    clean_merged = f'{clean}/corpus'
+    teacher_corpus = f'{clean}/corpus'
 
 clean_corpus_src = f'{clean}/corpus.source.gz'
 clean_corpus_trg = f'{clean}/corpus.target.gz'
@@ -552,7 +552,7 @@ if not vocab_pretrained:
         log: f"{log_dir}/train_vocab.log"
         conda: "envs/base.yml"
         threads: 2
-        input: bin=ancient(spm_trainer), corpus_src=f"{clean_merged}.source.gz",corpus_trg=f"{clean_merged}.target.gz"
+        input: bin=ancient(spm_trainer), corpus_src=f"{teacher_corpus}.source.gz",corpus_trg=f"{teacher_corpus}.target.gz"
         output: vocab_path
         params: prefix_test=f"{original}/devset", 
                 trgs = [Language.get(langpair.split('-')[1]).to_alpha3() for langpair in langpairs]
@@ -680,8 +680,8 @@ rule merge_corpus:
     threads: workflow.cores
     input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
             bin=ancient(deduper)
-    output: src=f"{clean_merged}.source.gz",trg=f"{clean_merged}.target.gz"
-    params: prefix_input = f"{opusfiltered}/*/corpus", prefix_output=f"{clean_merged}" # This is an issue, should take clean
+    output: src=f"{teacher_corpus}.source.gz",trg=f"{teacher_corpus}.target.gz"
+    params: prefix_input = f"{opusfiltered}/*/corpus", prefix_output=f"{teacher_corpus}" # This is an issue, should take clean
     shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
     cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
