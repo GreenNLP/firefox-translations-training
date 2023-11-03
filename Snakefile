@@ -681,9 +681,9 @@ rule merge_corpus:
     input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
             bin=ancient(deduper)
     output: src=f"{teacher_corpus}.source.gz",trg=f"{teacher_corpus}.target.gz"
-    params: prefix_input = f"{opusfiltered}/*/corpus", prefix_output=f"{teacher_corpus}" # This is an issue, should take clean
-    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
-    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
+    params: prefix_input = f"{teacher_corpus}".replace('corpus', ''), prefix_output=f"{teacher_corpus}"
+    shell: '''cat $(echo {params.prefix_input}*/corpus.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    cat $(echo {params.prefix_input}*/corpus.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
 rule merge_devset:
     message: "Merging clean parallel datasets"
