@@ -266,8 +266,8 @@ else:
     clean_corpus_prefix = f'{clean}/{{langpair}}/corpus'
     teacher_corpus = f'{clean}/corpus'
 
-clean_corpus_src = f'{clean}/corpus.source.gz'
-clean_corpus_trg = f'{clean}/corpus.target.gz'
+clean_corpus_src = f'{clean_corpus_prefix}.source.gz'
+clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
