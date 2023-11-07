@@ -572,10 +572,10 @@ if do_train_backward:
         resources: gpu=gpus_num
         #group 'backward'
         input:
-            rules.merge_devset.output, train_src=clean_corpus_src,train_trg=clean_corpus_trg,
+            rules.merge_devset.output, train_src=f"{teacher_corpus}.source.gz",train_trg=f"{teacher_corpus}.target.gz",
             bin=ancient(trainer), vocab=vocab_path,
         output:  model=f'{backward_dir}/{best_model}'
-        params: prefix_train=f"{clean}/corpus",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
+        params: prefix_train=f"{teacher_corpus}",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
                 args=get_args("training-backward")
         shell: '''bash pipeline/train/train.sh \
                     backward train {trg} {src} "{params.prefix_train}" "{params.prefix_test}" "{backward_dir}" \
