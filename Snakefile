@@ -220,7 +220,7 @@ elif opusmt_backward:
     do_train_backward = False 
 else:
     # don't evaluate pretrained model
-    results.extend(expand(f'{eval_backward_dir}/{{dataset}}.metrics',dataset=eval_datasets))
+    results.extend(expand(f'{eval_backward_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs))
     do_train_backward=True
 
 # bicleaner
@@ -560,6 +560,18 @@ if not vocab_pretrained:
                 "{params.trgs}" "{o2m_student}" {spm_sample_size} {threads} "{spm_vocab_size}" >> {log} 2>&1'''
                 # o2m_student should be modified in case teacher trianing is included
 
+rule merge_devset:
+    message: "Merging clean parallel datasets"
+    log: f"{log_dir}/merge_devset.log"
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+            bin=ancient(deduper)
+    output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
+    params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
+    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
+
 if do_train_backward: 
     mono_trg_file = f'{translated}/{{langpair}}/mono_trg/file.{{part}}'
     deseg_mono_trg_outfile = f'{mono_trg_file}.out'
@@ -572,8 +584,8 @@ if do_train_backward:
         resources: gpu=gpus_num
         #group 'backward'
         input:
-            rules.merge_devset.output, train_src=f"{teacher_corpus}.source.gz",train_trg=f"{teacher_corpus}.target.gz",
-            bin=ancient(trainer), vocab=vocab_path,
+            rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
+            bin=ancient(trainer), vocab=vocab_path
         output:  model=f'{backward_dir}/{best_model}'
         params: prefix_train=f"{teacher_corpus}",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
                 args=get_args("training-backward")
@@ -684,19 +696,6 @@ rule merge_corpus:
     params: prefix_input = f"{teacher_corpus}".replace('corpus', ''), prefix_output=f"{teacher_corpus}"
     shell: '''cat $(echo {params.prefix_input}*/corpus.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
     cat $(echo {params.prefix_input}*/corpus.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
-
-rule merge_devset:
-    message: "Merging clean parallel datasets"
-    log: f"{log_dir}/merge_devset.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
-            bin=ancient(deduper)
-    output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
-    params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
-    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
-    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
-
 
 # Three options for teacher: 1. download opus-mt model, 2. train teacher with pipeline, 3. path to pretrained teacher model
 # TODO: make it possible to combine any of the above options, i.e. use opus-mt, train and use 
