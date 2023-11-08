@@ -1,7 +1,7 @@
 cluster: "submit.py"
 cluster-status: "status.py"
 jobscript: "jobscript.sh"
-jobs: 1
+jobs: 4
 restart-times: 0
 immediate-submit: false
 verbose: false
@@ -14,7 +14,7 @@ keep-going: false
 default-resources: "mem_mb=64000"
 use-singularity: true
 use-conda: true
-resources: gpu=1
+resources: gpu=32
 cores: 8
 #cache: false
 reason: true
@@ -24,8 +24,8 @@ config:
   - deps=false
     #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data
     #- rocm=/opt/rocm
-  - workspace=20000
-  - numgpus=1
+  - workspace=40000
+  - numgpus=8
   - mariancmake=""
-  - gpus=""
+  - gpus="0,1,2,3,4,5,6,7"
   - marianversion="lumi-marian"

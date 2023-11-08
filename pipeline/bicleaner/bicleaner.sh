@@ -16,14 +16,12 @@ test -v ROCM_PATH
 
 # cuda and cudnn or rocm libs
 export LD_LIBRARY_PATH=${CUDA_DIR:+$CUDA_DIR/lib64:}${CUDNN_DIR:+$CUDNN_DIR/lib64:}${ROCM_PATH:+$ROCM_PATH/lib:}${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}
-
 corpus_prefix=$1
 output_prefix=$2
 bicleaner_threshold=$3
 type=$4
 threads=$5
 pack_dir=$6
-
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
@@ -56,10 +54,18 @@ else
     export tcol=1
   fi
 
-  #TODO: More than 1 GPU is not supported with AMD GPUs right now (usually 1 is enough, though, it's pretty fast).
-  #Export cuda visible devices if empty or not set
   if [ -z "${CUDA_VISIBLE_DEVICES:-}" ]; then
-    export CUDA_VISIBLE_DEVICES=$(nvidia-smi --query-gpu=index --format=csv,noheader);
+    if command -v nvidia-smi &> /dev/null
+    then
+      export CUDA_VISIBLE_DEVICES=$(nvidia-smi --query-gpu=index --format=csv,noheader);
+    elif command -v rocm-smi &> /dev/null
+    then
+      # AMD can interpret CUDA_VISIBLE_DEVICES as HIP_VISIBLE_DEVICES
+      # Note that this seems to fail inside a container, so CUDA_VISIBLE_DEVICES should be set outside
+      # the container.
+      export CUDA_VISIBLE_DEVICES=$(rocm-smi --showuse | grep -v "device" | grep -P "(?<=card)\d+" | tr "\n" ",")
+    fi
+
   fi
 
   echo "### Classifying"
@@ -67,12 +73,12 @@ else
        #Convert CUDA_VISIBLE_DEVICES to an array
        export CUDA_VISIBLE_ARRAY=(${CUDA_VISIBLE_DEVICES//,/ })
        #Turn on tensorflow logging in bicleaner-ai
-       export TF_CPP_MIN_LOG_LEVEL=0
+       #export TF_CPP_MIN_LOG_LEVEL=0
        #This function expects a bicleaner yaml and a 1-based index into the CUDA_VISIBLE_ARRAY
        #Example: /mnt/nanna0/nbogoych/data/data/fr-en/fr-en-prod/biclean/pack/metadata.yaml index_in_CUDA_VISIBLE_ARRAY+1
        biclean() {
                export CUDA_VISIBLE_ARRAY=(${CUDA_VISIBLE_DEVICES//,/ })
-               export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_ARRAY[$(($2-1))]}
+	       export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_ARRAY[$(($2-1))]}
                bicleaner-ai-classify --scol ${scol} --tcol ${tcol} - - $1
        }
        export -f biclean
@@ -80,12 +86,6 @@ else
        ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
        parallel -j ${#CUDA_VISIBLE_ARRAY[@]} --pipe -k --block 10M biclean "${pack_dir}"/*.yaml {%} |
        ${COMPRESSION_CMD} >"${output_prefix}.scored.${ARTIFACT_EXT}"
-  elif [[ "${type}" == 'bicleaner-ai' ]]; then
-   #Turn on tensorflow logging in bicleaner-ai
-   export TF_CPP_MIN_LOG_LEVEL=0
-   ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
-     ${cmd} --scol ${scol} --tcol ${tcol} - - "${pack_dir}"/*.yaml |
-     ${COMPRESSION_CMD} >"${output_prefix}.scored.${ARTIFACT_EXT}"
   else
    ${COMPRESSION_CMD} -dc "${corpus_prefix}.${ARTIFACT_EXT}" |
      ${cmd} --scol ${scol} --tcol ${tcol} --processes "${threads}"  - - "${pack_dir}"/*.yaml |
