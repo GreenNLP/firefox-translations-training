@@ -584,13 +584,13 @@ if do_train_backward:
         resources: gpu=gpus_num
         #group 'backward'
         input:
-            rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
+            rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.langtagged.gz',
             bin=ancient(trainer), vocab=vocab_path
         output:  model=f'{backward_dir}/{best_model}'
         params: prefix_train=f"{teacher_corpus}",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
                 args=get_args("training-backward")
         shell: '''bash pipeline/train/train.sh \
-                    backward train {trg} {src} "{params.prefix_train}" "{params.prefix_test}" "{backward_dir}" \
+                    backward train {trg}.langtagged {src} "{params.prefix_train}" "{params.prefix_test}" "{backward_dir}" \
                     "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 elif opusmt_backward:
@@ -671,8 +671,33 @@ rule add_lang_tag_corpus_src:
     input: f"{clean_corpus_prefix}.source.gz"
     output: f"{clean_corpus_prefix}.source.langtagged.gz"
     params: prefix=f"{clean_corpus_prefix}",
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
+            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+            suffix="source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" >> {log} 2>&1'''
+
+if do_train_backward:
+    rule add_lang_tag_corpus_trg:
+        message: "Adding language tag id for backward model training"
+        log: f"{log_dir}/add_langid_corpus_{{langpair}}_backward.log" 
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: f"{clean_corpus_prefix}.target.gz"
+        output: f"{clean_corpus_prefix}.target.langtagged.gz"
+        params: prefix=f"{clean_corpus_prefix}",
+                src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                suffix="target"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" >> {log} 2>&1'''
+    
+    rule merge_corpus_backward: 
+        message: "Merging clean parallel datasets"
+        log: f"{log_dir}/merge_corpus.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target.langtagged']),
+                bin=ancient(deduper)
+        output: trg=f"{teacher_corpus}.target.langtagged.gz"
+        params: prefix_input = f"{teacher_corpus}".replace('corpus', ''), prefix_output=f"{teacher_corpus}"
+        shell: '''cat $(echo {params.prefix_input}*/corpus.target.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.langtagged.gz" '''
 
 rule add_lang_tag_devset:
     message: "Adding language tag id for devset"
@@ -682,8 +707,9 @@ rule add_lang_tag_devset:
     input: f"{original}/{{langpair}}/devset.source.gz"
     output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
     params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" >> {log} 2>&1'''
+            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+            suffix="source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}" >> {log} 2>&1'''
 
 rule merge_corpus: 
     message: "Merging clean parallel datasets"
