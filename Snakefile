@@ -676,7 +676,7 @@ rule add_lang_tag_corpus_src:
     shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" >> {log} 2>&1'''
 
 if do_train_backward:
-    rule add_lang_tag_corpus_trg:
+    rule add_lang_tag_corpus_backward:
         message: "Adding language tag id for backward model training"
         log: f"{log_dir}/add_langid_corpus_{{langpair}}_backward.log" 
         conda: "envs/base.yml"
@@ -688,9 +688,21 @@ if do_train_backward:
                 suffix="target"
         shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" >> {log} 2>&1'''
     
+    rule add_lang_tag_devset_backward:
+        message: "Adding language tag id for devset for backward model training"
+        log: f"{log_dir}/add_langid_devset_{{langpair}}_backward.log" 
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: f"{original}/{{langpair}}/devset.target.gz"
+        output: f"{original}/{{langpair}}/devset.target.langtagged.gz"
+        params: prefix=f"{original}/{{langpair}}/devset",
+                src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                suffix="target"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}" >> {log} 2>&1'''
+
     rule merge_corpus_backward: 
-        message: "Merging clean parallel datasets"
-        log: f"{log_dir}/merge_corpus.log"
+        message: "Merging clean parallel datasets for backward training" 
+        log: f"{log_dir}/merge_corpus_backward.log"
         conda: "envs/base.yml"
         threads: workflow.cores
         input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source', 'target.langtagged']),
@@ -698,6 +710,17 @@ if do_train_backward:
         output: trg=f"{teacher_corpus}.target.langtagged.gz"
         params: prefix_input = f"{teacher_corpus}".replace('corpus', ''), prefix_output=f"{teacher_corpus}"
         shell: '''cat $(echo {params.prefix_input}*/corpus.target.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.langtagged.gz" '''
+
+    rule merge_devset_backward:
+        message: "Merging clean parallel devsets for backward training"
+        log: f"{log_dir}/merge_devset_backward.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source', 'target.langtagged']),
+                bin=ancient(deduper)
+        output: trg=f"{original}/devset.target.langtagged.gz"
+        params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
+        shell: '''cat $(echo {params.prefix_input}.target.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.langtagged.gz" '''
 
 rule add_lang_tag_devset:
     message: "Adding language tag id for devset"
