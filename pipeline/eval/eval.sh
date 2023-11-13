@@ -16,7 +16,7 @@ trg=$5
 trg_langtag=">>${6}<< "
 marian=$7
 decoder_config=$8
-o2m_student=$9
+o2m=$9
 args=( "${@:10}" )
 
 mkdir -p "$(basename "${res_prefix}")"
@@ -34,7 +34,7 @@ fi
 
 # Rest of your script continues here...
 
-if [ $o2m_student == "True" ]; then # If the student is multitarget, add language tag for decoding
+if [ $o2m == "True" ]; then # If the model is multitarget, add language tag for decoding
   pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add language tag for decoding
     tee "${res_prefix}.${src}" | 
     "${marian}"/marian-decoder \
