@@ -585,6 +585,7 @@ if do_train_backward:
         #group 'backward'
         input:
             rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.langtagged.gz',
+            devset_trg=f"{original}/devset.target.langtagged.gz",
             bin=ancient(trainer), vocab=vocab_path
         output:  model=f'{backward_dir}/{best_model}'
         params: prefix_train=f"{teacher_corpus}",prefix_test=f"{original}/devset", #modified until we implement bicleaner per language pair, this should be the output of merge_corpus
