@@ -268,6 +268,17 @@ else:
 
 clean_corpus_src = f'{clean_corpus_prefix}.source.gz'
 clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
+
+# opustrainer
+
+if 'opustrainer' in config['experiment']:
+    opustrainer_model = config['experiment']['opustrainer']['model']
+    opustrainer_path = config['experiment']['opustrainer']['path']
+    if opustrainer_model == 'student': # Should be modified to include teacher and backward model training with OpusTrainer
+        do_train_student_opustrainer = True
+    else:
+        do_train_student_opustrainer = False
+
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -515,8 +526,8 @@ rule merge_corpus_langpair:
     output: src=f"{clean_corpus_prefix}.source.gz",trg=f"{clean_corpus_prefix}.target.gz"
     params: prefix_output=f"{clean_corpus_prefix}",
             prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
-            max_sents=parallel_max_sents
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
+            max_sents=parallel_max_sents, format="" # not tsv
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.format} {params.prefixes} >> {log} 2>&1'''
 
 rule merge_devset_langpair:
     message: "Merging devsets per langpair"
@@ -527,8 +538,9 @@ rule merge_devset_langpair:
     input:  expand(f"{original}/{{langpair}}/devset/{{dataset}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
     output: multiext(f"{original}/{{langpair}}/devset", f".source.gz", f".target.gz")
-    params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True)
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
+    params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True),
+            format="" # not tsv
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.format} {params.prefixes} >> {log} 2>&1'''
  
 rule merge_mono: # TO DO
     message: "Merging clean monolingual datasets"
@@ -1109,6 +1121,24 @@ rule train_student:
                 "{input.alignments}" student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
+if do_train_student_opustrainer:
+    ruleorder: do_train_student_opustrainer > train_student
+
+    rule merge_corpus_tsv: 
+        message: "Merging clean parallel datasets per langpair into tsv format"
+        log: f"{log_dir}/merge_corpus_{{langpair}}_tsv.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        # group: "clean_corpus"
+        input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source.langtagged', 'target'], allow_missing=True),
+                bin=ancient(deduper)
+        output: f"{clean_corpus_prefix}.tsv"
+        params: prefix_output=f"{clean_corpus_prefix}",
+                prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
+                max_sents=parallel_max_sents, format="tsv"
+        shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.tsv} {params.prefixes} >> {log} 2>&1'''
+        
+    
 # quantize
 
 rule finetune_student:

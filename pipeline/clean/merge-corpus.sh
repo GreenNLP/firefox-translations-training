@@ -14,7 +14,8 @@ test -v BIN
 
 output_prefix=$1
 max_sents=$2
-inputs=( "${@:3}" )
+format=$3
+inputs=( "${@:4}" )
 
 src_lang="source"
 trg_lang="target"
@@ -45,8 +46,12 @@ if [ "${max_sents}" != "inf" ]; then
     mv "${tmp}.${src_lang}${trg_lang}.truncated.gz" "${tmp}.${src_lang}${trg_lang}.gz"
 fi
 
-${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f1 | ${COMPRESSION_CMD} > "${output_prefix}.${src_lang}.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f2 | ${COMPRESSION_CMD} > "${output_prefix}.${trg_lang}.${ARTIFACT_EXT}"
+if [ "${max_sents}" != "tsv" ]; then
+  ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f1 | ${COMPRESSION_CMD} > "${output_prefix}.${src_lang}.${ARTIFACT_EXT}"
+  ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" | cut -f2 | ${COMPRESSION_CMD} > "${output_prefix}.${trg_lang}.${ARTIFACT_EXT}"
+else
+  ${COMPRESSION_CMD} -dc "${tmp}.${src_lang}${trg_lang}.${ARTIFACT_EXT}" > "${output_prefix}.tsv"
+fi
 
 rm -rf "${tmp}"
 
