@@ -1185,7 +1185,9 @@ rule evaluate:
     params:
         dataset_prefix=f'{eval_data_dir}/{{dataset}}',
         res_prefix=f'{eval_res_dir}/{{model}}/{{langpair}}/{{dataset}}',
-        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
+        src=lambda wildcards: wildcards.langpair.split('-')[0] if wildcards.model != "backward" else wildcards.langpair.split('-')[1],
+        trg=lambda wildcards: wildcards.langpair.split('-')[1] if wildcards.model != "backward" else wildcards.langpair.split('-')[0],
+        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3() if wildcards.model != "backward" else Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
         o2m=lambda wildcards: (
             o2m_teacher if "teacher" in wildcards.model
             else (o2m_backward if "backward" in wildcards.model 
@@ -1194,8 +1196,8 @@ rule evaluate:
         decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
                             if wildcards.model != 'teacher-ensemble'
                             else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/eval/eval-gpu.sh  "{wildcards.langpair}" "{params.res_prefix}" "{params.dataset_prefix}" \
-             {params.trg_three_letter} "{params.decoder_config}" {o2m} {input.models} >> {log} 2>&1''' # This needs to be fixed, because if teacher is o2m or backward is o2m, as well...
+    shell: '''bash pipeline/eval/eval-gpu.sh  "{params.src}" "{params.trg}" "{params.res_prefix}" "{params.dataset_prefix}" \
+             {params.trg_three_letter} "{params.decoder_config}" {wildcards.model} {params.o2m} {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
     message: "Evaluating quantized student model"
@@ -1218,8 +1220,8 @@ rule eval_quantized:
         dataset_prefix=f'{eval_data_dir}/{{dataset}}', #, dataset=eval_datasets, allow_missing=True),
         res_prefix=f'{eval_speed_dir}/{{langpair}}/{{dataset}}', #, dataset=eval_datasets, allow_missing=True),
         trg_lng=lambda wildcards: wildcards.langpair.split('-')[1],
-        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), # Add something like "if multistudent trg_three_letter=>>est<< else """
+        trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), 
         decoder_config='../quantize/decoder.yml',
         o2m=o2m_student
     shell: '''bash pipeline/eval/eval-quantized.sh "{wildcards.langpair}" "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
-            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" {o2m} >> {log} 2>&1'''
+            "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" {params.o2m} >> {log} 2>&1'''

@@ -14,26 +14,47 @@ test -v WORKSPACE
 test -v SRC
 test -v TRG
 
-langpair=$1
-res_prefix=$2
-dataset_prefix=$3
-trg_langtag=$4
-decoder_config=$5
-o2m_student=$6
-models=( "${@:7}" )
+src=$1
+trg=$2
+res_prefix=$3
+dataset_prefix=$4
+trg_langtag=$5
+decoder_config=$6
+model_type=$7
+o2m=$8
+models=( "${@:9}" )
+
+langpair="${src}-${trg}"
+
 
 cd "$(dirname "${0}")"
 
-bash eval.sh \
-      "${langpair}" \
-      "${res_prefix}" \
-      "${dataset_prefix}" \
-      "${SRC}" \
-      "${TRG}" \
-      "${trg_langtag}" \
-      "${MARIAN}" \
-      "${decoder_config}" \
-      "${o2m_student}" \
-      -w "${WORKSPACE}" \
-      --devices ${GPUS} \
-      -m "${models[@]}"
+if [[ $model_type == "backward" ]]; then
+      bash eval.sh \
+            "${langpair}" \
+            "${res_prefix}" \
+            "${dataset_prefix}" \
+            "${TRG}" \
+            "${SRC}" \
+            "${trg_langtag}" \
+            "${MARIAN}" \
+            "${decoder_config}" \
+            "${o2m}" \
+            -w "${WORKSPACE}" \
+            --devices ${GPUS} \
+            -m "${models[@]}"
+else
+      bash eval.sh \
+            "${langpair}" \
+            "${res_prefix}" \
+            "${dataset_prefix}" \
+            "${SRC}" \
+            "${TRG}" \
+            "${trg_langtag}" \
+            "${MARIAN}" \
+            "${decoder_config}" \
+            "${o2m}" \
+            -w "${WORKSPACE}" \
+            --devices ${GPUS} \
+            -m "${models[@]}"
+fi
