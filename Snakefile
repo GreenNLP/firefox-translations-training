@@ -278,6 +278,8 @@ if 'opustrainer' in config['experiment']:
         do_train_student_opustrainer = True
     else:
         do_train_student_opustrainer = False
+else:
+        do_train_student_opustrainer = False
 
 # augmentation
 
@@ -322,9 +324,6 @@ rule experiment:
             yaml.dump(config, f)
 
 # todo: fix jobs grouping in cluster mode
-
-
-results = "/home/degibert/Documents/0_Work/multi-ftt/data/data/opustrainer-test/fiu-eng/clean/et-en/corpus.tsv"
 
 # setup
 
@@ -528,8 +527,8 @@ rule merge_corpus_langpair:
     output: src=f"{clean_corpus_prefix}.source.gz",trg=f"{clean_corpus_prefix}.target.gz"
     params: prefix_output=f"{clean_corpus_prefix}",
             prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
-            max_sents=parallel_max_sents, format="" # not tsv
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.format} {params.prefixes} >> {log} 2>&1'''
+            max_sents=parallel_max_sents
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
 
 rule merge_devset_langpair:
     message: "Merging devsets per langpair"
@@ -540,9 +539,8 @@ rule merge_devset_langpair:
     input:  expand(f"{original}/{{langpair}}/devset/{{dataset}}.{{lang}}.gz", dataset=valid_datasets, lang=['source', 'target'], allow_missing=True),
             bin=ancient(deduper)
     output: multiext(f"{original}/{{langpair}}/devset", f".source.gz", f".target.gz")
-    params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True),
-            format="" # not tsv
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.format} {params.prefixes} >> {log} 2>&1'''
+    params: prefix_output=f"{original}/{{langpair}}/devset", prefixes=expand(f"{original}/{{langpair}}/devset/{{dataset}}", dataset=valid_datasets, allow_missing=True)
+    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
  
 rule merge_mono: # TO DO
     message: "Merging clean monolingual datasets"
@@ -1132,13 +1130,13 @@ if do_train_student_opustrainer:
         conda: "envs/base.yml"
         threads: workflow.cores
         # group: "clean_corpus"
-        input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source.langtagged', 'target'], allow_missing=True),
+        input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", lang=['source.langtagged', 'target'], allow_missing=True),
                 bin=ancient(deduper)
-        output: f"{clean_corpus_prefix}.tsv" # here there is an issue
+        output: f"{clean_corpus_prefix}.tsv"
         params: prefix_output=f"{clean_corpus_prefix}",
-                prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
-                max_sents=parallel_max_sents, format="tsv"
-        shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.tsv} {params.prefixes} >> {log} 2>&1'''
+                prefixes=f"{clean_corpus_prefix}",
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix_output}" {params.prefixes} >> {log} 2>&1'''
+
     
 # quantize
 
