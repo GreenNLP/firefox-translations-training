@@ -209,8 +209,8 @@ if not (opusmt_teacher or forward_pretrained):
 if len(ensemble) > 1:
     results.extend(expand(f'{eval_teacher_ens_dir}/{{langpair}}/{{dataset}}.metrics', dataset=eval_datasets, langpair=langpairs))
 
-if install_deps:
-    results.append("/tmp/flags/setup.done")
+#if install_deps:
+#    results.append("/tmp/flags/setup.done")
 
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:
@@ -323,6 +323,8 @@ rule experiment:
 
 # todo: fix jobs grouping in cluster mode
 
+
+results = "/home/degibert/Documents/0_Work/multi-ftt/data/data/opustrainer-test/fiu-eng/clean/et-en/corpus.tsv"
 
 # setup
 
@@ -1122,9 +1124,9 @@ rule train_student:
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 if do_train_student_opustrainer:
-    ruleorder: do_train_student_opustrainer > train_student
+    #ruleorder: do_train_student_opustrainer > train_student
 
-    rule merge_corpus_tsv: 
+    rule merge_corpus_langpair_tsv:
         message: "Merging clean parallel datasets per langpair into tsv format"
         log: f"{log_dir}/merge_corpus_{{langpair}}_tsv.log"
         conda: "envs/base.yml"
@@ -1132,12 +1134,11 @@ if do_train_student_opustrainer:
         # group: "clean_corpus"
         input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=['source.langtagged', 'target'], allow_missing=True),
                 bin=ancient(deduper)
-        output: f"{clean_corpus_prefix}.tsv"
+        output: f"{clean_corpus_prefix}.tsv" # here there is an issue
         params: prefix_output=f"{clean_corpus_prefix}",
                 prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets, allow_missing=True),
                 max_sents=parallel_max_sents, format="tsv"
         shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.tsv} {params.prefixes} >> {log} 2>&1'''
-        
     
 # quantize
 

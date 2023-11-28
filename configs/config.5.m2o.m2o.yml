@@ -5,21 +5,21 @@
 ###
 
 experiment:
-  dirname: fiu-eng
+  dirname: teacher-test
   name: fiu-eng
   langpairs:
     - et-en
     - fi-en
 
   #URL to the OPUS-MT model to use as the teacher
-  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
+  #opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
   
   # Specify if the teacher and the student are many2one
   one2many-teacher: False
   one2many-student: False
 
   #URL to the OPUS-MT model to use as the backward model
-  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  #opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
   one2many-backward: True
 
   teacher-ensemble: 1

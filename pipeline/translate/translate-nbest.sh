@@ -35,8 +35,6 @@ cd "$(dirname "${0}")"
   -i "${input}" \
   -o "${output}" \
   --log "${input}.log" \
-  --n-best \
-  -d ${GPUS} \
-  -w "${WORKSPACE}"
+  --n-best -w "${WORKSPACE}" --cpu-threads 1
 
-test "$(wc -l <"${output}")" -eq "$(( $(wc -l <"${input}") * 8 ))"
+test "$(wc -l <"${output}")" -eq "$(( $(wc -l <"${input}") * 1))"

@@ -3,15 +3,15 @@ dec-cell-base-depth: 2
 dec-cell-high-depth: 1
 dec-cell: ssru
 dec-depth: 2
-dim-emb: 256
-dim-vocabs: [32000, 32000]
+dim-emb: 128
+dim-vocabs: [400, 400]
 enc-cell-depth: 1
 enc-cell: gru
-enc-depth: 6
+enc-depth: 1
 enc-type: bidirectional
 tied-embeddings-all: true
 transformer-decoder-autoreg: rnn
-transformer-dim-ffn: 1536
+transformer-dim-ffn: 768
 transformer-ffn-activation: relu
 transformer-ffn-depth: 2
 transformer-guided-alignment-layer: last

@@ -1,7 +1,7 @@
 verbose: false
 use-conda: true
-resources: gpu=0
-cores: 1
+#resources: gpu=0
+cores: 12
 cache: false
 reason: true
 config:

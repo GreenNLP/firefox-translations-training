@@ -31,7 +31,7 @@ conda:
 
 snakemake:
 	$(CONDA_ACTIVATE) base
-	mamba create -c conda-forge -c bioconda -n snakemake snakemake==7.19.1 tabulate==0.8.10 --yes
+	mamba create -c conda-forge -c bioconda -n snakemake python=3.9 snakemake==7.19.1 tabulate==0.8.10 --yes
 	mkdir -p "$(SNAKEMAKE_OUTPUT_CACHE)"
 
 
@@ -93,7 +93,7 @@ run:
 	chmod +x profiles/$(PROFILE)/*
 	$(SNAKEMAKE) \
 	  --profile=profiles/$(PROFILE) \
-	  --configfile $(CONFIG) \
+	  --configfile $(CONFIG) --until merge_corpus_langpair_tsv \
 	  $(TARGET) \
 	  $(EXTRA)
 
@@ -104,7 +104,7 @@ run-hpc:
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
 	  --conda-base-path=../bin \
-	  $(TARGET) \
+	  $(TARGET) --until collect_corpus \
 	  $(EXTRA)
 test: CONFIG=configs/config.test.yml
 test: run

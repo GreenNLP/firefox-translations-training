@@ -40,8 +40,7 @@ echo "### Training ${model_dir}"
   --shuffle-in-ram \
   --vocabs "${vocab}" "${vocab}" \
   -w "${WORKSPACE}" \
-  --devices ${GPUS} \
-  --sharding local \
+  --cpu-threads 12 \
   --sync-sgd \
   --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
   --valid-sets "${valid_set_prefix}".{"${src}","${trg}"}.gz \

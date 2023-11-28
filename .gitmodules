@@ -15,7 +15,7 @@
 	url = https://github.com/marian-nmt/marian-dev
 [submodule "3rd_party/preprocess"]
 	path = 3rd_party/preprocess
-	url = https://github.com/kpu/preprocess.git
+	url = https://github.com/kpu/preprocess
 [submodule "3rd_party/lumi-marian"]
 	path = 3rd_party/lumi-marian
 	url = git@github.com:hplt-project/lumi-marian.git
