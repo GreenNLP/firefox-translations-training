@@ -1133,11 +1133,22 @@ if do_train_student_opustrainer:
         input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", lang=['source.langtagged', 'target'], allow_missing=True),
                 bin=ancient(deduper)
         output: f"{clean_corpus_prefix}.tsv"
-        params: prefix_output=f"{clean_corpus_prefix}",
-                prefixes=f"{clean_corpus_prefix}",
-        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix_output}" {params.prefixes} >> {log} 2>&1'''
+        params: prefix=f"{clean_corpus_prefix}",
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
 
-    
+    rule merge_devset_langpair_tsv:
+        message: "Merging clean parallel devsets into tsv format"
+        log: f"{log_dir}/merge_dev_{{langpair}}_tsv.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        # group: "clean_corpus"
+        # NOT WORKING
+        input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target'], allow_missing=True),
+                bin=ancient(deduper)
+        output: f"{original}/{{langpair}}/devset.tsv"
+        params: prefix=f"{original}/{{langpair}}/devset",
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
+
 # quantize
 
 rule finetune_student:
