@@ -1149,6 +1149,17 @@ if do_train_student_opustrainer:
         params: prefix=f"{original}/{{langpair}}/devset",
         shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
     
+    rule merge_devset_tsv:
+        message: "Merging clean parallel datasets"
+        log: f"{log_dir}/merge_devset.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:  expand(f"{original}/{{langpair}}/devset.tsv", langpair=langpairs),
+                bin=ancient(deduper)
+        output: f"{original}/devset.tsv"
+        params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
+        shell: '''cat $(echo {params.prefix_input}.tsv | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.tsv"'''
+
     rule train_student_opustrainer:
         message: "Training student with OpusTrainer"
         log: f"{log_dir}/train_student.log"
@@ -1159,12 +1170,12 @@ if do_train_student_opustrainer:
         input:
             ancient(trainer),
             train=expand(f"{clean_corpus_prefix}.tsv", langpair=langpairs),
-            test=expand(f"{original}/{{langpair}}/devset.tsv", langpair=langpairs),
+            devset=rules.merge_devset_tsv.output,
             vocab=vocab_path
         output: model=f'{student_dir}/{best_model}'
         params: args=get_args("training-student") # is this right
         shell: '''bash pipeline/train/train-opustrainer.sh \
-                    student "{opustrainer_config}" \
+                    student "{opustrainer_config}" "{input.devset}" \
                     "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 # quantize

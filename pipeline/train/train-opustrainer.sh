@@ -8,10 +8,11 @@ echo "###### Training a model"
 
 model_type=$1
 opustrainer_config=$2
-model_dir=$3
-vocab=$4
-best_model_metric=$5
-extra_params=( "${@:6}" )
+devset=$3
+model_dir=$4
+vocab=$5
+best_model_metric=$6
+extra_params=( "${@:7}" )
 
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
@@ -45,7 +46,7 @@ echo "### Training ${model_type}"
     --sharding local \
     --sync-sgd \
     --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
-    --valid-sets /data/rw/evgeny/data/ru-en/ci/original/devset.ruen.tsv 
+    --valid-sets "${devset}" \
     --valid-translation-output "${model_dir}/devset.out" \
     --quiet-translation \
     --overwrite \
