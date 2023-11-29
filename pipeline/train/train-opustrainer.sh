@@ -11,8 +11,9 @@ opustrainer_config=$2
 devset=$3
 model_dir=$4
 vocab=$5
-best_model_metric=$6
-extra_params=( "${@:7}" )
+alignment=$6
+best_model_metric=$7
+extra_params=( "${@:8}" )
 
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
@@ -54,6 +55,7 @@ echo "### Training ${model_type}"
     --log "${model_dir}/train.log" \
     --valid-log "${model_dir}/valid.log" \
     --tsv \
+    --guided-alignment "${alignment}"\
     "${extra_params[@]}"
 
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz" "${model_dir}/final.model.npz.best-${best_model_metric}.npz"

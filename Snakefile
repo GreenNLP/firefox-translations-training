@@ -1171,12 +1171,13 @@ if do_train_student_opustrainer:
             ancient(trainer),
             train=expand(f"{filtered}/{{langpair}}/corpus.tsv", langpair=langpairs),
             devset=rules.merge_devset_tsv.output,
+            alignments=rules.alignments.output.alignment,
             vocab=vocab_path
         output: model=f'{student_dir}/{best_model}'
         params: args=get_args("training-student") # is this right
         shell: '''bash pipeline/train/train-opustrainer.sh \
                     student "{opustrainer_config}" "{input.devset}" \
-                    "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
+                    "{student_dir}" "{input.vocab}" "{input.alignment}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 # quantize
 
