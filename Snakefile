@@ -1191,7 +1191,7 @@ rule finetune_student:
     input:
         rules.merge_devset.output, ancient(trainer),
         train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
-        alignments=rules.alignments.output.alignment, student_model=rules.train_student.output.model,
+        alignments=rules.alignments.output.alignment, student_model=f'{student_dir}/{best_model}',
         vocab=vocab_path
     output: model=f'{student_finetuned_dir}/{best_model}'
     params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
