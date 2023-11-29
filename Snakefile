@@ -273,7 +273,7 @@ clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
 
 if 'opustrainer' in config['experiment']:
     opustrainer_model = config['experiment']['opustrainer']['model']
-    opustrainer_path = config['experiment']['opustrainer']['path']
+    opustrainer_config = config['experiment']['opustrainer']['path']
     if opustrainer_model == 'student': # Should be modified to include teacher and backward model training with OpusTrainer
         do_train_student_opustrainer = True
     else:
@@ -1122,7 +1122,7 @@ rule train_student:
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 if do_train_student_opustrainer:
-    #ruleorder: do_train_student_opustrainer > train_student
+    ruleorder: train_student_opustrainer > train_student
 
     rule merge_corpus_langpair_tsv:
         message: "Merging clean parallel datasets per langpair into tsv format"
@@ -1136,7 +1136,7 @@ if do_train_student_opustrainer:
         params: prefix=f"{clean_corpus_prefix}",
         shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
 
-    rule merge_devset_langpair_tsv:
+    rule merge_devset_langpair_tsv: # Not sure if this is needed
         message: "Merging clean parallel devsets into tsv format"
         log: f"{log_dir}/merge_dev_{{langpair}}_tsv.log"
         conda: "envs/base.yml"
@@ -1148,6 +1148,24 @@ if do_train_student_opustrainer:
         output: f"{original}/{{langpair}}/devset.tsv"
         params: prefix=f"{original}/{{langpair}}/devset",
         shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
+    
+    rule train_student_opustrainer:
+        message: "Training student with OpusTrainer"
+        log: f"{log_dir}/train_student.log"
+        conda: "envs/base.yml"
+        threads: gpus_num*2
+        resources: gpu=gpus_num
+        #group 'student'
+        input:
+            ancient(trainer),
+            train=expand(f"{clean_corpus_prefix}.tsv", langpair=langpairs),
+            test=expand(f"{original}/{{langpair}}/devset.tsv", langpair=langpairs),
+            vocab=vocab_path
+        output: model=f'{student_dir}/{best_model}'
+        params: args=get_args("training-student") # is this right
+        shell: '''bash pipeline/train/train-opustrainer.sh \
+                    student "{opustrainer_config}" \
+                    "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 # quantize
 
