@@ -12,8 +12,7 @@ test -v SRC
 test -v TRG
 test -v BIN
 
-output_prefix=$1
-inputs=( "${@:2}" )
+prefix=$1
 
 src_lang="source.langtagged" # BE MINDFUL THIS SHOULD BE CHANGED FOR BACKWARD
 trg_lang="target"
@@ -21,14 +20,14 @@ trg_lang="target"
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
-tmp="${output_prefix}/merge_tsv"
+tmp="${prefix}/merge_tsv"
 mkdir -p "${tmp}"
 
 echo "### Merging"
-${COMPRESSION_CMD} -dc "${inputs[@]/%/.${src_lang}.${ARTIFACT_EXT}}" >"${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -dc "${inputs[@]/%/.${trg_lang}.${ARTIFACT_EXT}}" >"${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} -dc "${prefix}.${src_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}"
+${COMPRESSION_CMD} -dc "${prefix}.${trg_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}"
 
-paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" > "${output_prefix}.tsv"
+paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" > "${prefix}.tsv"
 
 rm -rf "${tmp}"
 
