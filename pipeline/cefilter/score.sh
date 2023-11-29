@@ -33,7 +33,9 @@ mkdir -p "${dir}"
   --maxi-batch 1000 \
   --max-length 250 \
   --max-length-crop \
-  --normalize  -w "${WORKSPACE}" \
+  --normalize \
+  -d ${GPUS} \
+  -w "${WORKSPACE}" \
   --log "${dir}/scores.txt.log" \
   >"${output}"
 

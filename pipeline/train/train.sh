@@ -26,7 +26,7 @@ test -v WORKSPACE
 cd "$(dirname "${0}")"
 mkdir -p "${model_dir}/tmp"
 
-all_model_metrics=(chrf ce-mean-words bleu-detok)
+all_model_metrics=(chrf ce-mean-words ) #bleu-detok) Removed because it hangs
 
 echo "### Training ${model_dir}"
 
@@ -40,7 +40,8 @@ echo "### Training ${model_dir}"
   --shuffle-in-ram \
   --vocabs "${vocab}" "${vocab}" \
   -w "${WORKSPACE}" \
-  --cpu-threads 12 \
+  --devices ${GPUS} \
+  --sharding local \
   --sync-sgd \
   --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
   --valid-sets "${valid_set_prefix}".{"${src}","${trg}"}.gz \

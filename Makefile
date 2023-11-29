@@ -93,7 +93,7 @@ run:
 	chmod +x profiles/$(PROFILE)/*
 	$(SNAKEMAKE) \
 	  --profile=profiles/$(PROFILE) \
-	  --configfile $(CONFIG) --until merge_corpus_langpair_tsv \
+	  --configfile $(CONFIG) \
 	  $(TARGET) \
 	  $(EXTRA)
 
@@ -104,7 +104,7 @@ run-hpc:
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
 	  --conda-base-path=../bin \
-	  $(TARGET) --until collect_corpus \
+	  $(TARGET) \
 	  $(EXTRA)
 test: CONFIG=configs/config.test.yml
 test: run

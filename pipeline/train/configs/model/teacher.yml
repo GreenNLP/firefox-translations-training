@@ -1,28 +1,6 @@
-# # https://discourse.translatelocally.com/t/marian-configuration-to-use/24
-# dim-vocabs: [32000, 32000]
-# type: transformer
-# # tasks: https://github.com/marian-nmt/marian-dev/blob/master/src/common/aliases.cpp
-# task: transformer-base
-# #task: transformer-base  # use smaller model for low resource (<5M sentences)
-# # https://github.com/browsermt/students/tree/master/train-student/models/student.tiny11
-beam-size: 1
-clip-norm: 0
-cost-type: ce-mean-words
-disp-first: 10
-disp-freq: 1000
-early-stopping: 1
-exponential-smoothing: True
-learn-rate: 0.0003
-lr-decay-inv-sqrt: 32000
-lr-report: True
-lr-warmup: 16000
-max-length: 20
-maxi-batch: 1000
-mini-batch-fit: True
-mini-batch: 32
-normalize: 1
-optimizer-delay: 2
-optimizer-params: [0.9, 0.98, 1e-09]
-save-freq: 5000
-valid-freq: 5000
-valid-mini-batch: 64
+# https://discourse.translatelocally.com/t/marian-configuration-to-use/24
+dim-vocabs: [32000, 32000]
+type: transformer
+# tasks: https://github.com/marian-nmt/marian-dev/blob/master/src/common/aliases.cpp
+task: transformer-big
+#task: transformer-base  # use smaller model for low resource (<5M sentences)
