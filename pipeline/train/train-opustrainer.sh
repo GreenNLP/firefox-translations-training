@@ -4,7 +4,7 @@
 set -x
 set -euo pipefail
 
-echo "###### Training a model"
+echo "###### Training a model with Opustrainer"
 
 model_type=$1
 opustrainer_config=$2
@@ -53,6 +53,7 @@ echo "### Training ${model_type}"
     --keep-best \
     --log "${model_dir}/train.log" \
     --valid-log "${model_dir}/valid.log" \
+    --tsv \
     "${extra_params[@]}"
 
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz" "${model_dir}/final.model.npz.best-${best_model_metric}.npz"
