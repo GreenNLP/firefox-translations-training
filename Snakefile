@@ -1124,16 +1124,16 @@ rule train_student:
 if do_train_student_opustrainer:
     ruleorder: train_student_opustrainer > train_student
 
-    rule merge_corpus_langpair_tsv:
-        message: "Merging clean parallel datasets per langpair into tsv format"
-        log: f"{log_dir}/merge_corpus_{{langpair}}_tsv.log"
+    rule merge_filtered_langpair_tsv:
+        message: "Merging filtered parallel datasets per langpair into tsv format"
+        log: f"{log_dir}/merge_filtered_{{langpair}}_tsv.log"
         conda: "envs/base.yml"
         threads: workflow.cores
         # group: "clean_corpus"
-        input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", lang=['source.langtagged', 'target'], allow_missing=True),
+        input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'], allow_missing=True),
                 bin=ancient(deduper)
-        output: f"{clean_corpus_prefix}.tsv"
-        params: prefix=f"{clean_corpus_prefix}",
+        output: f"{filtered}/{{langpair}}/corpus.tsv"
+        params: prefix=expand(f"{filtered}/{{langpair}}/corpus",langpair=langpairs)
         shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
 
     rule merge_devset_langpair_tsv: # Not sure if this is needed
@@ -1169,7 +1169,7 @@ if do_train_student_opustrainer:
         #group 'student'
         input:
             ancient(trainer),
-            train=expand(f"{clean_corpus_prefix}.tsv", langpair=langpairs),
+            train=expand(f"{filtered}/{{langpair}}/corpus.tsv", langpair=langpairs),
             devset=rules.merge_devset_tsv.output,
             vocab=vocab_path
         output: model=f'{student_dir}/{best_model}'
