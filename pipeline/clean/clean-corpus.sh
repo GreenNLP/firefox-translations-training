@@ -82,16 +82,16 @@ test -s "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" ||
   ${COMPRESSION_CMD} >"${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}"
 
 ######################################################################
-# echo "### Language identification"
-# test -s "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}" ||
-#   ${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" |
-#   # memory intensive
-#   parallel --no-notice --pipe -k -j "$(echo "${threads}"/4 | bc)" --block 50M \
-#     "python -Wi tools/langid_fasttext.py -f 1 | python -Wi tools/langid_fasttext.py -f 1" |
-#   grep -P "^${src_code}\t${trg_code}\t" |
-#   cut -f3,4 |
-#   ${COMPRESSION_CMD} >"${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}"
-cp "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}"
+echo "### Language identification"
+test -s "${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}" ||
+  ${COMPRESSION_CMD} -dc "${output_prefix}.${src_ext}${trg_ext}.rule-based.${ARTIFACT_EXT}" |
+  # memory intensive
+  parallel --no-notice --pipe -k -j "$(echo "${threads}"/4 | bc)" --block 50M \
+    "python3 -Wi tools/langid_fasttext.py -f 1 | python3 -Wi tools/langid_fasttext.py -f 1" |
+  grep -P "^${src_code}\t${trg_code}\t" |
+  cut -f3,4 |
+  ${COMPRESSION_CMD} >"${output_prefix}.${src_ext}${trg_ext}.langid.${ARTIFACT_EXT}"
+
 ######################################################################
 echo "### Removing leading and repetitive white spaces"
 
