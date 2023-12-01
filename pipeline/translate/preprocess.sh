@@ -12,7 +12,7 @@
 #    to avoid removing newline characters!
 #
 #
-SPMENCODE=`which spm_encode || echo "${PWD}/tools/marian-dev/build/spm_encode"
+SPMENCODE=`which spm_encode || echo "${PWD}/tools/marian-dev/build/spm_encode"`
 
 ## simple pre-processing steps adapted from Moses tools
 
