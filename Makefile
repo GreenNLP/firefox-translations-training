@@ -143,6 +143,16 @@ dag:
 	  --dag \
 	  | dot -Tpdf > DAG.pdf
 
+dag-hpc: CONFIG=configs/config.mtm23.eng-fiu.yml
+dag-hpc:
+	chmod +x profiles/$(PROFILE)/*
+	$(SNAKEMAKE) \
+	  --profile=profiles/$(PROFILE) \
+	  --configfile $(CONFIG) \
+	  --conda-base-path=../bin \
+	  --dag > dag.txt 
+	  #| dot -Tpdf > DAG.pdf
+
 install-tensorboard:
 	$(CONDA_ACTIVATE) base
 	conda env create -f envs/tensorboard.yml
