@@ -1130,10 +1130,12 @@ if do_train_student_opustrainer:
         conda: "envs/base.yml"
         threads: workflow.cores
         # group: "clean_corpus"
-        input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'], allow_missing=True),
+        input: multiext(f"{filtered}/{{langpair}}/corpus", f".source.gz", f".target.gz"),
                 bin=ancient(deduper)
+        #input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'], allow_missing=True),
         output: f"{filtered}/{{langpair}}/corpus.tsv"
-        params: prefix=expand(f"{filtered}/{{langpair}}/corpus",langpair=langpairs)
+        #   params: prefix_input=f"{original}/{{langpair}}/corpus/{{dataset}}"
+        params: prefix=f"{filtered}/{{langpair}}/corpus"
         shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source" >> {log} 2>&1''' #TODO: Fix it with variables
 
     rule merge_devset_langpair_tsv: # Not sure if this is needed
