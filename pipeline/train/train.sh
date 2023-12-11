@@ -8,6 +8,9 @@ set -euo pipefail
 
 echo "###### Training a model"
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 model_type=$1
 training_type=$2
 src=$3

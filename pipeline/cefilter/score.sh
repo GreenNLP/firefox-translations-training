@@ -14,6 +14,9 @@ test -v SRC
 test -v TRG
 test -v WORKSPACE
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 model=$1
 vocab=$2
 #note that target will be used as source, since scoring is done with backward model

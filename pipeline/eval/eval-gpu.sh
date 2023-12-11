@@ -8,6 +8,9 @@ set -euo pipefail
 
 echo "###### Evaluation of a model"
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 test -v GPUS
 test -v MARIAN
 test -v WORKSPACE
