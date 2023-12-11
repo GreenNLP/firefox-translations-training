@@ -13,8 +13,9 @@ test -v TRG
 test -v BIN
 
 prefix=$1
+src_lang=$2
 
-src_lang="source.langtagged" # BE MINDFUL THIS SHOULD BE CHANGED FOR BACKWARD
+#src_lang="source.langtagged" # BE MINDFUL THIS SHOULD BE CHANGED FOR BACKWARD
 trg_lang="target"
 
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"

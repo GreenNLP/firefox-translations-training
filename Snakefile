@@ -1134,7 +1134,7 @@ if do_train_student_opustrainer:
                 bin=ancient(deduper)
         output: f"{filtered}/{{langpair}}/corpus.tsv"
         params: prefix=expand(f"{filtered}/{{langpair}}/corpus",langpair=langpairs)
-        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source" >> {log} 2>&1''' #TODO: Fix it with variables
 
     rule merge_devset_langpair_tsv: # Not sure if this is needed
         message: "Merging clean parallel devsets into tsv format"
@@ -1147,7 +1147,7 @@ if do_train_student_opustrainer:
                 bin=ancient(deduper)
         output: f"{original}/{{langpair}}/devset.tsv"
         params: prefix=f"{original}/{{langpair}}/devset",
-        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" >> {log} 2>&1'''
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source.langtagged" >> {log} 2>&1'''  #TODO: Fix it with variables
     
     rule merge_devset_tsv:
         message: "Merging clean parallel datasets"
