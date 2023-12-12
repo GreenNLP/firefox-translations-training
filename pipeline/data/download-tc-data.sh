@@ -43,11 +43,23 @@ else
    mv ${tmp}/train.trg.gz ${output_prefix}/corpus/tc_${version}.${package_trg}.gz
 fi
 
-cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.${package_src}.gz
-cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.${package_trg}.gz
+if [ -f ${tmp}/dev.src ]; then
+   cat ${tmp}/dev.src | gzip > ${output_prefix}/devset/tc_${version}.${package_src}.gz
+   cat ${tmp}/dev.trg | gzip > ${output_prefix}/devset/tc_${version}.${package_trg}.gz
+else
+   #This is a workaround for TC packages that do not contain dev or test. Fix this before merging with main!
+   touch ${output_prefix}/devset/tc_${version}.${package_src}.gz
+   touch ${output_prefix}/devset/tc_${version}.${package_trg}.gz
+fi   
 
-cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.${package_src}.gz
-cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.${package_trg}.gz
+if [ -f ${tmp}/test.src ]; then
+   cat ${tmp}/test.src | gzip > ${output_prefix}/eval/tc_${version}.${package_src}.gz
+   cat ${tmp}/test.trg | gzip > ${output_prefix}/eval/tc_${version}.${package_trg}.gz
+else
+   #This is a workaround for TC packages that do not contain dev or test. Fix this before merging with main!
+   touch ${output_prefix}/eval/tc_${version}.${package_src}.gz
+   touch ${output_prefix}/eval/tc_${version}.${package_trg}.gz
+fi
 
 rm -rf "${tmp}"
 

@@ -6,6 +6,7 @@ log_file=$(echo '{properties}' | jq -r .log[0])
 gpu=$(echo '{properties}' | jq -r .resources.gpu)
 
 mkdir -p $(dirname $log_file)
+mkdir /tmp/$USER
 
 if [ $gpu != "null" ] && [ $gpu != "0" ]; then
   #this will add the header row for the csv file, it will be removed for later log lines

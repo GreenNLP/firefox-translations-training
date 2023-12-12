@@ -17,7 +17,7 @@ min_version("6.6.1")
 containerized: 'Ftt.sif'
 
 install_deps = config['deps'] == 'true'
-data_root_dir = config.get('root', srcdir("../data"))
+data_root_dir = os.path.abspath(config.get('root', srcdir("../data")))
 cuda_dir = config.get('cuda', os.environ.get("CUDA_INSTALL_ROOT","")) 
 cudnn_dir = config.get('cudnn', os.environ.get("CUDNN_INSTALL_ROOT",""))
 rocm_dir = config.get('rocm',os.environ.get("ROCM_PATH",""))

@@ -10,4 +10,4 @@ parts_dir=$1
 output=$2
 
 echo "### Collecting bicleaner output"
-zcat "${parts_dir}"/bicleaned.file.*.scored.gz > "${output}"
+cat "${parts_dir}"/bicleaned.file.*.scored.gz > "${output}"

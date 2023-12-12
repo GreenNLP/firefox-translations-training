@@ -5,18 +5,18 @@
 
 experiment:
   name: tatoeba-bicleaner
-  src: en
-  trg: fi
-  src_three_letter: eng
-  trg_three_letter: fin
+  #src: en
+  #trg: fi
+  #src_three_letter: eng
+  #trg_three_letter: fin
 
   #OPUS models are not ensembled, they have different vocabs anyway
   teacher-ensemble: 1
 
   #URL to the OPUS-MT model to use as the teacher
-  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip"
+  #opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip"
   #URL to the OPUS-MT model to use as the backward model
-  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-08-25.zip" 
+  #opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-08-25.zip" 
 
   # path to a pretrained backward model (optional)
   backward-model: ""

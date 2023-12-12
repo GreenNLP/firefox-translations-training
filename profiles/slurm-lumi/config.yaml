@@ -14,12 +14,11 @@ keep-going: false
 default-resources: "mem_mb=64000"
 use-singularity: true
 use-conda: true
-resources: gpu=32
 cores: 8
 #cache: false
 reason: true
 
-singularity-args: "--bind $ROCM_PATH,$PWD/../data,$PWD/../data/tmp:/tmp --rocm --containall"
+singularity-args: "--bind $PWD/../data,/tmp/$USER:/tmp --rocm --containall"
 config:
   - deps=false
     #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data
