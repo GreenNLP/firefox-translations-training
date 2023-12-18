@@ -56,6 +56,7 @@ echo "### Training ${model_type}"
     --log "${model_dir}/train.log" \
     --valid-log "${model_dir}/valid.log" \
     --tsv \
+    --valid-translation-output: "${model_dir}/valid_logs/validation-output-after-{U}-updates-{E}-epochs.txt" \
     # --guided-alignment "${alignment}"\
     "${extra_params[@]}"
 
