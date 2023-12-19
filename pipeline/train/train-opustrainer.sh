@@ -25,6 +25,7 @@ ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
 cd "$(dirname "${0}")"
 mkdir -p "${model_dir}/tmp"
+mkdir -p "${model_dir}/valid_outputs"
 
 all_model_metrics=(chrf ce-mean-words) # not using bleu-detok as it hangs in Marian
 
@@ -37,7 +38,7 @@ echo "### Training ${model_type}"
   --config "${opustrainer_config}" \
   "${MARIAN}/marian" \
     --model "${model_dir}/model.npz" \
-    -c "configs/model/${model_type}.yml" \
+    -c "configs/model/${model_type}.yml"  "configs/training/${model_type}.train.yml" \
     -T "${model_dir}/tmp" \
     --shuffle batches \
     --no-restore-corpus true \
@@ -49,16 +50,15 @@ echo "### Training ${model_type}"
     --sync-sgd \
     --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
     --valid-sets "${devset}" \
-    --valid-translation-output "${model_dir}/devset.out" \
+    --valid-translation-output "${model_dir}/valid_outputs/validation-output-after-{U}-updates-{E}-epochs.txt" \
     --quiet-translation \
     --overwrite \
     --keep-best \
     --log "${model_dir}/train.log" \
     --valid-log "${model_dir}/valid.log" \
     --tsv \
-    --valid-translation-output: "${model_dir}/valid_logs/validation-output-after-{U}-updates-{E}-epochs.txt" \
-    # --guided-alignment "${alignment}"\
     "${extra_params[@]}"
+    # --guided-alignment "${alignment}"\
 
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz" "${model_dir}/final.model.npz.best-${best_model_metric}.npz"
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz.decoder.yml" "${model_dir}/final.model.npz.best-${best_model_metric}.npz.decoder.yml"
