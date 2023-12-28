@@ -1,0 +1,30 @@
+cluster: "submit.py"
+cluster-status: "status.py"
+jobscript: "jobscript.sh"
+jobs: 4
+restart-times: 0
+immediate-submit: false
+verbose: false
+max-jobs-per-second: 1
+max-status-checks-per-second: 1
+local-cores: 1
+latency-wait: 60
+rerun-incomplete: true  # recomended for cluster submissions
+keep-going: false
+default-resources: "mem_mb=64000"
+use-singularity: true
+use-conda: true
+cores: 8
+#cache: false
+reason: true
+
+singularity-args: "--bind $PWD/../data,/tmp/$USER:/tmp --rocm --containall"
+config:
+  - deps=false
+    #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data
+    #- rocm=/opt/rocm
+  - workspace=40000
+  - numgpus=8
+  - mariancmake=""
+  - gpus="0,1,2,3,4,5,6,7"
+  - marianversion="lumi-marian"
