@@ -40,12 +40,10 @@ echo "### Training ${model_type}"
     --model "${model_dir}/model.npz" \
     -c "configs/model/${model_type}.yml"  "configs/training/${model_type}.train.yml" \
     -T "${model_dir}/tmp" \
-    --shuffle batches \
-    --no-restore-corpus true \
+    --shuffle-in-ram \
     --vocabs "${vocab}" "${vocab}" \
     -w "${WORKSPACE}" \
     --devices ${GPUS} \
-    --sentencepiece-alphas 0.1 \
     --sharding local \
     --sync-sgd \
     --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
