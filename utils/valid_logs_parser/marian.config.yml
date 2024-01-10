@@ -1,0 +1,27 @@
+# transformer-base configuration
+dim-vocabs: [32000, 32000]
+type: transformer
+task: transformer-base
+
+lr-report: true
+
+train-sets: data/corpus.tsv
+vocabs:
+    - models/base/vocab.spm
+    - models/base/vocab.spm
+log:  models/base/train.log
+
+valid-log: models/base/train.log
+valid-translation-output: models/base/output.translation
+valid-sets:
+- data/devset.tsv
+valid-metrics:
+    - chrf
+    - bleu
+    - perplexity   
+valid-freq: 100
+valid-translation-output: validation-output-after-{U}-updates-{E}-epochs.txt
+
+disp-first: 10
+
+tsv: true # Tsv input
