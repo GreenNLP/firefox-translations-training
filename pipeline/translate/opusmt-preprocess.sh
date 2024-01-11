@@ -41,7 +41,7 @@ else
     if [ $o2m_teacher == "True" ]; then
         while IFS= read -r line; do
                 # Get the language tag
-                target_lang_token="$(echo "$line" | egrep -o "^>>[a-z]{2,3}<<" ")"
+                target_lang_token="$(echo "$line" | egrep -o "^>>[a-z]{2,3}<< ")"
                 # Remove it from the sentence
                 line="$(echo "$line" | sed "s/$target_lang_token//")"
                 # Encode and paste
