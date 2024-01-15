@@ -145,13 +145,20 @@ filtered = f'{data_dir}/filtered'
 align_dir = f"{data_dir}/alignment"
 
 # models
+student_prefix = config['experiment'].get('student-prefix')
 models_dir = f"{data_root_dir}/models/{dirname}/{experiment}"
 teacher_base_dir = f"{models_dir}/teacher-base"
 teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
-student_dir = f"{models_dir}/student"
-student_finetuned_dir = f"{models_dir}/student-finetuned"
-speed_dir = f"{models_dir}/speed"
-exported_dir = f"{models_dir}/exported"
+if student_prefix:
+    student_dir = f"{models_dir}/"+student_prefix+"_student"
+    student_finetuned_dir = f"{models_dir}/"+student_prefix+"_student-finetuned"
+    speed_dir = f"{models_dir}/"+student_prefix+"_speed"
+    exported_dir = f"{models_dir}/"+student_prefix+"_exported"
+else:
+    student_dir = f"{models_dir}/student"
+    student_finetuned_dir = f"{models_dir}/student-finetuned"
+    speed_dir = f"{models_dir}/speed"
+    exported_dir = f"{models_dir}/exported"
 best_model_metric = config['experiment']['best-model']
 best_model = f"final.model.npz.best-{best_model_metric}.npz"
 backward_dir = f'{models_dir}/backward'
@@ -177,9 +184,14 @@ else:
 eval_data_dir = f"{original}/{{langpair}}/eval"
 eval_res_dir = f"{models_dir}/evaluation"
 eval_backward_dir = f'{eval_res_dir}/backward'
-eval_student_dir = f'{eval_res_dir}/student'
-eval_student_finetuned_dir = f'{eval_res_dir}/student-finetuned'
-eval_speed_dir = f'{eval_res_dir}/speed'
+if student_prefix:
+    eval_student_dir = f'{eval_res_dir}/'+student_prefix+'_student'
+    eval_student_finetuned_dir = f'{eval_res_dir}/'+student_prefix+'_student-finetuned'
+    eval_speed_dir = f'{eval_res_dir}/'+student_prefix+'_speed'
+else:
+    eval_student_dir = f'{eval_res_dir}/student'
+    eval_student_finetuned_dir = f'{eval_res_dir}/student-finetuned'
+    eval_speed_dir = f'{eval_res_dir}/speed'
 eval_teacher_ens_dir = f'{eval_res_dir}/teacher-ensemble'
 
 # set common environment variables
