@@ -893,7 +893,7 @@ rule translate_corpus:
     input:
         ancient(decoder),
         file=teacher_source_file,
-        vocab=vocab_path,
+        vocab="" if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
         teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble)
     output: file=teacher_target_file
     params: args=get_args('decoding-teacher')
