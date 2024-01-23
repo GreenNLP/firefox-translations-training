@@ -78,7 +78,7 @@ dry-run-hpc:
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
 	  -n \
-	  --conda-base-path=../bin \
+	  --conda-base-path=../bin --rerun-triggers mtime\
 	  $(TARGET) \
 	  $(EXTRA)
 
@@ -103,13 +103,14 @@ run-hpc:
 	$(SNAKEMAKE) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  --conda-base-path=../bin \
+	  --conda-base-path=../bin --rerun-triggers mtime\
 	  $(TARGET) \
 	  $(EXTRA)
 test: CONFIG=configs/config.test.yml
 test: run
 
-
+#--until merge_translated \
+# --unlock
 ### 5. create a report
 
 report:
@@ -140,8 +141,8 @@ dag:
 	$(SNAKEMAKE) \
 	  --profile=profiles/local \
 	  --configfile $(CONFIG) \
-	  --dag \
-	  | dot -Tpdf > DAG.pdf
+	  --dag > DAG.txt
+#| dot -Tpdf > DAG.pdf
 
 dag-hpc: CONFIG=configs/config.mtm23.eng-fiu.yml
 dag-hpc:
