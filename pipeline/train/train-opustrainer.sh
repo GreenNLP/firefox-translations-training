@@ -35,7 +35,7 @@ echo "### Training ${model_type}"
 # OpusTrainer reads the datasets, shuffles them and feeds to stdin of Marian
 #--log-file not working
 "opustrainer-train" \
-  --config "${opustrainer_config}" \
+  --config "${opustrainer_config}" --state "${model_dir}/stages.yml.state" --log-file "${model_dir}/datatrainer.log" --workers 32 \
   "${MARIAN}/marian" \
     --model "${model_dir}/model.npz" \
     -c "configs/model/${model_type}.yml"  "configs/training/${model_type}.train.yml" \
@@ -44,6 +44,7 @@ echo "### Training ${model_type}"
     --vocabs "${vocab}" "${vocab}" \
     -w "${WORKSPACE}" \
     --devices ${GPUS} \
+    --guided-alignment 2 \
     --sharding local \
     --sync-sgd \
     --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
@@ -55,8 +56,7 @@ echo "### Training ${model_type}"
     --log "${model_dir}/train.log" \
     --valid-log "${model_dir}/valid.log" \
     --tsv \
-    "${extra_params[@]}"
-    # --guided-alignment "${alignment}"\
+    "${extra_params[@]}" \
 
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz" "${model_dir}/final.model.npz.best-${best_model_metric}.npz"
 cp "${model_dir}/model.npz.best-${best_model_metric}.npz.decoder.yml" "${model_dir}/final.model.npz.best-${best_model_metric}.npz.decoder.yml"
