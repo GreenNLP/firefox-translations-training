@@ -14,6 +14,7 @@ test -v BIN
 
 prefix=$1
 src_lang=$2
+alignments=$3
 
 #src_lang="source.langtagged" # BE MINDFUL THIS SHOULD BE CHANGED FOR BACKWARD
 trg_lang="target"
@@ -28,7 +29,7 @@ echo "### Merging"
 ${COMPRESSION_CMD} -dc "${prefix}.${src_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}"
 ${COMPRESSION_CMD} -dc "${prefix}.${trg_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}"
 
-paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" > "${prefix}.tsv"
+paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" "${alignments}" > "${prefix}.tsv"
 
 rm -rf "${tmp}"
 

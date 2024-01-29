@@ -1136,6 +1136,22 @@ rule train_student:
 if do_train_student_opustrainer:
     ruleorder: train_student_opustrainer > train_student
 
+    rule alignments_langpair:
+        message: 'Training word alignments per language pair'
+        log: f"{log_dir}/alignments_{{langpair}}_tsv.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:
+            ancient(spm_encoder), ancient(spm_exporter),
+            multiext(f"{filtered}/{{langpair}}/corpus", f".source.gz", f".target.gz"),
+            vocab=vocab_path,
+            fast_align= (rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
+            extract_lex=ancient(rules.extract_lex.output)
+        output: alignment=f'{align_dir}/{{langpair}}/corpus.aln'
+        params: prefix=f"{filtered}/{{langpair}}/corpus", output_dir=f"{align_dir}/{{langpair}}/"
+        shell: '''bash pipeline/alignment/generate-alignment-tsv.sh \
+                    "{params.prefix}" "{input.vocab}" "{params.output_dir}" {o2m_student} {threads} >> {log} 2>&1'''
+
     rule merge_filtered_langpair_tsv:
         message: "Merging filtered parallel datasets per langpair into tsv format"
         log: f"{log_dir}/merge_filtered_{{langpair}}_tsv.log"
@@ -1143,12 +1159,13 @@ if do_train_student_opustrainer:
         threads: workflow.cores
         # group: "clean_corpus"
         input: multiext(f"{filtered}/{{langpair}}/corpus", f".source.gz", f".target.gz"),
+                alignments=f"{align_dir}/{{langpair}}/corpus.aln",
                 bin=ancient(deduper)
         #input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'], allow_missing=True),
         output: f"{filtered}/{{langpair}}/corpus.tsv"
         #   params: prefix_input=f"{original}/{{langpair}}/corpus/{{dataset}}"
         params: prefix=f"{filtered}/{{langpair}}/corpus"
-        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source" >> {log} 2>&1''' #TODO: Fix it with variables
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source" "{input.alignments}" >> {log} 2>&1''' #TODO: Fix it with variables
 
     rule merge_devset_langpair_tsv: # Not sure if this is needed
         message: "Merging clean parallel devsets into tsv format"
