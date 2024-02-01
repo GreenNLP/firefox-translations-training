@@ -23,18 +23,26 @@ Some things have changed in the configuration file:
 - `dirname`: usually the directory structure relies on the source and target languages, in case of a multilingual model of any kind, you can specify the name of the directory you want to use. You can see how in [this example](configs/config.1.o2o.o2o.yml#L8). 
 
 TO DO:
-- OpusTrainer: it would be really nice to implement OpusTrainer to specify curriculum training for multilingual models.
 - Download different datasets per language pair, right now it only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it creates dummy files.
-- Downloading monolingual datasets
-
-DONE:
-- Vocabulary: when we train a one2many student, it takes the language tags as control symbols so that this are not tokenized.
-- Include OpusFilter
+- Downloading monolingual datasets. The use of monolingual data is not implemented, currently only supports the use of bilingual data.
 
 Not implemented:
 - Multiple teachers or backward models: currenlty only multilingual models can be used, not individual models.
-- The use of monolingual data is not implemented, currently only supports the use of bilingual data.
 - Multilingual Teacher training, at the moment only takes opusmt as teacher
+
+# OpusFilter
+
+We have added support for using [OpusFilter](https://github.com/Helsinki-NLP/OpusFilter), a tool for filtering and combining parallel corpora. For data filtering, instead of the default cleaning or using bicleaner, you can choose to use opusfilter with a default configuration or with a specific configuration you provide.
+
+In the configuration file, if you want to use a [default](pipeline/clean/run-opusfilter.py#13) configuration, you can see how in [this example](configs/opusfilter/config.fiu-eng.opusfilter.yml#L33). Otherwise, you can specify the path to a specific file with an Opusfilter configuration such as [this one](configs/opusfilter/config.opusfilter.yml).
+
+# OpusTrainer
+
+We have also added support for using [OpusTrainer](https://github.com/hplt-project/OpusTrainer), a tool for curriculum training and data augmentation. 
+
+In the configuration file, you can specify a path to the OpusTrainer configuration as in [here](configs/opustrainer/config.fiu-eng.opustrainer.yml#L37). However, this assumes that you already now the final paths of the data as specified in [here](configs/opustrainer/config.fiu-eng.opustrainer.stages.yml).
+
+At the moment, this is only implement for student training. For future work, we would like to implement it as well for teacher and backward training.
 
 # OPUS-MT integration
 

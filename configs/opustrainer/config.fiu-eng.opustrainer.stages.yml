@@ -1,0 +1,44 @@
+# Datasets are already TSV files
+datasets:
+  et: data/data/opustrainer/baseline/filtered/et-en/corpus.tsv
+  fi: data/data/opustrainer/baseline/filtered/fi-en/corpus.tsv
+  hu: data/data/opustrainer/baseline/filtered/hu-en/corpus.tsv
+
+stages:
+  - start
+  - mid-hu
+  - mid-fi
+  - mid-et
+  - end
+
+start:
+  - et 0.333
+  - fi 0.333
+  - hu 0.333
+  - until fi 2 # Until two epochs of finnish
+
+mid-hu:
+  - et 0.15
+  - fi 0.15
+  - hu 0.7
+  - until hu 2 # Until two epochs of hungarian
+  
+mid-fi:
+  - et 0.15
+  - fi 0.7
+  - hu 0.15
+  - until fi 2 # Until two epochs of finnish
+
+mid-et:
+  - et 0.7
+  - fi 0.15
+  - hu 0.15
+  - until et 2 # Until two epochs of estonian
+  
+end:
+  - et 0.333
+  - fi 0.333
+  - hu 0.333
+  - until et inf # Until convergence
+
+seed: 1111
