@@ -21,6 +21,7 @@ def plot_data(log_dir):
     for log_file in bleu_logs:
         lang_pair=re.findall(r"\b[a-z]{2}-[a-z]{2}\b",log_file)[0]
         bleu=[float(line) for line in open(log_file).read().splitlines()]
+        print(log_file, lang_pair, len(bleu))
         ax1.plot(updates, bleu, label=lang_pair)
 
     ax1.set_xlabel('Updates')
