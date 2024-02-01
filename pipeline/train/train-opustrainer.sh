@@ -19,9 +19,9 @@ extra_params=( "${@:8}" )
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
-#test -v GPUS
-#test -v MARIAN
-#test -v WORKSPACE
+test -v GPUS
+test -v MARIAN
+test -v WORKSPACE
 
 cd "$(dirname "${0}")"
 mkdir -p "${model_dir}/tmp"
