@@ -1193,7 +1193,7 @@ if do_train_student_opustrainer:
 
     rule train_student_opustrainer:
         message: "Training student with OpusTrainer"
-        log: f"{log_dir}/train_student_opustrainer.log"
+        log: f"{log_dir}/train_student_opustrainer_{student_prefix}.log"
         conda: "envs/base.yml"
         threads: gpus_num*2
         resources: gpu=gpus_num
