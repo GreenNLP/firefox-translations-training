@@ -29,7 +29,11 @@ echo "### Merging"
 ${COMPRESSION_CMD} -dc "${prefix}.${src_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}"
 ${COMPRESSION_CMD} -dc "${prefix}.${trg_lang}.${ARTIFACT_EXT}" >"${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}"
 
-paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" "${alignments}" > "${prefix}.tsv"
+if [ -n "${alignments}" ]; then
+    paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" "${alignments}" > "${prefix}.tsv"
+else
+    paste "${tmp}/corpus.${src_lang}.${ARTIFACT_EXT}" "${tmp}/corpus.${trg_lang}.${ARTIFACT_EXT}" > "${prefix}.tsv"
+fi
 
 rm -rf "${tmp}"
 
