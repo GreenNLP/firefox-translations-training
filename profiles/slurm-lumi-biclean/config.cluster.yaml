@@ -2,7 +2,7 @@
 single-gpu-partition: small-g
 multi-gpu-partition: small-g
 # project is out of cpu time, use dev-g as hack, since bicleaning does very little with cpu partition anyway
-cpu-partition: dev-g
-cpu-account: project_462000088
-gpu-account: project_462000088
+cpu-partition: small
+cpu-account: project_462000223
+gpu-account: project_462000223
 time-limit: "02:00:00"

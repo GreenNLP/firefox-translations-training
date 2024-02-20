@@ -4,11 +4,21 @@ import langcodes
 import yaml
 import os
 import time
+import sys
 
 api = HfApi()
 bicleaner_ai_models = [x.id for x in api.list_models(author="bitextor") if "bicleaner-ai" in x.id]
 
+#this allows you to specify the model from which to start. Save time, since running
+#snakemake for all lang pairs is a bit slow, even if the files have been generated
+start_from = sys.argv[1]
 for model in bicleaner_ai_models:
+    if start_from is not None:
+        if model != start_from:
+            print(f"skipping {model}")
+            continue
+        else:
+            start_from = None
     name_split = model.split('-')
     source_lang_2 = name_split[-2]
     target_lang_2 = name_split[-1]
