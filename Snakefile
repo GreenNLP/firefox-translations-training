@@ -1178,7 +1178,7 @@ if do_train_student_opustrainer:
                 bin=ancient(deduper)
         output: f"{original}/{{langpair}}/devset.tsv"
         params: prefix=f"{original}/{{langpair}}/devset",
-        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source.langtagged" >> {log} 2>&1'''  #TODO: Fix it with variables
+        shell: '''bash pipeline/clean/merge-corpus-tsv.sh "{params.prefix}" "source.langtagged" "" >> {log} 2>&1'''  #TODO: Fix it with variables
     
     rule merge_devset_tsv:
         message: "Merging clean parallel datasets"
