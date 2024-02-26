@@ -4,7 +4,7 @@
 #SBATCH --output=logs/valid_curves_%j.out
 #SBATCH --error=logs/valid_curves_%j.err
 #SBATCH --time=00:30:00
-#SBATCH --partition=small-g
+#SBATCH --partition=dev-g
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-node=1

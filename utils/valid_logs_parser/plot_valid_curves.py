@@ -6,11 +6,57 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import sys
 import os
+import re
+
+def parse_datetime(line):
+    """Extracts datetime object from a log line."""
+    match = re.search(r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]', line)
+    if match:
+        return datetime.strptime(match.group(1), '%Y-%m-%d %H:%M:%S')
+    return None
+
+def obtain_stages(datatrainer, trainlog):
+    # Read the stages and their starting times from the datatrainer log
+    stages = []
+    with open(datatrainer, 'r') as f:
+        for line in f:
+            dt = parse_datetime(line)
+            if dt and "INFO] Starting stage " in line:
+                stage = line.split('] [INFO] Starting stage ')[-1].strip()
+                stages.append((dt, stage))
+
+    # Read update times from the training log
+    updates = []
+    with open(trainlog, 'r') as f:
+        for line in f:
+            if "Ep." in line:
+                dt = parse_datetime(line)
+                if dt:
+                    update = int(re.search(r'Up\. (\d+)', line).group(1))
+                    updates.append((dt, update))
+
+    # Correlate updates to stages based on time
+    update_stages = []
+    current_stage = None
+    for update_time, update in updates:
+        # Update the current stage based on the update's timestamp
+        while stages and stages[0][0] <= update_time:
+            current_stage = stages.pop(0)[1]
+        update_stages.append(current_stage)
+
+    return update_stages
 
 def plot_data(log_basename, metric_plot):
     log_dir = os.path.dirname(log_basename)
     updates = [int(line) for line in open(log_dir+"/updates.log", 'r').read().splitlines()]
-    epochs = [int(line) for line in open(log_dir+"/epochs.log", 'r').read().splitlines()]
+    model_dir = os.path.dirname(log_dir)
+    datatrainer = model_dir+"/datatrainer.log"
+    trainlog = model_dir+"/train.log"
+
+    if os.path.isfile(datatrainer):
+        epochs = obtain_stages(datatrainer,trainlog)
+    else:
+        epochs = [int(line) for line in open(log_dir+"/epochs.log", 'r').read().splitlines()]
     bleu = [float(line) for line in open(log_basename+".bleu.log", 'r').read().splitlines()]
     chrf = [float(line) for line in open(log_basename+".chrf.log", 'r').read().splitlines()]
     ter = [float(line) for line in open(log_basename+".ter.log", 'r').read().splitlines()]
@@ -41,7 +87,10 @@ def plot_data(log_basename, metric_plot):
     ax2.xaxis.set_ticks_position('bottom') # set the position of the second x-axis to bottom
     ax2.spines['bottom'].set_position(('outward', 40))
     #ax2.plot(epochs, label='Metrics', color='red', linestyle='dashed')
-    ax2.set_xlabel('Epochs')
+    if os.path.isfile(datatrainer):
+        ax2.set_xlabel('Stages')
+    else:
+        ax2.set_xlabel('Epochs')
     fig.legend(loc='center right')
    
     plt.grid(True)
