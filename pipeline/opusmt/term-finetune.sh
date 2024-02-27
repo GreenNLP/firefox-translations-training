@@ -11,31 +11,42 @@ echo "###### Finetuning a model with term data"
 # On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
 unset CUDA_VISIBLE_DEVICES
 
-model_type=$1
-training_type=$2
-src=$3
-trg=$4
-train_set_prefix=$5
-valid_set_prefix=$6
-model_dir=$7
-vocab=$8
-best_model_metric=$9
-extra_params=( "${@:10}" )
+src=$1
+trg=$2
+train_set_prefix=$3
+valid_set_prefix=$4
+model_dir=$5
+base_model=$6
+base_model_dir=$(dirname ${base_model})
+best_model_metric=$7
+extra_params=( "${@:8}" )
+vocab="${model_dir}/vocab.yml"
 
 test -v GPUS
 test -v MARIAN
 test -v WORKSPACE
 
 cd "$(dirname "${0}")"
+
+
 mkdir -p "${model_dir}/tmp"
+cp ${base_model_dir}/source.spm ${model_dir}
+cp ${base_model_dir}/target.spm ${model_dir}
+cp ${base_model_dir}/vocab.yml ${model_dir}
+
+# Modify vocab to contain three augmentation symbols
+python ./add_term_symbols.py \
+  --source_spm_model ${model_dir}/source.spm \
+  --target_spm_model ${model_dir}/target.spm \
+  --yaml_vocab ${vocab}
 
 echo "### Training ${model_dir}"
 
 # if doesn't fit in RAM, remove --shuffle-in-ram and add --shuffle batches
 
 "${MARIAN}"/marian \
+  --task transformer-big \
   --model "${model_dir}/model_unfinished.npz" \
-  -c "configs/model/${model_type}.yml" "configs/training/${model_type}.${training_type}.yml" \
   --train-sets "${train_set_prefix}".{"${src}","${trg}"}.gz \
   -T "${model_dir}/tmp" \
   --shuffle-in-ram \
@@ -51,6 +62,7 @@ echo "### Training ${model_dir}"
   --overwrite \
   --log "${model_dir}/train.log" \
   --valid-log "${model_dir}/valid.log" \
+  --pretrained-model "${base_model}" \
   "${extra_params[@]}"
 
 

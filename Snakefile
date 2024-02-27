@@ -72,7 +72,8 @@ target_language_token = config['experiment'].get('target-language-token',trg)
 source_language_token = config['experiment'].get('target-language-token',src)
 
 # datasets
-train_datasets = config['datasets']['train']
+train_datasets = config['datasets'].get('train')
+tc_scored = config['datasets'].get('tc_scored')
 valid_datasets = config['datasets']['devtest']
 eval_datasets = config['datasets']['test']
 mono_src_datasets = config['datasets'].get('mono-src')
@@ -125,6 +126,7 @@ deduper = f'{cwd}/bin/dedupe'
 data_dir = f"{data_root_dir}/data/{src}-{trg}/{experiment}"
 clean = f"{data_dir}/clean"
 biclean = f"{data_dir}/biclean"
+biclean_scored = f"{data_dir}/biclean_scored"
 cache_dir = f"{data_dir}/cache"
 original = f"{data_dir}/original"
 translated = f"{data_dir}/translated"
@@ -209,47 +211,47 @@ if wmt23_termtask:
     term_ratios = wmt23_termtask['term-ratios']
     sents_per_term_sents = wmt23_termtask['sents-per-term-sents']
 
-    if not (opusmt_teacher or forward_pretrained):
-        results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/wmt23_termtask.score',ens=ensemble))
-        results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.score',ens=ensemble))
+    #results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/wmt23_termtask.score',ens=ensemble))
+    #results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.score',ens=ensemble))
 
-        if finetune_teacher_with_terms: 
-            results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/wmt23_termtask.score',
-                annotation_scheme=annotation_schemes,
-                term_ratio=term_ratios,
-                sents_per_term_sent=sents_per_term_sents,
-                omit=omit_unannotated))
+    if finetune_teacher_with_terms: 
+        #results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/wmt23_termtask.score',
+        #    annotation_scheme=annotation_schemes,
+        #    term_ratio=term_ratios,
+        #    sents_per_term_sent=sents_per_term_sents,
+        #    omit=omit_unannotated))
 
-            results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/evalsets_terms.score',
-                annotation_scheme=annotation_schemes,
-                term_ratio=term_ratios,
-                sents_per_term_sent=sents_per_term_sents,
-                omit=omit_unannotated))
+        #results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/evalsets_terms.score',
+        #    annotation_scheme=annotation_schemes,
+        #    term_ratio=term_ratios,
+        #    sents_per_term_sent=sents_per_term_sents,
+        #    omit=omit_unannotated))
 
-            results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
-                annotation_scheme=annotation_schemes,
-                term_ratio=term_ratios,
-                sents_per_term_sent=sents_per_term_sents,
-                omit=omit_unannotated,
-                dataset=eval_datasets))
+        results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
+            annotation_scheme=annotation_schemes,
+            term_ratio=term_ratios,
+            sents_per_term_sent=sents_per_term_sents,
+            omit=omit_unannotated,
+            dataset=eval_datasets))
 
-        if mixture_of_models:
-            mixture_hash = hashlib.md5(("+".join(mixture_of_models)).encode("utf-8")).hexdigest()
-            #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/testset_terms.mixture.{trg}'))
-            #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/blindset_terms.mixture.{trg}'))
-            results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms.mixture.{trg}'))
-                
+    if mixture_of_models:
+        mixture_hash = hashlib.md5(("+".join(mixture_of_models)).encode("utf-8")).hexdigest()
+        #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/testset_terms.mixture.{trg}'))
+        #results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/blindset_terms.mixture.{trg}'))
+        results.extend(expand(f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms.mixture.{trg}'))
+    else:
+        mixture_hash = None    
 
-        if train_term_teacher:
-            results.extend(expand(f'{eval_res_dir}/teacher-base-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/wmt23_termtask.score',
-                annotation_scheme=annotation_schemes,
-                term_ratio=term_ratios,
-                sents_per_term_sent=sents_per_term_sents))
+    if train_term_teacher:
+#            results.extend(expand(f'{eval_res_dir}/teacher-base-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/wmt23_termtask.score',
+#                annotation_scheme=annotation_schemes,
+#                term_ratio=term_ratios,
+#                sents_per_term_sent=sents_per_term_sents))
 
-            results.extend(expand(f'{eval_res_dir}/teacher-base-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/{{dataset}}.metrics',
-                annotation_scheme=annotation_schemes,
-                term_ratio=term_ratios,
-                sents_per_term_sent=sents_per_term_sents,dataset=eval_datasets))
+        results.extend(expand(f'{eval_res_dir}/teacher-base-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/{{dataset}}.metrics',
+            annotation_scheme=annotation_schemes,
+            term_ratio=term_ratios,
+            sents_per_term_sent=sents_per_term_sents,dataset=eval_datasets))
 
 
     if train_student:
@@ -315,6 +317,10 @@ if bicleaner_type:
     clean_corpus_prefix = f'{biclean}/corpus'
     teacher_corpus = f'{biclean}/corpus'
     use_bicleaner = True
+elif tc_scored:
+    clean_corpus_prefix = f'{biclean_scored}/corpus'
+    teacher_corpus = f'{teacher_align_dir}/corpus.spm'
+    use_bicleaner = False
 else:
     clean_corpus_prefix = f'{clean}/corpus'
     teacher_corpus = f'{clean}/corpus'
@@ -435,8 +441,8 @@ rule extract_lex:
     shell: 'bash pipeline/setup/compile-extract-lex.sh {extract_lex_build} {threads} >> {log} 2>&1'
 
 # data downloading
-# TODO: Tatoeba data has dev, test and train in same big tar, make a rule producing them all,
-# and use snakemake ruleorder to prioritize it over this
+# Tatoeba data has dev, test and train in same big tar, this is a rule producing them all,
+# use snakemake ruleorder to prioritize it over normal download
 ruleorder: download_tatoeba_corpus > download_corpus
 
 rule download_tatoeba_corpus:
@@ -543,6 +549,20 @@ if use_bicleaner:
                     "{params.prefix_input}" "{params.prefix_output}" {params.threshold} {bicleaner_type} {threads} \
                     "{input.pack_dir}" >> {log} 2>&1'''
 
+
+
+rule extract_tc_scored:
+    message: "Extracting corpora from scored tc training set"
+    log: f"{log_dir}/extract_tc_scored.log"
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input: tc_scored
+    output: src=clean_corpus_src,trg=clean_corpus_trg,scores=f"{clean_corpus_src}.scores.gz"
+    params: max_sents=parallel_max_sents
+    # extract sent pairs with more than 0.8 bicleaner score
+    shell: '''zcat {input} | grep -P "(1.000|0.[89]\d\d)$" | head -n {params.max_sents} | tee >(cut -f 1 | gzip > {output.src}) | tee >(cut -f 2 | gzip > {output.trg}) | cut -f 3 | gzip > {output.scores} 2> {log}'''
+    # the approach of just taking the best scored sentences risks bias for the type of sentences that score very high (and also increases near-duplicates), so don't do it
+    #shell: '''zcat {input} | sort -u -k3,3nr -k1,2 -t$'\t' | head -n {params.max_sents} | tee >(cut -f 1 | gzip > {output.src}) | tee >(cut -f 2 | gzip > {output.trg}) | cut -f 3 | gzip > {output.scores} 2> {log}'''
 
 rule merge_corpus:
     message: "Merging clean parallel datasets"
@@ -699,7 +719,10 @@ if 'opusmt-teacher' in config['experiment']:
         log: f"{log_dir}/download_teacher{{model_index}}-{{ens}}.log"
         conda: "envs/base.yml"
         threads: 1
-        output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}',vocab=f'{teacher_base_dir}{{model_index}}-{{ens}}/vocab.yml', model_dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}')
+        wildcard_constraints:
+           model_index="\d+",
+           ens="\d+"
+        output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}',vocab=f'{teacher_base_dir}{{model_index}}-{{ens}}/vocab.yml', model_dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}'), src_spm=f'{teacher_base_dir}{{model_index}}-{{ens}}/source.spm', trg_spm=f'{teacher_base_dir}{{model_index}}-{{ens}}/target.spm'
         params: teacher_dir=f'{teacher_base_dir}{{model_index}}-{{ens}}',
                 teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)] 
         shell: '''bash pipeline/opusmt/download-model.sh \
@@ -726,49 +749,6 @@ elif not forward_pretrained:
                     teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" "{params.dir}" \
                     "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
-    rule finetune_teacher_with_terms:
-        message: "Finetune teacher on term annotated corpus"
-        log: f"{log_dir}/finetune_teacher-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}.log"
-        wildcard_constraints:
-            omit="(.{0}|-omit)"
-        conda: "envs/base.yml"
-        threads: gpus_num * 2
-        resources: gpu=gpus_num
-        input:
-            rules.merge_devset.output, ancient(trainer),
-            model=f'{teacher_base_dir}0-0/{best_model}',
-            train_src=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.{src}.gz",
-            train_trg=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.{trg}.gz",
-            alignments=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.aln.gz",
-            vocab=vocab_path
-        output: model=f'{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/model.npz'
-        params: 
-            prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}",
-            prefix_test=f"{original}/devset",
-            args=get_args("finetune-teacher-with-terms"),
-            teacher_term_dir=f"{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}"
-        shell: '''bash pipeline/train/term-finetune.sh \
-                    teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
-                    "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.model}" {params.args} >> {log} 2>&1'''
-        #shell: '''bash pipeline/train/train-student.sh \
-        #            "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
-        #            "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.model}" {params.args} >> {log} 2>&1'''
-
-    rule teacher_alignments:
-        message: 'Training word alignment and lexical shortlists'
-        log: f"{log_dir}/alignments.log"
-        conda: "envs/base.yml"
-        threads: workflow.cores
-        input:
-            ancient(spm_encoder), ancient(spm_exporter),
-            src_corpus=f'{teacher_corpus}.{src}.gz',trg_corpus=f'{teacher_corpus}.{trg}.gz',
-            vocab=vocab_path,
-            fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
-            extract_lex=ancient(rules.extract_lex.output)
-        output: alignment=f'{teacher_align_dir}/corpus.aln.gz',shortlist=f'{teacher_align_dir}/lex.s2t.pruned.gz'
-        params: input_prefix=teacher_corpus
-        shell: '''bash pipeline/alignment/generate-alignment-and-shortlist.sh \
-                    "{params.input_prefix}" "{input.vocab}" "{teacher_align_dir}" {threads} >> {log} 2>&1'''
 
     # This is normal teacher with alignments, NOT needed for term models, but might be useful later.
     # Note that it uses train-student script, but that just adds the guided alignment
@@ -812,6 +792,69 @@ elif not forward_pretrained:
                     "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 
+
+if wmt23_termtask and finetune_teacher_with_terms: 
+    rule finetune_opusmt_with_terms:
+        message: "Finetune OPUS-MT model on term annotated corpus"
+        log: f"{log_dir}/finetune_teacher-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}.log"
+        wildcard_constraints:
+            omit="(.{0}|-omit)"
+        conda: "envs/base.yml"
+        threads: gpus_num * 2
+        resources: gpu=gpus_num
+        input:
+            rules.merge_devset.output, ancient(trainer),
+            model=f'{teacher_base_dir}0-0/{best_model}',
+            train_src=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.{src}.gz",
+            train_trg=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.{trg}.gz",
+            alignments=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}.aln.gz"
+        output: model=f'{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/model.npz'
+        params: 
+            prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus{{omit}}",
+            prefix_test=f"{original}/devset",
+            args=get_args("finetune-teacher-with-terms"),
+            teacher_term_dir=f"{teacher_base_dir}-finetuned-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}"
+        shell: '''bash pipeline/opusmt/term-finetune.sh \
+                    {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+                    "{params.teacher_term_dir}" "{input.model}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
+        #shell: '''bash pipeline/train/train-student.sh \
+        #            "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+        #            "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" --pretrained-model "{input.model}" "{params.args}" >> {log} 2>&1'''
+
+
+    rule opusmt_finetune_alignments:
+        message: 'Training word alignment and generating sp corpora for OPUS-MT finetuning'
+        log: f"{log_dir}/alignments.log"
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input:
+            ancient(spm_encoder), ancient(spm_exporter),
+            src_corpus=clean_corpus_src,trg_corpus=clean_corpus_trg,
+            src_vocab=f'{teacher_base_dir}0-0/source.spm',
+            trg_vocab=f'{teacher_base_dir}0-0/target.spm',	
+            fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
+        output: alignment=f'{teacher_align_dir}/corpus.aln.gz',train_src=f'{teacher_align_dir}/corpus.spm.{src}.gz',train_trg=f'{teacher_align_dir}/corpus.spm.{trg}.gz'
+        params: input_prefix=clean_corpus_prefix
+        shell: '''bash pipeline/opusmt/generate-alignment-and-sp.sh \
+                    "{params.input_prefix}" "{input.src_vocab}" "{input.trg_vocab}" "{teacher_align_dir}" {threads} >> {log} 2>&1'''
+
+
+    #rule teacher_alignments:
+    #    message: 'Training word alignment and lexical shortlists'
+    #    log: f"{log_dir}/alignments.log"
+    #    conda: "envs/base.yml"
+    #    threads: workflow.cores
+    #    input:
+    #        ancient(spm_encoder), ancient(spm_exporter),
+    #        src_corpus=f'{teacher_corpus}.{src}.gz',trg_corpus=f'{teacher_corpus}.{trg}.gz',
+    #        vocab=vocab_path,
+    #        fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
+    #        extract_lex=ancient(rules.extract_lex.output)
+    #    output: alignment=f'{teacher_align_dir}/corpus.aln.gz',shortlist=f'{teacher_align_dir}/lex.s2t.pruned.gz'
+    #    params: input_prefix=teacher_corpus
+    #    shell: '''bash pipeline/alignment/generate-alignment-and-shortlist.sh \
+    #                "{params.input_prefix}" "{input.vocab}" "{teacher_align_dir}" {threads} >> {log} 2>&1'''
+
     #TODO: These are copy pasted from the similar rules for student training, because of deadline.
     #Make generic rules for annotation when time for that
     checkpoint split_teacher_corpus_for_annotation:
@@ -821,10 +864,11 @@ elif not forward_pretrained:
         threads: 1
         input:
             train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
-            alignments=rules.teacher_alignments.output.alignment
+            alignments=rules.opusmt_finetune_alignments.output.alignment
         output: directory(f"{term_data_dir}/teacher_corpus")
         shell: '''bash pipeline/wmt23_termtask/split-corpus.sh \
                     {input.train_src} {input.train_trg} {input.alignments} {output} {split_length} >> {log} 2>&1'''
+
 
     rule annotate_teacher_terms: 
         message: "Annotating corpus with term information"
@@ -837,19 +881,21 @@ elif not forward_pretrained:
             train_src=f"{term_data_dir}/teacher_corpus/file.src.{{part}}.gz",
             train_trg=f"{term_data_dir}/teacher_corpus/file.trg.{{part}}.gz",
             alignments=f"{term_data_dir}/teacher_corpus/file.aln.{{part}}.gz",
-            vocab=vocab_path
+            src_vocab=f'{teacher_base_dir}0-0/source.spm',
+            trg_vocab=f'{teacher_base_dir}0-0/target.spm',	
         output:
             annotated_src=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/annotated.src.{{part}}.gz",
             annotated_trg=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/annotated.trg.{{part}}.gz",
             annotated_alignments=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/annotated.aln.{{part}}.gz"
         shell: '''python 3rd_party/soft-term-constraints/src/softconstraint.py \
-                    --source_spm "{input.vocab}" --target_spm "{input.vocab}" --annotation_method {wildcards.scheme} \
+                    --source_spm "{input.src_vocab}" --target_spm "{input.trg_vocab}" --annotation_method {wildcards.scheme} \
                     --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2 \
                     --mask_tag augmentsymbol3 --source_lang "{src}" --target_lang "{trg}" \
                     --source_corpus "{input.train_src}" --target_corpus "{input.train_trg}" \
                     --alignment_file "{input.alignments}" --terms_per_sent_ratio {wildcards.term_ratio} \
                     --sents_per_term_sent {wildcards.sents_per_term_sent}  \
                     --source_output_path "{output.annotated_src}" --target_output_path "{output.annotated_trg}" \
+                    --sp_input --sp_output \
                     --alignment_output_path "{output.annotated_alignments}" >> {log} 2>&1'''
 
 

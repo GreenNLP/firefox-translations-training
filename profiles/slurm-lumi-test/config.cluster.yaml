@@ -2,7 +2,7 @@
 single-gpu-partition: dev-g
 multi-gpu-partition: dev-g
 cpu-partition: debug
-cpu-account: project_462000088
-gpu-account: project_462000088
+cpu-account: project_462000447
+gpu-account: project_462000447
 time-limit: "00:30:00"
-gpu-time-limit: "06:00:00"
+gpu-time-limit: "03:00:00"

@@ -2,6 +2,6 @@
 single-gpu-partition: small-g
 multi-gpu-partition: standard-g
 cpu-partition: small
-cpu-account: project_462000088
-gpu-account: project_462000088
+cpu-account: project_462000447
+gpu-account: project_462000447
 time-limit: "48:00:00"
