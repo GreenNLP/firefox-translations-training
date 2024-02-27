@@ -25,25 +25,20 @@ then
     mkdir -p $model_dir
 fi
 
-# If model is not "best", check if it has been already downloaded
-if test -f "${model_dir}/${best_model}"; then
-    echo "Model has already been dowloaded to ${model_dir}/${best_model}"
-else
-    model_zip=${download_url##*/}
-    archive_path="${model_dir}/${model_zip}"
+model_zip=${download_url##*/}
+archive_path="${model_dir}/${model_zip}"
 
-    wget -O "${archive_path}" "${download_url}"
+wget -O "${archive_path}" "${download_url}"
 
-    cd ${model_dir}
-    unzip -j -o "${model_zip}"
-    rm ${model_zip}
+cd ${model_dir}
+unzip -j -o "${model_zip}"
+rm ${model_zip}
 
-    model_file=$(ls *.npz)
-    vocab_file=$(ls *vocab.yml)
-    #Create a soft link for the model with the name that the workflow expects 
-    ln -s $model_file ${best_model}
-    #Also create a standard name link for the vocab
-    ln -s $vocab_file "vocab.yml"
-fi
+model_file=$(ls *.npz)
+vocab_file=$(ls *vocab.yml)
+#Create a soft link for the model with the name that the workflow expects 
+ln -s $model_file ${best_model}
+#Also create a standard name link for the vocab
+ln -s $vocab_file "vocab.yml"
 
 echo "###### Done: Downloading and extracting opus mt model"

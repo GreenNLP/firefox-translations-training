@@ -149,10 +149,8 @@ align_dir = f"{data_dir}/alignment"
 student_prefix = config['experiment'].get('student-prefix')
 models_dir = f"{data_root_dir}/models/{dirname}/{experiment}"
 # Teacher dir
-if opusmt_teacher == "best":
+if opusmt_teacher:
     teacher_base_dir = f"{models_dir}/{{langpair}}/teacher-base"
-else:
-    teacher_base_dir = f"{models_dir}/teacher-base"
 teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
 if student_prefix:
     student_dir = f"{models_dir}/"+student_prefix+"_student"
@@ -783,12 +781,14 @@ rule merge_corpus:
 # created/used/connected to (in case of e.g. external APIs).
 if 'opusmt-teacher' in config['experiment']:
     rule download_teacher_model:
-        message: "Downloading OPUS-MT teacher model"
-        log: f"{log_dir}/download_teacher{{model_index}}-{{ens}}.log"
+        message: "Downloading OPUS-MT teacher model for {wildcards.langpair}"
+        log: f"{log_dir}/download_teacher_{{model_index}}-{{ens}}_{{langpair}}.log"
         conda: "envs/base.yml"
         threads: 1
-        output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}',vocab=f'{teacher_base_dir}{{model_index}}-{{ens}}/vocab.yml', model_dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}')
-        params: teacher_dir=f'{teacher_base_dir}{{model_index}}-{{ens}}',
+        output: model=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/{best_model}',
+                vocab=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/vocab.yml',
+                model_dir=directory(f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}')
+        params: teacher_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}',
                 teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)],
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
@@ -877,7 +877,7 @@ if opusmt_teacher:
         threads: 1
         input: 
             file=f'{translated}/{{langpair}}/{{corpus}}/file.{{part}}', 
-            teacher_model=f"{final_teacher_dir}{{model_index}}-0/{best_model}",
+            teacher_model=f"{teacher_base_dir}{{model_index}}-0/{best_model}",
             spm_encoder=ancient(spm_encoder)
         output: f'{translated}/{{langpair}}/{{corpus}}/file.{{part}}.{{model_index}}.opusmt'
         shell: '''bash pipeline/translate/opusmt-preprocess.sh \
@@ -913,7 +913,7 @@ rule translate_corpus:
         ancient(decoder),
         file=teacher_source_file,
         vocab=teacher_source_file if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
-        teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble)
+        teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True)
     output: file=teacher_target_file
     params: args=get_args('decoding-teacher')
     shell: '''bash pipeline/translate/translate-nbest.sh \
@@ -964,7 +964,7 @@ rule translate_mono_src:
     resources: gpu=gpus_num
     input:
         file=teacher_mono_source_file,vocab=vocab_path,
-        teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble),
+        teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True),
         bin=ancient(decoder)
     output: file=teacher_mono_target_file
     params: args=get_args('decoding-teacher')
