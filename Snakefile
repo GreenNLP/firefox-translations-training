@@ -30,6 +30,7 @@ marian_cmake = config['mariancmake']
 marian_version = config.get('marianversion','marian-dev')
 
 # experiment
+# This only works for bilingual models
 src = config['experiment'].get('src')
 trg = config['experiment'].get('trg')
 src_three_letter = config['experiment'].get('src_three_letter')
@@ -147,7 +148,11 @@ align_dir = f"{data_dir}/alignment"
 # models
 student_prefix = config['experiment'].get('student-prefix')
 models_dir = f"{data_root_dir}/models/{dirname}/{experiment}"
-teacher_base_dir = f"{models_dir}/teacher-base"
+# Teacher dir
+if opusmt_teacher == "best":
+    teacher_base_dir = f"{models_dir}/{{langpair}}/teacher-base"
+else:
+    teacher_base_dir = f"{models_dir}/teacher-base"
 teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
 if student_prefix:
     student_dir = f"{models_dir}/"+student_prefix+"_student"
@@ -784,9 +789,11 @@ if 'opusmt-teacher' in config['experiment']:
         threads: 1
         output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}',vocab=f'{teacher_base_dir}{{model_index}}-{{ens}}/vocab.yml', model_dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}')
         params: teacher_dir=f'{teacher_base_dir}{{model_index}}-{{ens}}',
-                teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)] 
+                teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)],
+                src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/opusmt/download-model.sh \
-                    "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {src_three_letter} {trg_three_letter} >> {log} 2>&1'''
+                    "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {params.src_three_letter} {params.trg_three_letter} >> {log} 2>&1'''
     
 elif not forward_pretrained:
     rule train_teacher:
