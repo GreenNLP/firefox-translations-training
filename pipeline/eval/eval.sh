@@ -18,6 +18,7 @@ marian=$7
 decoder_config=$8
 o2m=$9
 args=( "${@:10}" )
+model_dir=$(dirname $args) # This only works now for one available model per language pair
 
 mkdir -p "$(basename "${res_prefix}")"
 
@@ -32,7 +33,12 @@ else
     exit 0
 fi
 
-# Rest of your script continues here...
+# If the model is the best available, we need to check again whether the model is multilingual at the target side
+
+if [ $o2m == "best" ]; then   
+    o2m=$(cat ${model_dir}/one2many.txt)  # Read the content of the file
+    echo "Model is multilingual to the target side: $o2m"
+fi
 
 if [ $o2m == "True" ]; then # If the model is multitarget, add language tag for decoding
   pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add language tag for decoding
