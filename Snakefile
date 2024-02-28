@@ -696,12 +696,12 @@ rule add_lang_tag_corpus_src:
     log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" 
     conda: "envs/base.yml"
     threads: workflow.cores
-    input: f"{clean_corpus_prefix}.source.gz"
+    input: f"{clean_corpus_prefix}.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
     output: f"{clean_corpus_prefix}.source.langtagged.gz"
     params: prefix=f"{clean_corpus_prefix}",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source", model_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" "{params.model_dir}" >> {log} 2>&1'''
+            suffix="source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" "{input.model_dir}" >> {log} 2>&1'''
 
 if do_train_backward:
     rule add_lang_tag_corpus_backward:
@@ -709,24 +709,24 @@ if do_train_backward:
         log: f"{log_dir}/add_langid_corpus_{{langpair}}_backward.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{clean_corpus_prefix}.target.gz"
+        input: f"{clean_corpus_prefix}.target.gz", model_dir=f'{models_dir}/{{langpair}}/backward'
         output: f"{clean_corpus_prefix}.target.langtagged.gz"
         params: prefix=f"{clean_corpus_prefix}",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target", model_dir=f'{models_dir}/{{langpair}}/backward'
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" "{params.model_dir}" >> {log} 2>&1'''
+                suffix="target"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" "{input.model_dir}" >> {log} 2>&1'''
     
     rule add_lang_tag_devset_backward:
         message: "Adding language tag id for devset for backward model training"
         log: f"{log_dir}/add_langid_devset_{{langpair}}_backward.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{original}/{{langpair}}/devset.target.gz"
+        input: f"{original}/{{langpair}}/devset.target.gz",  model_dir=f'{models_dir}/{{langpair}}/backward'
         output: f"{original}/{{langpair}}/devset.target.langtagged.gz"
         params: prefix=f"{original}/{{langpair}}/devset",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target", model_dir=f'{models_dir}/{{langpair}}/backward'
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}"  "{params.model_dir}" >> {log} 2>&1'''
+                suffix="target"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}"  "{input.model_dir}" >> {log} 2>&1'''
 
     rule merge_corpus_backward: 
         message: "Merging clean parallel datasets for backward training" 
@@ -755,12 +755,12 @@ rule add_lang_tag_devset:
     log: f"{log_dir}/add_langid_devset_{{langpair}}.log" 
     conda: "envs/base.yml"
     threads: workflow.cores
-    input: f"{original}/{{langpair}}/devset.source.gz"
+    input: f"{original}/{{langpair}}/devset.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
     output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
     params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source", model_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}"  "{params.model_dir}" >> {log} 2>&1'''
+            suffix="source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}"  "{input.model_dir}" >> {log} 2>&1'''
 
 rule merge_corpus: 
     message: "Merging clean parallel datasets"
