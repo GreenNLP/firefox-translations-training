@@ -15,6 +15,8 @@ best_model=$3
 source_lang=$4
 target_lang=$5
 
+mkdir -p $model_dir
+
 #if download url is best, find the best model from list
 if [[ $download_url = "best" ]]
 then
@@ -22,7 +24,14 @@ then
     wget -O ${model_list} "https://raw.githubusercontent.com/Helsinki-NLP/Tatoeba-Challenge/master/models/released-model-results.txt"
     download_url=$(grep -P -m 1 "^${source_lang}-${target_lang}" ${model_list} | cut -f 4) 
     echo "###### Using best ${source_lang}-${target_lang} model ${download_url}"
-    mkdir -p $model_dir
+    model_target=$(echo "$download_url" | cut -d'/' -f5 | cut -d '-' -f2) #check if the target language equals the dowload url > ture otherwise false
+    if [ $model_target == $target_lang ]; then   
+        o2m="False"
+    else
+        o2m="True"
+    fi
+    echo ${o2m} > ${model_dir}/one2many.txt # Read the content of the file
+    echo "Model is multilingual to the target side: $o2m"
 fi
 
 model_zip=${download_url##*/}
