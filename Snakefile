@@ -149,6 +149,7 @@ align_dir = f"{data_dir}/alignment"
 student_prefix = config['experiment'].get('student-prefix')
 models_dir = f"{data_root_dir}/models/{dirname}/{experiment}"
 # Teacher dir
+teacher_base_dir = f"{models_dir}/teacher-base"
 if opusmt_teacher:
     teacher_base_dir = f"{models_dir}/{{langpair}}/teacher-base"
 teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
@@ -165,6 +166,8 @@ else:
 best_model_metric = config['experiment']['best-model']
 best_model = f"final.model.npz.best-{best_model_metric}.npz"
 backward_dir = f'{models_dir}/backward'
+if opusmt_backward:
+    backward_dir = f"{models_dir}/{{langpair}}/backward"
 spm_sample_size=config['experiment'].get('spm-sample-size')
 spm_vocab_size=config['experiment'].get('spm-vocab-size',"32000")
 
@@ -626,13 +629,15 @@ elif opusmt_backward:
     deseg_mono_trg_outfile = f'{mono_trg_file}.out.deseg'
     
     rule download_opusmt_backward:
-        message: "Downloading OPUS-MT backward model"
-        log: f"{log_dir}/download_backward.log"
+        message: "Downloading OPUS-MT backward model {wildcards.langpair}"
+        log: f"{log_dir}/download_backward_{{langpair}}.log"
         conda: "envs/base.yml"
-        output:  model=f'{backward_dir}/{best_model}',vocab=f'{backward_dir}/vocab.yml', model_dir=directory({backward_dir})
+        output: model=f'{backward_dir}/{best_model}',vocab=f'{backward_dir}/vocab.yml',
+                model_dir=directory(f'{backward_dir}')
+        params: src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/opusmt/download-model.sh \
-                    "{opusmt_backward}" "{backward_dir}" "{best_model}" {trg_three_letter} {src_three_letter} >> {log} 2>&1''' 
-
+                    "{opusmt_backward}" "{backward_dir}" "{best_model}" {params.trg_three_letter} {params.src_three_letter} >> {log} 2>&1''' 
 
 if augment_corpus:
     checkpoint split_mono_trg:
@@ -1063,7 +1068,7 @@ rule opusmt_preprocess_for_scoring:
     shell: '''bash pipeline/translate/opusmt-preprocess.sh \
               {input.res_src} {input.model} "target.spm" {input.spm_encoder} {o2m_teacher} "" "" && \ 
               bash pipeline/translate/opusmt-preprocess.sh \
-              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} {o2m_teacher} {params.src} {o2m_backward} >> {log} 2>&1'''
+              {input.res_trg} {input.model} "source.spm" {input.spm_encoder} "" {params.src} {o2m_backward} >> {log} 2>&1'''
 
 rule score:
     message: "Scoring"
