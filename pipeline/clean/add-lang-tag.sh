@@ -12,6 +12,12 @@ target_lang_token=$1
 file=$2
 o2m=$3
 suffix=$4
+model_dir=$5
+
+if [ $o2m == "best" ]; then   
+    o2m=$(cat ${model_dir}/one2many.txt)  # Read the content of the file
+    echo "Model is multilingual to the target side: $o2m"
+fi
 
 # Target_lang_token needs to be provided only for multilingual many2one teacher models
 # First check whether model is multilingual AND preprocessing is done on source side (never language tags on target side)

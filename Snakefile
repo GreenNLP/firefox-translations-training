@@ -700,8 +700,8 @@ rule add_lang_tag_corpus_src:
     output: f"{clean_corpus_prefix}.source.langtagged.gz"
     params: prefix=f"{clean_corpus_prefix}",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source"
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" >> {log} 2>&1'''
+            suffix="source", model_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" "{params.model_dir}" >> {log} 2>&1'''
 
 if do_train_backward:
     rule add_lang_tag_corpus_backward:
@@ -713,8 +713,8 @@ if do_train_backward:
         output: f"{clean_corpus_prefix}.target.langtagged.gz"
         params: prefix=f"{clean_corpus_prefix}",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target"
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" >> {log} 2>&1'''
+                suffix="target", model_dir=f'{models_dir}/{{langpair}}/backward'
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" "{params.model_dir}" >> {log} 2>&1'''
     
     rule add_lang_tag_devset_backward:
         message: "Adding language tag id for devset for backward model training"
@@ -725,8 +725,8 @@ if do_train_backward:
         output: f"{original}/{{langpair}}/devset.target.langtagged.gz"
         params: prefix=f"{original}/{{langpair}}/devset",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target"
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}" >> {log} 2>&1'''
+                suffix="target", model_dir=f'{models_dir}/{{langpair}}/backward'
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}"  "{params.model_dir}" >> {log} 2>&1'''
 
     rule merge_corpus_backward: 
         message: "Merging clean parallel datasets for backward training" 
@@ -759,8 +759,8 @@ rule add_lang_tag_devset:
     output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
     params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source"
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}" >> {log} 2>&1'''
+            suffix="source", model_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}"  "{params.model_dir}" >> {log} 2>&1'''
 
 rule merge_corpus: 
     message: "Merging clean parallel datasets"
