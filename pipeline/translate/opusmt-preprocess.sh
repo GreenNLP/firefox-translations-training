@@ -25,6 +25,16 @@ else
     model_index_suffix=""
 fi
 
+# If the model is the best available, we need to check again whether the model is multilingual at the target side
+if [ $o2m_teacher == "best" ]; then   
+    o2m_teacher=$(cat ${model_dir}/one2many.txt)  # Read the content of the file
+    echo "Model is multilingual to the target side: $o2m_teacher"
+fi
+
+if [ $o2m_backward == "best" ]; then   
+    o2m_backward=$(cat ${model_dir}/one2many.txt)  # Read the content of the file
+    echo "Model is multilingual to the target side: $o2m_backward"
+fi
 
 if [ "${source_file##*.}" == "gz" ]; then #This applies when scoring
     echo "source file is gzipped"
