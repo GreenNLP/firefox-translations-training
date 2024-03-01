@@ -16,6 +16,7 @@ experiment:
 
   wmt23_termtask:
     annotation-schemes:
+      - 'lemma-nonfac-int-append'
       - 'surface-nonfac-int-append'
       - 'surface-nonfac-int-replace'
     term-ratios: [2]

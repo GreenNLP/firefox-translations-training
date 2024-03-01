@@ -45,7 +45,7 @@ echo "### Training ${model_dir}"
 # if doesn't fit in RAM, remove --shuffle-in-ram and add --shuffle batches
 
 "${MARIAN}"/marian \
-  --task transformer-big \
+  --task transformer-base \
   --model "${model_dir}/model_unfinished.npz" \
   --train-sets "${train_set_prefix}".{"${src}","${trg}"}.gz \
   -T "${model_dir}/tmp" \

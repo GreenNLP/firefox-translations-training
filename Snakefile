@@ -212,7 +212,7 @@ if wmt23_termtask:
     sents_per_term_sents = wmt23_termtask['sents-per-term-sents']
 
     #results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/wmt23_termtask.score',ens=ensemble))
-    #results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.score',ens=ensemble))
+    results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.score',ens=ensemble))
 
     if finetune_teacher_with_terms: 
         #results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/wmt23_termtask.score',
@@ -1448,29 +1448,28 @@ rule annotate_evalsets:
     #group 'student'
     input:
         evalsets_aln=f'{eval_data_dir}/evalsets.aln.gz',
-        evalsets_src=f'{eval_data_dir}/evalsets.src.gz',
-        evalsets_trg=f'{eval_data_dir}/evalsets.trg.gz',
-        vocab=vocab_path
+        evalsets_src=f'{eval_data_dir}/evalsets.spm.src.gz',
+        evalsets_trg=f'{eval_data_dir}/evalsets.spm.trg.gz',
+        src_vocab=f'{teacher_base_dir}0-0/source.spm',
+        trg_vocab=f'{teacher_base_dir}0-0/target.spm'
     output:
         evalsets_terms_src=f'{eval_data_dir}/evalsets_terms.src',
         evalsets_terms_trg=f'{eval_data_dir}/evalsets_terms.trg',
         evalsets_terms_aln=f'{eval_data_dir}/evalsets_terms.aln',
-        evalsets_terms_jsonl=f'{eval_data_dir}/evalsets_terms.jsonl'
+        evalsets_sgm_src=f'{eval_data_dir}/evalsets.src.sgm',
+        evalsets_sgm_trg=f'{eval_data_dir}/evalsets.trg.sgm'	
+	
     params: 
         evalsets_terms_src_gz=f'{eval_data_dir}/evalsets_terms.src.gz',
         evalsets_terms_trg_gz=f'{eval_data_dir}/evalsets_terms.trg.gz',
         evalsets_terms_aln_gz=f'{eval_data_dir}/evalsets_terms.aln.gz',
-    shell: '''python 3rd_party/soft-term-constraints/src/softconstraint.py \
-                --source_spm "{input.vocab}" --target_spm "{input.vocab}"  \
-                --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2 \
-                --mask_tag augmentsymbol3 --source_lang "{src}" --target_lang "{trg}" \
-                --source_corpus "{input.evalsets_src}" --target_corpus "{input.evalsets_trg}" \
-                --alignment_file "{input.evalsets_aln}" --do_not_augment --omit_unannotated  \
-                --source_output_path "{params.evalsets_terms_src_gz}" --target_output_path "{params.evalsets_terms_trg_gz}" \
-                --alignment_output_path "{params.evalsets_terms_aln_gz}" --term_jsonl_output_path "{output.evalsets_terms_jsonl}" \
-                && zcat "{params.evalsets_terms_src_gz}" > "{output.evalsets_terms_src}" \
-                && zcat "{params.evalsets_terms_trg_gz}" > "{output.evalsets_terms_trg}" \
-                && zcat "{params.evalsets_terms_aln_gz}" > "{output.evalsets_terms_aln}" >> {log} 2>&1'''
+    shell: '''bash pipeline/opusmt/annotate_evalset.sh "{input.src_vocab}" "{input.trg_vocab}" \
+                "{src}" "{trg}" "{input.evalsets_src}" "{input.evalsets_trg}" "{input.evalsets_aln}" \
+                "{params.evalsets_terms_src_gz}" "{params.evalsets_terms_trg_gz}" \
+                "{params.evalsets_terms_aln_gz}" "{output.evalsets_sgm_src}" \
+                "{output.evalsets_sgm_trg}" "{params.evalsets_terms_src_gz}" "{output.evalsets_terms_src}" \
+                "{params.evalsets_terms_trg_gz}" "{output.evalsets_terms_trg}" \
+                "{params.evalsets_terms_aln_gz}" "{output.evalsets_terms_aln}" >> {log} 2>&1'''
 
 rule eval_termscore: 
     message: "Scoring evalsets based on recognized terms"
@@ -1486,8 +1485,8 @@ rule eval_termscore:
         ancient(decoder),
         eval_src=rules.annotate_evalsets.output.evalsets_terms_src,
         eval_trg=rules.annotate_evalsets.output.evalsets_terms_trg,
-        eval_dict=rules.annotate_evalsets.output.evalsets_terms_jsonl,
-        vocab=vocab_path, 
+        evalsets_sgm_src=f'{eval_data_dir}/evalsets.src.sgm',
+        evalsets_sgm_trg=f'{eval_data_dir}/evalsets.trg.sgm',
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
                                     if "finetuned-term" in wildcards.model
                                     else f'{models_dir}/{wildcards.model}/{best_model}'
@@ -1497,13 +1496,14 @@ rule eval_termscore:
     output: f'{eval_res_dir}/{{model}}/evalsets_terms.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/evalsets_terms',
-        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/decoder.yml'
                             if "finetuned-term" in wildcards.model
-                            else f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            else f'{models_dir}/{wildcards.model}/decoder.yml',
+        vocab=lambda wildcards: f'{models_dir}/{wildcards.model}/vocab.yml'
                             #if wildcards.model != 'teacher-ensemble'
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
-            "{params.decoder_config}" {input.models} {input.vocab} {params.res_prefix} >> {log} 2>&1'''
+    shell: '''bash pipeline/opusmt/eval.sh "{input.eval_src}" "{src}" "{trg}" \
+            "{params.decoder_config}" {input.models} {params.vocab} {params.res_prefix} >> {log} 2>&1'''
 
 
 rule testset_mixture_termscore: 
@@ -1577,42 +1577,6 @@ rule blindset_mixture_termscore:
     shell: '''bash pipeline/wmt23_termtask/term_mixture.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.vocab} {params.res_prefix} 8 {params.models} >> {log} 2>&1'''
 
-rule eval_mixture_termscore: 
-    message: "Scoring evalsets based on recognized terms using mixture of models"
-    log: f"{log_dir}/eval/eval_mixture-{mixture_hash}_termscore.log"
-    conda: "envs/base.yml"
-    threads: 16
-    resources: gpu=8
-    #group '{model}'
-    priority: 50
-    wildcard_constraints:
-        models="[+\w-]+"
-    input:
-        ancient(decoder),
-        eval_src=rules.annotate_evalsets.output.evalsets_terms_src,
-        eval_trg=rules.annotate_evalsets.output.evalsets_terms_trg,
-        eval_dict=rules.annotate_evalsets.output.evalsets_terms_jsonl,
-        vocab=vocab_path, 
-        models=lambda wildcards: [f'{models_dir}/{model}/model.npz'
-                                    if "finetuned-term" in model
-                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models] 
-                                    #TODO: handle ensembling better
-                                    #if wildcards.model != 'teacher-ensemble'
-                                    #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
-    output: f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms.mixture.{trg}'
-    params:
-        models=lambda wildcards: " ".join([f'{models_dir}/{model}/model.npz'
-                                    if "finetuned-term" in model
-                                    else f'{models_dir}/{model}/{best_model}' for model in mixture_of_models]), 
-        res_prefix=f'{eval_res_dir}/mixture-{mixture_hash}/evalsets_terms',
-        decoder_config=lambda wildcards: [f'{models_dir}/{model}/model.npz.decoder.yml'
-                            if "finetuned-term" in model
-                            else f'{models_dir}/{model}/{best_model}.decoder.yml' for model in mixture_of_models][0] 
-                            #if wildcards.model != 'teacher-ensemble'
-                            #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/wmt23_termtask/term_mixture.sh "{input.eval_src}" "{input.eval_dict}" "{src}" "{trg}" \
-            "{params.decoder_config}" {input.vocab} {params.res_prefix} 8 {params.models} >> {log} 2>&1'''
-
 rule align_evalsets:
     message: 'Training word alignment for evalsets'
     log: f"{log_dir}/evalset_alignments.log"
@@ -1620,21 +1584,21 @@ rule align_evalsets:
     threads: workflow.cores
     input:
         ancient(spm_encoder), ancient(spm_exporter),
-        evalset_src=expand(f"{eval_data_dir}/{{dataset}}.{src}.gz",dataset=eval_datasets),
-        evalset_trg=expand(f"{eval_data_dir}/{{dataset}}.{trg}.gz",dataset=eval_datasets),
+        evalset_src=expand(f'{eval_data_dir}/{{dataset}}.{src}.gz',dataset=eval_datasets),
+        evalset_trg=expand(f'{eval_data_dir}/{{dataset}}.{trg}.gz',dataset=eval_datasets),
         src_corpus=f'{teacher_corpus}.{src}.gz',trg_corpus=f'{teacher_corpus}.{trg}.gz',
-        vocab=vocab_path,
+        src_vocab=f'{teacher_base_dir}0-0/source.spm',
+        trg_vocab=f'{teacher_base_dir}0-0/target.spm',
         fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),
-        extract_lex=ancient(rules.extract_lex.output)
     output:
         evalsets_aln=f'{eval_data_dir}/evalsets.aln.gz',
-        evalsets_src=f'{eval_data_dir}/evalsets.src.gz',
-        evalsets_trg=f'{eval_data_dir}/evalsets.trg.gz'
+        evalsets_src=f'{eval_data_dir}/evalsets.spm.src.gz',
+        evalsets_trg=f'{eval_data_dir}/evalsets.spm.trg.gz'
     params: output_dir=eval_data_dir 
     shell: '''bash -c \'cat {input.evalset_src} > {output.evalsets_src} && \
              cat {input.evalset_trg} > {output.evalsets_trg} && \
              bash pipeline/eval/generate-alignment.sh \
-                    "{output.evalsets_src}" "{output.evalsets_trg}" "{input.src_corpus}" "{input.trg_corpus}" "{input.vocab}" "{params.output_dir}" {threads} >> {log} 2>&1\''''
+                    "{input.evalset_src}" "{input.evalset_trg}" "{input.src_corpus}" "{input.trg_corpus}" "{input.src_vocab}" "{input.trg_vocab}" "{params.output_dir}" {threads} >> {log} 2>&1\''''
 
 rule wmt23_termtask_score: 
     message: "Scoring wmt23 termtask dev data"

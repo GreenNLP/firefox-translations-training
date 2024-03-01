@@ -16,11 +16,12 @@ evalset_src=$1
 evalset_trg=$2
 train_src=$3
 train_trg=$4
-vocab_path=$5
-output_dir=$6
-threads=$7
+src_vocab_path=$5
+trg_vocab_path=$6
+output_dir=$7
+threads=$8
 
-evalsets_length=$(zcat "${evalset_src}" | wc -l)
+evalsets_length=$(zcat ${evalset_src} | wc -l)
 
 cd "$(dirname "${0}")"
 
@@ -33,20 +34,20 @@ aln_corpus_src=${dir}/aln_corpus.src
 aln_corpus_trg=${dir}/aln_corpus.trg
 
 echo "#### Creating alignment corpus"
-zcat "${evalset_trg}"  > "${aln_corpus_trg}"
+zcat ${evalset_trg}  > "${aln_corpus_trg}"
 head -n 10000000 <(zcat "${train_trg}") >> "${aln_corpus_trg}"
-zcat "${evalset_src}" > "${aln_corpus_src}"
+zcat ${evalset_src} > "${aln_corpus_src}"
 head -n 10000000 <(zcat "${train_src}") >> "${aln_corpus_src}"
 
 
 echo "### Subword segmentation with SentencePiece"
 test -s "${dir}/corpus.spm.${SRC}.gz" ||
   cat "${aln_corpus_src}" |
-  parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${vocab_path}" |
+  parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${src_vocab_path}" |
   pigz >"${dir}/corpus.spm.${SRC}.gz"
 test -s "${dir}/corpus.spm.${TRG}.gz" ||
   cat "${aln_corpus_trg}" |
-  parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${vocab_path}" |
+  parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${trg_vocab_path}" |
   pigz >"${dir}/corpus.spm.${TRG}.gz"
 
 echo "### Creating merged corpus"
@@ -70,8 +71,10 @@ test -s "${dir}/full.aln.gz" ||
   pigz >"${dir}/full.aln.gz"
 
 head -n ${evalsets_length} <(zcat "${dir}/full.aln.gz") | gzip > "${output_dir}/evalsets.aln.gz"
+head -n ${evalsets_length} <(zcat "${dir}/corpus.spm.${SRC}.gz") | gzip > "${output_dir}/evalsets.spm.src.gz"
+head -n ${evalsets_length} <(zcat "${dir}/corpus.spm.${TRG}.gz") | gzip > "${output_dir}/evalsets.spm.trg.gz"
 
 echo "### Deleting tmp dir"
 #rm -rf "${dir}"
 
-echo "###### Done: Generating alignments and shortlist"
+echo "###### Done: Generating alignments and segmented corpus"
