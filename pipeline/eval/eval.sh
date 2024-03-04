@@ -18,7 +18,6 @@ marian=$7
 decoder_config=$8
 o2m=$9
 args=( "${@:10}" )
-model_dir=$(dirname $args) # This only works now for one available model per language pair
 
 mkdir -p "$(basename "${res_prefix}")"
 
