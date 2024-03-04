@@ -632,12 +632,13 @@ elif opusmt_backward:
         message: "Downloading OPUS-MT backward model {wildcards.langpair}"
         log: f"{log_dir}/download_backward_{{langpair}}.log"
         conda: "envs/base.yml"
-        output: model=f'{backward_dir}/{best_model}',vocab=f'{backward_dir}/vocab.yml',
-                model_dir=directory(f'{backward_dir}')
-        params: src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+        output: model=f'{models_dir}/{{langpair}}/backward/{best_model}',vocab=f'{models_dir}/{{langpair}}/backward/vocab.yml',
+                model_dir=directory(f'{models_dir}/{{langpair}}/backward')
+        params: model_dir=f'{models_dir}/{{langpair}}/backward',
+                src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/opusmt/download-model.sh \
-                    "{opusmt_backward}" "{backward_dir}" "{best_model}" {params.trg_three_letter} {params.src_three_letter} >> {log} 2>&1''' 
+                    "{opusmt_backward}" "{params.model_dir}" "{best_model}" {params.trg_three_letter} {params.src_three_letter} >> {log} 2>&1''' 
 
 if augment_corpus:
     checkpoint split_mono_trg:
