@@ -1141,7 +1141,8 @@ rule train_student:
         ancient(trainer),
         train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment,
-        vocab=vocab_path
+        vocab=vocab_path,
+        dev_src=rules.merge_devset.output.src
     output: model=f'{student_dir}/{best_model}'
     params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
             args=get_args("training-student")
