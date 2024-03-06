@@ -1,7 +1,7 @@
 #OPUS-CAT Terms, eng-fin
 
 experiment:
-  name: opuscat-terms-eng-fin
+  name: opuscat-terms-eng-fin-10M
   src: en
   trg: fi
 
@@ -17,15 +17,13 @@ experiment:
   wmt23_termtask:
     annotation-schemes:
       - 'lemma-nonfac-int-append'
-      - 'surface-nonfac-int-append'
-      - 'surface-nonfac-int-replace'
     term-ratios: [2]
-    sents-per-term-sents: [10]
+    sents-per-term-sents: [1]
     train-term-teacher: False
     finetune-teacher-with-terms: True
 
   # Since we are just doing fine-tuning, just use 5 mil sentences
-  parallel-max-sentences: 5000000
+  parallel-max-sentences: 10000000
 
   # limits per downloaded dataset
   mono-max-sentences-src: 100000000
@@ -45,7 +43,7 @@ marian-args:
 
 datasets:
   # parallel training corpus
-  tc_scored: /pfs/lustrep2/scratch/project_465000961/niemine1/opuscat_terms/data/finetuning_data/en-fi/tc_Tatoeba-Challenge-v2023-09-26.scored.gz
+  tc_scored: ../data/finetuning_data/en-fi/tc_Tatoeba-Challenge-v2023-09-26.scored.gz
   # datasets to merge for validation while training
   devtest:
     - flores_dev

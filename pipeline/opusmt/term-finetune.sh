@@ -67,7 +67,7 @@ echo "### Training ${model_dir}"
 
 
 cp "${model_dir}/model_unfinished.npz" "${model_dir}/model.npz"  
-cp "${model_dir}/model_unfinished.npz.decoder.yml" "${model_dir}/model.npz.decoder.npz"  
+cp "${model_dir}/model_unfinished.npz.decoder.yml" "${model_dir}/model.npz.decoder.yml"  
 
 echo "### Model training is completed: ${model_dir}"
 echo "###### Done: Training a model"

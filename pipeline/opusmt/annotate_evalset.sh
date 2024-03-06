@@ -24,7 +24,7 @@ python 3rd_party/soft-term-constraints/src/softconstraint.py \
   --term_start_tag augmentsymbol0 --term_end_tag augmentsymbol1 --trans_end_tag augmentsymbol2 \
   --mask_tag augmentsymbol3 --source_lang "${src}" --target_lang "${trg}" \
   --source_corpus "${evalsets_src}" --target_corpus "${evalsets_trg}" \
-  --alignment_file "${evalsets_aln}" --omit_unannotated  \
+  --alignment_file "${evalsets_aln}" --omit_unannotated \
   --source_output_path "${evalsets_terms_src_gz}" --target_output_path "${evalsets_terms_trg_gz}" \
   --alignment_output_path "${evalsets_terms_aln_gz}" \
   --source_sgm_path "${evalsets_sgm_src}" \

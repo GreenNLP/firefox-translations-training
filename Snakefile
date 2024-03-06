@@ -1392,7 +1392,7 @@ rule evaluate:
     input:
         ancient(decoder),
         data=multiext(f'{eval_data_dir}/{{dataset}}',f".{src}.gz",f".{trg}.gz"),
-        vocab=vocab_path,
+        src_vocab=f'{teacher_base_dir}0-0/source.spm',
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
                                     if "finetuned-term" in wildcards.model
                                     else f'{models_dir}/{wildcards.model}/{best_model}'
@@ -1413,7 +1413,7 @@ rule evaluate:
                             #if wildcards.model != 'teacher-ensemble'
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" \
-             {params.src_lng} {params.trg_lng} "{params.decoder_config}" {input.vocab} {input.models} >> {log} 2>&1'''
+             {params.src_lng} {params.trg_lng} "{params.decoder_config}" {input.src_vocab} {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
     message: "Evaluating qunatized student model"
@@ -1496,14 +1496,15 @@ rule eval_termscore:
     output: f'{eval_res_dir}/{{model}}/evalsets_terms.score'
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/evalsets_terms',
-        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/decoder.yml'
+        decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
                             if "finetuned-term" in wildcards.model
                             else f'{models_dir}/{wildcards.model}/decoder.yml',
         vocab=lambda wildcards: f'{models_dir}/{wildcards.model}/vocab.yml'
                             #if wildcards.model != 'teacher-ensemble'
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/opusmt/eval.sh "{input.eval_src}" "{src}" "{trg}" \
-            "{params.decoder_config}" {input.models} {params.vocab} {params.res_prefix} >> {log} 2>&1'''
+            "{params.decoder_config}" {input.models} {params.vocab} {params.res_prefix} \
+            "{input.evalsets_sgm_src}" "{input.evalsets_sgm_trg}" >> {log} 2>&1'''
 
 
 rule testset_mixture_termscore: 
@@ -1586,7 +1587,7 @@ rule align_evalsets:
         ancient(spm_encoder), ancient(spm_exporter),
         evalset_src=expand(f'{eval_data_dir}/{{dataset}}.{src}.gz',dataset=eval_datasets),
         evalset_trg=expand(f'{eval_data_dir}/{{dataset}}.{trg}.gz',dataset=eval_datasets),
-        src_corpus=f'{teacher_corpus}.{src}.gz',trg_corpus=f'{teacher_corpus}.{trg}.gz',
+        src_corpus=ancient(f'{teacher_corpus}.{src}.gz'),trg_corpus=ancient(f'{teacher_corpus}.{trg}.gz'),
         src_vocab=f'{teacher_base_dir}0-0/source.spm',
         trg_vocab=f'{teacher_base_dir}0-0/target.spm',
         fast_align=ancient(rules.fast_align.output.fast_align), atools=ancient(rules.fast_align.output.atools),

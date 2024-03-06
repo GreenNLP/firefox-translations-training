@@ -24,4 +24,4 @@
 	url = git@github.com:TommiNieminen/soft-term-constraints.git
 [submodule "3rd_party/terminology_evaluation"]
 	path = 3rd_party/terminology_evaluation
-	url = git@github.com:mahfuzibnalam/terminology_evaluation.git
+	url = git@github.com:TommiNieminen/terminology_evaluation.git
