@@ -78,7 +78,6 @@ marian_args = {name: ' '.join([f'--{k} {v}' for k,v in conf.items() ])
 opusmt_teacher = config['experiment'].get('opusmt-teacher')
 if opusmt_teacher and not isinstance(opusmt_teacher,list):
     opusmt_teacher = [opusmt_teacher]
-
 opusmt_backward = config['experiment'].get('opusmt-backward')
 
 # if no target language token specified, use src (they might be different in rare cases)
@@ -635,8 +634,8 @@ elif opusmt_backward:
         output: model=f'{models_dir}/{{langpair}}/backward/{best_model}',vocab=f'{models_dir}/{{langpair}}/backward/vocab.yml',
                 model_dir=directory(f'{models_dir}/{{langpair}}/backward')
         params: model_dir=f'{models_dir}/{{langpair}}/backward',
-                # This assumes that if there are multiple teachers, each one corresponds to a language pair
-                backward_url=lambda wildcards: opusmt_backward[langpairs.index(wildcards.langpair)] if len(opusmt_backward) == len(langpairs) else opusmt_backward,
+                # If the opusmt_backward is a dictionary, it will download a backward model for each langpair
+                backward_url=lambda wildcards: opusmt_backward["-".join(wildcards.langpair.split("-")[::-1])] if isinstance(opusmt_backward,dict) else opusmt_backward,
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
                 trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
         shell: '''bash pipeline/opusmt/download-model.sh \
@@ -788,22 +787,39 @@ rule merge_corpus:
 # models to use, and then prefixes (opusmt_, train_, pretrained_, nllb_ etc.) determine how the models are
 # created/used/connected to (in case of e.g. external APIs).
 if 'opusmt-teacher' in config['experiment']:
-    rule download_teacher_models:
-        message: "Downloading OPUS-MT teacher model for {wildcards.langpair}"
-        log: f"{log_dir}/download_teacher_{{model_index}}-{{ens}}_{{langpair}}.log"
-        conda: "envs/base.yml"
-        threads: 1
-        output: model=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/{best_model}',
-                vocab=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/vocab.yml',
-                model_dir=directory(f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}')
-        params: teacher_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}',
-                # This assumes that if there are multiple teachers, each one corresponds to a language pair
-                teacher_url=lambda wildcards: opusmt_teacher[langpairs.index(wildcards.langpair)] if len(opusmt_teacher) == len(langpairs) else opusmt_teacher[int(wildcards.model_index)],
-                src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
-        shell: '''bash pipeline/opusmt/download-model.sh \
-                    "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {params.src_three_letter} {params.trg_three_letter} >> {log} 2>&1'''
-    
+    if not isinstance(opusmt_teacher[0],dict):
+        rule download_teacher_models:
+            message: "Downloading OPUS-MT teacher model for {wildcards.langpair}"
+            log: f"{log_dir}/download_teacher_{{model_index}}-{{ens}}_{{langpair}}.log"
+            conda: "envs/base.yml"
+            threads: 1
+            output: model=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/{best_model}',
+                    vocab=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}/vocab.yml',
+                    model_dir=directory(f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}')
+            params: teacher_dir=f'{models_dir}/{{langpair}}/teacher-base{{model_index}}-{{ens}}',
+                    # This assumes that if there are multiple teachers, each one corresponds to a language pair
+                    teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)],
+                    src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                    trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
+            shell: '''bash pipeline/opusmt/download-model.sh \
+                        "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {params.src_three_letter} {params.trg_three_letter} >> {log} 2>&1'''
+    else:
+        # In case you specify a specific teacher per language pair
+        rule download_teacher_per_langpair:
+            message: "Downloading OPUS-MT teacher model for {wildcards.langpair}"
+            log: f"{log_dir}/download_teacher_0-0_{{langpair}}.log"
+            conda: "envs/base.yml"
+            output: model=f'{models_dir}/{{langpair}}/teacher-base0-0/{best_model}',
+                    vocab=f'{models_dir}/{{langpair}}/teacher-base0-0/vocab.yml',
+                    model_dir=directory(f'{models_dir}/{{langpair}}/teacher-base0-0')
+            params: teacher_dir=f'{models_dir}/{{langpair}}/teacher-base0-0',
+                    # This assumes that if there are multiple teachers, each one corresponds to a language pair
+                    teacher_url=lambda wildcards: opusmt_teacher[0][wildcards.langpair],
+                    src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
+                    trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3()
+            shell: '''bash pipeline/opusmt/download-model.sh \
+                        "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {params.trg_three_letter} {params.src_three_letter} >> {log} 2>&1''' 
+
 elif not forward_pretrained:
     rule train_teacher:
         message: "Training teacher on all data"
