@@ -1119,16 +1119,53 @@ rule ce_filter:
     shell: '''bash pipeline/cefilter/ce-filter.sh \
                 "{params.input_prefix}" "{params.output_prefix}" "{input.scores}" >> {log} 2>&1'''
 
+# It may be that the teacher is not multi-target but the student is, we have to make sure that the corpus are langtagged
+rule add_lang_tag_corpus_src_for_student:
+    message: "Adding language tag id for student training"
+    log: f"{log_dir}/add_langid_corpus_{{langpair}}_student.log" 
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input: expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
+    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz"
+    params: prefix=f"{filtered}/{{langpair}}/corpus",
+            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+            suffix="source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_student}" "{params.suffix}" "" >> {log} 2>&1'''
+
+rule add_lang_tag_devset_for_student:
+    message: "Adding language tag id for devset for student training"
+    log: f"{log_dir}/add_langid_devset_{{langpair}}_student.log" 
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input: f"{original}/{{langpair}}/devset.source.gz"
+    output: f"{original}/{{langpair}}/devset.student.source.langtagged.gz"
+    params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
+            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+            suffix="student.source"
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_student}"  "{params.suffix}"  "" >> {log} 2>&1'''
+
+rule merge_devset_for_student:
+    message: "Merging clean parallel datasets"
+    log: f"{log_dir}/merge_devset.log"
+    conda: "envs/base.yml"
+    threads: workflow.cores
+    input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['student.source.langtagged', 'target']),
+            bin=ancient(deduper)
+    output: src=f"{original}/devset.student.source.gz",trg=f"{original}/devset.student.target.gz"
+    params: prefix_input=f"{original}/*/devset.student", prefix_target=f"{original}/*/devset", prefix_output=f"{original}/devset"
+    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.student.source.gz"
+    cat $(echo {params.prefix_target}.target.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.student.target.gz" '''
+
 rule merge_filtered:
     message: "Merging filtered parallel datasets"
     log: f"{log_dir}/merge_filtered_corpus.log"
     conda: "envs/base.yml"
     threads: workflow.cores
-    input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
+    input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target'])
     output: src=f"{filtered}/corpus.source.gz",trg=f"{filtered}/corpus.target.gz"
     params: prefix_input=f"{filtered}/*/corpus", prefix_output=f"{filtered}/corpus"
-    shell: '''cat $(echo {params.prefix_input}.source.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
-    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
+    shell: '''cat $(echo {params.prefix_input}.source.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.source.gz"
+    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.target.gz" '''
 
 rule alignments:
     message: 'Training word alignment and lexical shortlists'
@@ -1158,9 +1195,9 @@ rule train_student:
         train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment,
         vocab=vocab_path,
-        dev_src=rules.merge_devset.output.src
+        dev_src=rules.merge_devset_for_student.output.src
     output: model=f'{student_dir}/{best_model}'
-    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset.student",
             args=get_args("training-student")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
@@ -1191,7 +1228,7 @@ if do_train_student_opustrainer:
         conda: "envs/base.yml"
         threads: workflow.cores
         # group: "clean_corpus"
-        input: multiext(f"{filtered}/{{langpair}}/corpus", f".source.gz", f".target.gz"),
+        input: multiext(f"{filtered}/{{langpair}}/corpus", f".source.langtagged.gz", f".target.gz"),
                 alignments=f"{align_dir}/{{langpair}}/corpus.aln",
                 bin=ancient(deduper)
         #input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'], allow_missing=True),
