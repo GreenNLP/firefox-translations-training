@@ -227,7 +227,13 @@ if wmt23_termtask:
         #    sents_per_term_sent=sents_per_term_sents,
         #    omit=omit_unannotated))
 
-        results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
+        results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/evalsets_terms.score',
+            annotation_scheme=annotation_schemes,
+            term_ratio=term_ratios,
+            sents_per_term_sent=sents_per_term_sents,
+            omit=omit_unannotated))
+        
+	results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
             annotation_scheme=annotation_schemes,
             term_ratio=term_ratios,
             sents_per_term_sent=sents_per_term_sents,
@@ -269,9 +275,7 @@ if wmt23_termtask:
          
 
 
-#don't evaluate opus mt teachers or pretrained teachers (TODO: fix sp issues with opusmt teacher evaluation)
-if not (opusmt_teacher or forward_pretrained):
-    results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/{{dataset}}.metrics',ens=ensemble, dataset=eval_datasets))
+results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/{{dataset}}.metrics',ens=ensemble, dataset=eval_datasets))
 
 if len(ensemble) > 1:
     results.extend(expand(f'{eval_teacher_ens_dir}/{{dataset}}.metrics', dataset=eval_datasets))
@@ -1384,7 +1388,7 @@ rule evaluate:
     log: f"{log_dir}/eval/eval_{{model}}_{{dataset}}.log"
     conda: "envs/base.yml"
     threads: 7
-    resources: gpu=8
+    resources: gpu=1
     #group '{model}'
     priority: 50
     wildcard_constraints:
@@ -1392,7 +1396,8 @@ rule evaluate:
     input:
         ancient(decoder),
         data=multiext(f'{eval_data_dir}/{{dataset}}',f".{src}.gz",f".{trg}.gz"),
-        src_vocab=f'{teacher_base_dir}0-0/source.spm',
+        src_spm=f'{teacher_base_dir}0-0/source.spm',
+        trg_spm=f'{teacher_base_dir}0-0/target.spm',
         models=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz'
                                     if "finetuned-term" in wildcards.model
                                     else f'{models_dir}/{wildcards.model}/{best_model}'
@@ -1404,16 +1409,18 @@ rule evaluate:
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
     params:
         dataset_prefix=f'{eval_data_dir}/{{dataset}}',
+        vocab=lambda wildcards: f'{models_dir}/{wildcards.model}/vocab.yml',
         res_prefix=f'{eval_res_dir}/{{model}}/{{dataset}}',
         src_lng=lambda wildcards: src if wildcards.model != 'backward' else trg,
         trg_lng=lambda wildcards: trg if wildcards.model != 'backward' else src,
         decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'
                             if "finetuned-term" in wildcards.model
-                            else f'{models_dir}/{wildcards.model}/{best_model}.decoder.yml'
+                            else f'{models_dir}/{wildcards.model}/decoder.yml'
                             #if wildcards.model != 'teacher-ensemble'
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" \
-             {params.src_lng} {params.trg_lng} "{params.decoder_config}" {input.src_vocab} {input.models} >> {log} 2>&1'''
+    shell: '''bash pipeline/opusmt/eval.sh "{params.res_prefix}" "{params.dataset_prefix}" \
+             {params.src_lng} {params.trg_lng} "{input.src_spm}" \
+             "{input.trg_spm}" "{params.vocab}" "{params.decoder_config}" {input.models} >> {log} 2>&1'''
 
 rule eval_quantized:
     message: "Evaluating qunatized student model"
@@ -1502,7 +1509,7 @@ rule eval_termscore:
         vocab=lambda wildcards: f'{models_dir}/{wildcards.model}/vocab.yml'
                             #if wildcards.model != 'teacher-ensemble'
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
-    shell: '''bash pipeline/opusmt/eval.sh "{input.eval_src}" "{src}" "{trg}" \
+    shell: '''bash pipeline/opusmt/eval-termscore.sh "{input.eval_src}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.models} {params.vocab} {params.res_prefix} \
             "{input.evalsets_sgm_src}" "{input.evalsets_sgm_trg}" >> {log} 2>&1'''
 

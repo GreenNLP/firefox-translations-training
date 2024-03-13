@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-# Merges and deduplicates parallel datasets
+# Merges and deduplicates parallel datasets (dedupe removed due to lib problems)
 #
 
 set -x
@@ -33,7 +33,6 @@ fi
 
 echo "### Deduplication"
 paste <(${COMPRESSION_CMD} -dc "${tmp}/corpus.${SRC}.dup.${ARTIFACT_EXT}") <(${COMPRESSION_CMD} -dc "${tmp}/corpus.${TRG}.dup.${ARTIFACT_EXT}") |
-${BIN}/dedupe |
 ${COMPRESSION_CMD} >"${tmp}.${SRC}${TRG}.${ARTIFACT_EXT}"
 
 # if max sents not "inf", get the first n sents (this is mainly used for testing to make translation and training go faster)

@@ -43,12 +43,20 @@ def main():
     parser.add_argument('--yaml_vocab', type=str, help='Marian yaml vocabulary file')
     args = parser.parse_args()
 
+    # The vocabs are occasionally corrupt, safe_load will break on unquoted <<, so fix that
+    fixed_yaml_path = f"{args.yaml_vocab}.fixed"
+    with open(args.yaml_vocab,'r') as orig_vocab, open(fixed_yaml_path,'w') as fixed_yaml:
+        for line in orig_vocab:
+            if line.startswith("<<:"):
+                line = line.replace('<<:','"<<":')
+            fixed_yaml.write(line)
+
+    with open(fixed_yaml_path, 'r') as f:
+        vocab = yaml.safe_load(f)
+
     source_sp = spm.SentencePieceProcessor(args.source_spm_model)
     target_sp = spm.SentencePieceProcessor(args.target_spm_model)
 
-    
-    with open(args.yaml_vocab, 'r') as f:
-        vocab = yaml.safe_load(f)
    
     source_symbols_with_lowest_scores = find_symbols_with_lowest_scores(source_sp, target_sp, vocab)
     new_yaml_file = os.path.splitext(args.yaml_vocab)[0] + '_term.yaml'

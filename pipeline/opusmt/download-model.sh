@@ -16,10 +16,11 @@ source_lang=$4
 target_lang=$5
 
 #if download url is best, find the best model from list
+#TODO: this doesn't seem to work, the models are not ordered by score in the list
 if [[ $download_url = "best" ]]
 then
     model_list="${model_dir}/released-model-results.txt"
-    wget -O ${model_list} "https://raw.githubusercontent.com/Helsinki-NLP/Tatoeba-Challenge/master/models/released-model-results.txt"
+    curl -o ${model_list} "https://raw.githubusercontent.com/Helsinki-NLP/Tatoeba-Challenge/master/models/released-model-results.txt"
     download_url=$(grep -P -m 1 "^${source_lang}-${target_lang}" ${model_list} | cut -f 4) 
     echo "###### Using best ${source_lang}-${target_lang} model ${download_url}"
 fi
@@ -27,7 +28,7 @@ fi
 model_zip=${download_url##*/}
 archive_path="${model_dir}/${model_zip}"
 
-wget -O "${archive_path}" "${download_url}"
+curl -o "${archive_path}" "${download_url}"
 
 cd ${model_dir}
 unzip -j -o "${archive_path}"

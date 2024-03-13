@@ -20,7 +20,7 @@ ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 tmp="$(mktemp -d)/flores/${dataset}"
 mkdir -p "${tmp}"
 
-wget -O "${tmp}/flores101_dataset.tar.gz" "https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz"
+curl -o "${tmp}/flores101_dataset.tar.gz" "https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz"
 tar -xzf "${tmp}/flores101_dataset.tar.gz" -C "${tmp}" --no-same-owner
 
 flores_code() {

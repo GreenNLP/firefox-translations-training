@@ -27,6 +27,10 @@ cd "$(dirname "${0}")"
 
 mkdir -p "${output_dir}"
 dir="${output_dir}/tmp"
+
+#Delete existing tmp dir, unfinished files will mess up later runs
+rm -rf "${dir}"
+
 mkdir -p "${dir}"
 
 # bulk up the evalset with part of the train set, to enable alignment
@@ -75,6 +79,6 @@ head -n ${evalsets_length} <(zcat "${dir}/corpus.spm.${SRC}.gz") | gzip > "${out
 head -n ${evalsets_length} <(zcat "${dir}/corpus.spm.${TRG}.gz") | gzip > "${output_dir}/evalsets.spm.trg.gz"
 
 echo "### Deleting tmp dir"
-#rm -rf "${dir}"
+rm -rf "${dir}"
 
 echo "###### Done: Generating alignments and segmented corpus"

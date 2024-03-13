@@ -22,6 +22,10 @@ cd "$(dirname "${0}")"
 
 mkdir -p "${output_dir}"
 dir="${output_dir}/tmp"
+
+#delete tmp dir if it exists, unfinished files will mess up later runs
+rm -rf "${dir}"
+
 mkdir -p "${dir}"
 
 corpus_src="${corpus_prefix}.${SRC}.gz"
