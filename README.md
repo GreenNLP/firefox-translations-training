@@ -29,6 +29,8 @@ TO DO:
 Not implemented:
 - Multiple teachers or backward models: currenlty only multilingual models can be used, not individual models.
 - Multilingual Teacher training, at the moment only takes opusmt as teacher
+- mono src and trg are not working
+- At the moment, if you specify an opus-mt model as a teacher, it will be download for as many language pairs as you have.
 
 # OpusFilter
 
