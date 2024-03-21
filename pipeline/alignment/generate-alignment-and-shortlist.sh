@@ -30,7 +30,7 @@ corpus_trg="${corpus_prefix}.${TRG}.gz"
 
 echo "### Subword segmentation with SentencePiece"
 test -s "${dir}/corpus.spm.${SRC}.gz" ||
-  pigz -dc "${corpus_src}" | sed "s/^>>.*<< //" |
+  pigz -dc "${corpus_src}" | sed -E "s/^>>[a-z]{3}<< //" |
   parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${vocab_path}" |
   pigz >"${dir}/corpus.spm.${SRC}.gz"
 test -s "${dir}/corpus.spm.${TRG}.gz" ||
