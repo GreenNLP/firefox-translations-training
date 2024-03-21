@@ -1153,8 +1153,8 @@ rule merge_devset_for_student:
             bin=ancient(deduper)
     output: src=f"{original}/devset.student.source.gz",trg=f"{original}/devset.student.target.gz"
     params: prefix_input=f"{original}/*/devset.student", prefix_target=f"{original}/*/devset", prefix_output=f"{original}/devset"
-    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.student.source.gz"
-    cat $(echo {params.prefix_target}.target.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.student.target.gz" '''
+    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.student.source.gz"
+    cat $(echo {params.prefix_target}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.student.target.gz" '''
 
 rule merge_filtered:
     message: "Merging filtered parallel datasets"
@@ -1164,8 +1164,8 @@ rule merge_filtered:
     input:  expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target'])
     output: src=f"{filtered}/corpus.source.gz",trg=f"{filtered}/corpus.target.gz"
     params: prefix_input=f"{filtered}/*/corpus", prefix_output=f"{filtered}/corpus"
-    shell: '''cat $(echo {params.prefix_input}.source.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.source.gz"
-    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') | pigz > "{params.prefix_output}.target.gz" '''
+    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ')  > "{params.prefix_output}.target.gz" '''
 
 rule alignments:
     message: 'Training word alignment and lexical shortlists'
