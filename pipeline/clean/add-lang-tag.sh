@@ -25,7 +25,7 @@ fi
 if [ $o2m == "True" ]; then
     target_lang_token=">>${target_lang_token}<< "
     # Check if there is already a language tag token
-    if zgrep -q "${target_lang_token}" $file.$suffix.gz; then
+    if zgrep -q "${target_lang_token}" $file.$lang.gz; then
         ln -s $file.$lang.gz $file.$suffix.langtagged.gz
         echo "The file already contains language tags, we create a dummy file"
     else
