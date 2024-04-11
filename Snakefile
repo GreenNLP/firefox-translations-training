@@ -213,6 +213,7 @@ if wmt23_termtask:
 
     #results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/wmt23_termtask.score',ens=ensemble))
     results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.score',ens=ensemble))
+    results.extend(expand(f'{eval_res_dir}/teacher-base0-{{ens}}/evalsets_terms.noterms.score',ens=ensemble))
 
     if finetune_teacher_with_terms: 
         #results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/wmt23_termtask.score',
@@ -233,6 +234,12 @@ if wmt23_termtask:
             sents_per_term_sent=sents_per_term_sents,
             omit=omit_unannotated))
         
+        results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/evalsets_terms.noterms.score',
+            annotation_scheme=annotation_schemes,
+            term_ratio=term_ratios,
+            sents_per_term_sent=sents_per_term_sents,
+            omit=omit_unannotated))
+
 	results.extend(expand(f'{eval_res_dir}/teacher-base-finetuned-term-{{annotation_scheme}}-{{term_ratio}}-{{sents_per_term_sent}}{{omit}}/{{dataset}}.metrics',
             annotation_scheme=annotation_schemes,
             term_ratio=term_ratios,
@@ -1500,7 +1507,10 @@ rule eval_termscore:
                                     #TODO: handle ensembling better
                                     #if wildcards.model != 'teacher-ensemble'
                                     #else [f'{final_teacher_dir}0-{ens}/{best_model}' for ens in ensemble]
-    output: f'{eval_res_dir}/{{model}}/evalsets_terms.score'
+    output: 
+        with_terms=f'{eval_res_dir}/{{model}}/evalsets_terms.score',
+        without_terms=f'{eval_res_dir}/{{model}}/evalsets_terms.noterms.score'
+
     params:
         res_prefix=f'{eval_res_dir}/{{model}}/evalsets_terms',
         decoder_config=lambda wildcards: f'{models_dir}/{wildcards.model}/model.npz.decoder.yml'

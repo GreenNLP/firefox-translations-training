@@ -5,6 +5,9 @@
 log_file=$(echo '{properties}' | jq -r .log[0])
 gpu=$(echo '{properties}' | jq -r .resources.gpu)
 
+# why doesn't the diff get executed after jobscript?
+#/appl/local/csc/soft/ai/bin/gpu-energy --save
+
 mkdir -p $(dirname $log_file)
 mkdir /tmp/$USER
 
@@ -19,6 +22,8 @@ if [ $gpu != "null" ] && [ $gpu != "0" ]; then
 fi
 
 {exec_job} 
+
+#/appl/local/csc/soft/ai/bin/gpu-energy --diff
 
 if [ -z $rocmloop_pid ]; then 
     kill $rocmloop_pid
