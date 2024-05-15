@@ -21,7 +21,9 @@ jobs:
           pip install sphinx
           if [ -f docs/requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Build docs with Sphinx
-        run: sphinx-build docs docs/build
+        run: |
+          sphinx-build -b html docs/ docs/build
+          touch docs/build/.nojekyll  # Disable Jekyll processin
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/multi-ftt'
         uses: JamesIves/github-pages-deploy-action@v4
