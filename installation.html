@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting started on CSC’s puhti and mahti &mdash; OpusDistillery  documentation</title>
+  <title>Installation &mdash; OpusDistillery  documentation</title>
   
 
   
@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic usage" href="usage.html" />
     <link rel="prev" title="OpusDistillery" href="index.html" /> 
 </head>
 
@@ -81,8 +82,12 @@
             
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started on CSC’s puhti and mahti</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#getting-started-on-csc-s-lumi">Getting started on CSC’s lumi</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-on-csc-s-puhti-and-mahti">Getting started on CSC’s puhti and mahti</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-on-csc-s-lumi">Getting started on CSC’s lumi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
 </ul>
 
             
@@ -128,7 +133,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Getting started on CSC’s puhti and mahti</li>
+      <li>Installation</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -145,8 +150,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="getting-started-on-csc-s-puhti-and-mahti">
-<h1>Getting started on CSC’s puhti and mahti<a class="headerlink" href="#getting-started-on-csc-s-puhti-and-mahti" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started-on-csc-s-puhti-and-mahti">
+<h2>Getting started on CSC’s puhti and mahti<a class="headerlink" href="#getting-started-on-csc-s-puhti-and-mahti" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
 <li><p>Download the Ftt.sif container to the repository root.</p></li>
@@ -163,11 +170,11 @@
 <li><p>If the data directory is not located in the parent directory of the repository, edit <em>profiles/slurm-puhti/config.yaml</em> or <em>profiles/slurm-mahti/config.yaml</em> and change the bindings in the singularity-args section to point to your data directory, and also enter the <em>data</em> directory path as the <em>root</em> value of the <em>config</em> section.</p></li>
 <li><p>Edit profiles/slurm-puhti/config.cluster.yaml to change the CSC account to one you have access to.</p></li>
 <li><p>Load cuda modules: module load gcc/9.4.0 cuda cudnn</p></li>
-<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run</span> <span class="pre">PROFILE=&quot;slurm-mahti&quot;</span></code></p></li>
+<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run</span> <span class="pre">PROFILE=&quot;slurm-mahti&quot;</span></code>. More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a></p></li>
 </ol>
 </div>
 <div class="section" id="getting-started-on-csc-s-lumi">
-<h1>Getting started on CSC’s lumi<a class="headerlink" href="#getting-started-on-csc-s-lumi" title="Permalink to this headline">¶</a></h1>
+<h2>Getting started on CSC’s lumi<a class="headerlink" href="#getting-started-on-csc-s-lumi" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
 <li><p>Download the Ftt.sif container to the repository root.</p></li>
@@ -189,6 +196,7 @@
 <li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code></p></li>
 </ol>
 </div>
+</div>
 
 
            </div>
@@ -197,6 +205,8 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usage.html" class="btn btn-neutral float-right" title="Basic usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="OpusDistillery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -1,4 +1,6 @@
-# Getting started on CSC's puhti and mahti
+# Installation
+
+## Getting started on CSC's puhti and mahti
 1. Clone the repository.
 2. Download the Ftt.sif container to the repository root.
 3. Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):
@@ -11,9 +13,9 @@
 7. If the data directory is not located in the parent directory of the repository, edit _profiles/slurm-puhti/config.yaml_ or _profiles/slurm-mahti/config.yaml_ and change the bindings in the singularity-args section to point to your data directory, and also enter the _data_ directory path as the _root_ value of the _config_ section.
 8. Edit profiles/slurm-puhti/config.cluster.yaml to change the CSC account to one you have access to. 
 9. Load cuda modules: module load gcc/9.4.0 cuda cudnn
-10. Run pipeline: `make run-hpc PROFILE="slurm-puhti"` or `make run PROFILE="slurm-mahti"`
+10. Run pipeline: `make run-hpc PROFILE="slurm-puhti"` or `make run PROFILE="slurm-mahti"`. More information in [Basic Usage](usage.md)
 
-# Getting started on CSC's lumi
+## Getting started on CSC's lumi
 1. Clone the repository.
 2. Download the Ftt.sif container to the repository root.
 3. Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):
