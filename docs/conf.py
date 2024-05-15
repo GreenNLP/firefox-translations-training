@@ -1,4 +1,3 @@
-from pkg_resources import get_distribution
 
 from pybtex.style.formatting.unsrt import Style as UnsrtStyle
 from pybtex.style.labels import BaseLabelStyle
