@@ -9,7 +9,7 @@ jobs:
   deploy-docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
@@ -22,7 +22,7 @@ jobs:
     - name: Build docs
       run:  sphinx-build docs docs/build
     - name: Deploy docs
-      uses: JamesIves/github-pages-deploy-action@3.7.1
+      uses: JamesIves/github-pages-deploy-action@4
       with:
         GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages

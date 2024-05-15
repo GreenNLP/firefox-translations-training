@@ -4,8 +4,13 @@ OpusDistillery
 Welcome to OpusDistillery's documentation!
 
 OpusDistillery is an end-to-end pipeline to perform systematic multilingual distillation of MT models.
-It is built on top of the [Firefox Translations Training pipeline](https://github.com/mozilla/firefox-translations-training),
-originally developed within the [Bergamot project](https://browser.mt), for training efficient NMT models that can run locally in a web browser.
+It is built on top of the `Firefox Translations Training pipeline <https://github.com/mozilla/firefox-translations-training>`,
+originally developed within the `Bergamot project<https://browser.mt>`, for training efficient NMT models that can run locally in a web browser.
+
+The pipeline is capable of training a translation model for any language pair(s) end to end.
+Translation quality depends on the chosen datasets, data cleaning procedures and hyperparameters. Some settings, especially low resource languages might require extra tuning.
+
+We use `Marian<https://marian-nmt.github.io/>`, the fast neural machine translation engine .
 
 New features:
 
@@ -13,4 +18,8 @@ New features:
 * **GPU Utilisation** With the hope of moving towards greener NLP and NMT, we have added GPU utilisation tracking so that we can report the amount of hours and energy consumed by the pipeline.
 * **Multilinguality Support**: The pipeline supports training multilingual models. This covers two aspects: support for using any combination of multilingual and bilingual teachers, as well as support for multilingual student training.
 
-<!-- OpusDistillery has been presented in `ACL 2020 system demonstrations <https://www.aclweb.org/anthology/2020.acl-demos.20>`_.-->
+.. toctree::
+   :caption: Get started
+   :maxdepth: 1
+
+   installation.md
