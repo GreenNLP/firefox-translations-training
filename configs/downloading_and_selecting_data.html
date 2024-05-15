@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Dataset importers &mdash; OpusDistillery  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Cleaning" href="preprocessing_text.html" />
+    <link rel="prev" title="Configuration files" href="configuration_files.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> OpusDistillery
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Setting up your experiment</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset importers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-new-importer">Adding a new importer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing_text.html">Data Cleaning</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpusDistillery</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Dataset importers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dataset-importers">
+<h1>Dataset importers<a class="headerlink" href="#dataset-importers" title="Permalink to this headline">¶</a></h1>
+<p>Dataset importers can be used in <code class="docutils literal notranslate"><span class="pre">datasets</span></code> sections of the <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/configs/test.yml#L66">training config</a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">train</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">opus_ada83</span><span class="o">/</span><span class="n">v1</span>
+    <span class="o">-</span> <span class="n">mtdata_newstest2014_ruen</span>
+</pre></div>
+</div>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Data source</p></th>
+<th class="head"><p>Prefix</p></th>
+<th class="head"><p>Name examples</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/thammegowda/mtdata">MTData</a></p></td>
+<td><p>mtdata</p></td>
+<td><p>newstest2017_ruen</p></td>
+<td><p>corpus</p></td>
+<td><p>Supports many datasets. Run <code class="docutils literal notranslate"><span class="pre">mtdata</span> <span class="pre">list</span> <span class="pre">-l</span> <span class="pre">ru-en</span></code> to see datasets for a specific language pair.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="xref myst">OPUS</span></p></td>
+<td><p>opus</p></td>
+<td><p>ParaCrawl/v7.1</p></td>
+<td><p>corpus</p></td>
+<td><p>Many open source datasets. Go to the website, choose a language pair, check links under Moses column to see what names and version is used in a link.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/mjpost/sacrebleu">SacreBLEU</a></p></td>
+<td><p>sacrebleu</p></td>
+<td><p>wmt20</p></td>
+<td><p>corpus</p></td>
+<td><p>Official evaluation datasets available in SacreBLEU tool. Recommended to use in <code class="docutils literal notranslate"><span class="pre">datasets:test</span></code> config section. Look up supported datasets and language pairs in <code class="docutils literal notranslate"><span class="pre">sacrebleu.dataset</span></code> python module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/facebookresearch/flores">Flores</a></p></td>
+<td><p>flores</p></td>
+<td><p>dev, devtest</p></td>
+<td><p>corpus</p></td>
+<td><p>Evaluation dataset from Facebook that supports 100 languages.</p></td>
+</tr>
+<tr class="row-even"><td><p>Custom parallel</p></td>
+<td><p>url</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://storage.googleapis.com/releng-translations-dev/data/en-ru/pytest-dataset.[LANG].zst</span></code></p></td>
+<td><p>corpus</p></td>
+<td><p>A custom zst compressed parallel dataset, for instance uploaded to GCS. The language pairs should be split into two files. the <code class="docutils literal notranslate"><span class="pre">[LANG]</span></code> will be replaced with the <code class="docutils literal notranslate"><span class="pre">to</span></code> and <code class="docutils literal notranslate"><span class="pre">from</span></code> language codes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://paracrawl.eu/">Paracrawl</a></p></td>
+<td><p>paracrawl-mono</p></td>
+<td><p>paracrawl8</p></td>
+<td><p>mono</p></td>
+<td><p>Datasets that are crawled from the web. Only <a class="reference external" href="https://paracrawl.eu/index.php/moredata">mono datasets</a> are used in this importer. Parallel corpus is available using opus importer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="http://data.statmt.org/news-crawl">News crawl</a></p></td>
+<td><p>news-crawl</p></td>
+<td><p>news.2019</p></td>
+<td><p>mono</p></td>
+<td><p>Some news monolingual datasets from <a class="reference external" href="https://www.statmt.org/wmt21/translation-task.html">WMT21</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://commoncrawl.org/">Common crawl</a></p></td>
+<td><p>commoncrawl</p></td>
+<td><p>wmt16</p></td>
+<td><p>mono</p></td>
+<td><p>Huge web crawl datasets. The links are posted on <a class="reference external" href="https://www.statmt.org/wmt21/translation-task.html">WMT21</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Custom mono</p></td>
+<td><p>url</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://storage.googleapis.com/releng-translations-dev/data/en-ru/pytest-dataset.ru.zst</span></code></p></td>
+<td><p>mono</p></td>
+<td><p>A custom zst compressed monolingual dataset, for instance uploaded to GCS.</p></td>
+</tr>
+</tbody>
+</table>
+<p>You can also use <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/utils/find-corpus.py">find-corpus</a> tool to find all datasets for an importer and get them formatted to use in config.</p>
+<p>Set up a local <a class="reference external" href="https://python-poetry.org/">poetry</a> environment.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">task</span> <span class="n">find</span><span class="o">-</span><span class="n">corpus</span> <span class="o">--</span> <span class="n">en</span> <span class="n">ru</span>
+</pre></div>
+</div>
+<p>Make sure to check licenses of the datasets before using them.</p>
+<div class="section" id="adding-a-new-importer">
+<h2>Adding a new importer<a class="headerlink" href="#adding-a-new-importer" title="Permalink to this headline">¶</a></h2>
+<p>Just add a shell script to <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/tree/main/pipeline/data/importers/corpus">corpus</a> or <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/tree/main/pipeline/data/importers/mono">mono</a> which is named as <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.sh</span></code>
+and accepts the same parameters as the other scripts from the same folder.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="preprocessing_text.html" class="btn btn-neutral float-right" title="Data Cleaning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="configuration_files.html" class="btn btn-neutral float-left" title="Configuration files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -20,7 +20,17 @@ New features:
 
 .. toctree::
    :caption: Get started
-   :maxdepth: 1
+   :maxdepth: 2
 
    installation.md
    usage.md
+
+.. toctree::
+   :caption: Setting up your experiment
+   :name: configs/
+   :maxdepth: 1
+
+   configs/configuration_files.md
+   configs/downloading_and_selecting_data.md
+   configs/preprocessing_text.md
+   configs/filtering_and_scoring.md

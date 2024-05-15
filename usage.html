@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration files" href="configs/configuration_files.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -83,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Basic usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-examples">Configuration examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#specific-target">Specific target</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rerunning">Rerunning</a></li>
@@ -90,6 +92,12 @@
 </li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">Setting up your experiment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/downloading_and_selecting_data.html">Dataset importers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/preprocessing_text.html">Data Cleaning</a></li>
 </ul>
 
             
@@ -154,6 +162,44 @@
             
   <div class="section" id="basic-usage">
 <h1>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
+<p>The pipeline is built with <a class="reference external" href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a>.</p>
+<p>Snakemake workflow manager infers the DAG of tasks implicitly from the specified inputs and outputs of the steps. The workflow manager checks which files are missing and runs the corresponding jobs either locally or on a cluster depending on the configuration.</p>
+<p>Snakemake parallelizes steps that can be executed simultaneously.</p>
+<p>The main Snakemake process (scheduler) should be launched interactively. It runs the job processes on the worker nodes in cluster mode or on a local machine in local mode.</p>
+<div class="section" id="configuration-examples">
+<h2>Configuration examples<a class="headerlink" href="#configuration-examples" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline is run with the <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/Makefile">Makefile</a> which takes a configuration file as an input.
+Configuration files are in <a class="reference external" href="https://yaml.org/">YAML</a> format. Although we report details of the configuration files in <a class="reference internal" href="configs/downloading_and_selecting_data.html"><span class="doc std std-doc">Setting up your experiment</span></a>, a configuration file that trains a student model (Estonian, Finnish and Hungarian into English) looks like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dirname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fiu-eng</span>
+<span class="w">  </span><span class="nt">langpairs</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">et-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fi-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hu-en</span>
+
+<span class="w">  </span><span class="c1">#URL to the OPUS-MT model to use as the teacher</span>
+<span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip&quot;</span>
+
+<span class="w">  </span><span class="c1">#URL to the OPUS-MT model to use as the backward model</span>
+<span class="w">  </span><span class="nt">opusmt-backward</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip&quot;</span>
+<span class="w">  </span><span class="nt">one2many-backward</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="nt">parallel-max-sentences</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000000</span>
+<span class="w">  </span><span class="nt">split-length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000000</span>
+
+<span class="w">  </span><span class="nt">best-model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">perplexity</span>
+
+<span class="nt">datasets</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">train</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tc_Tatoeba-Challenge-v2023-09-26</span>
+<span class="w">  </span><span class="nt">devtest</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">flores_dev</span>
+<span class="w">  </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">flores_devtest</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="running">
 <h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
 <p>Load all the necessary modules as explained in <a class="reference internal" href="installation.html"><span class="doc std std-doc">Installation</span></a></p>
@@ -169,8 +215,8 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">test</span>
 </pre></div>
 </div>
-<p>You can also run a speicific profile or config by overriding variables from Makefile</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=</span><span class="n">slurm</span><span class="o">-</span><span class="n">moz</span> <span class="n">CONFIG</span><span class="o">=</span><span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">yml</span>
+<p>You can also run a specific profile or config by overriding variables from Makefile</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=</span><span class="n">slurm</span><span class="o">-</span><span class="n">puhti</span> <span class="n">CONFIG</span><span class="o">=</span><span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <div class="section" id="specific-target">
@@ -210,6 +256,8 @@ Snakemake might complain about a missing file and suggest to run it with <code c
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configs/configuration_files.html" class="btn btn-neutral float-right" title="Configuration files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
