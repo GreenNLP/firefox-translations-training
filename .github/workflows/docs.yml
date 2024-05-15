@@ -1,8 +1,9 @@
 name: Deploy Docs & Publish to PyPi
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - multi-ftt  # Update with your main branch or tag filters
 
 jobs:
   deploy-docs:
