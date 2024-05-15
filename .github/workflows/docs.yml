@@ -6,7 +6,6 @@ on:
 jobs:
   build-and-deploy-docs:
     runs-on: ubuntu-latest
-    needs: [build-n-test]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
