@@ -4,7 +4,7 @@ Configuration files are in [YAML](https://yaml.org/) format.
 At the top level, they have two sections:
 
 * `experiment`: contains all the relevant information for your experiment, except the information on which datasets to use.
-* `datasets`: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in [Dataset importers](configs/downloading_and_selecting_data.md).
+* `datasets`: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in [Dataset importers](docs/configs/downloading_and_selecting_data.md).
 
 At the beginning of your `experiment` section, you should define the following:
 

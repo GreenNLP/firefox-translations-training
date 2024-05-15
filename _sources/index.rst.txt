@@ -28,8 +28,27 @@ New features:
 .. toctree::
    :caption: Setting up your experiment
    :name: configs/
-   :maxdepth: 2
+   :maxdepth: 1
 
    configs/configuration_files.md
    configs/downloading_and_selecting_data.md
    configs/examples.md
+
+.. toctree::
+   :caption: Pipeline steps
+   :name: steps/
+   :maxdepth: 1
+
+   steps/
+
+.. toctree::
+   :caption: Troubleshooting
+   :maxdepth: 1
+
+   troubleshooting.md
+
+.. toctree::
+   :caption: References
+   :maxdepth: 1
+
+   references.md

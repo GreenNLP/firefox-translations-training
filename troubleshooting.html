@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OpusDistillery &mdash; OpusDistillery  documentation</title>
+  <title>Troubleshooting &mdash; OpusDistillery  documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" /> 
+    <link rel="prev" title="Examples of Configuration Files" href="configs/examples.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,7 +49,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> OpusDistillery
+            <a href="index.html" class="icon icon-home"> OpusDistillery
           
 
           
@@ -91,8 +91,11 @@
 <li class="toctree-l1"><a class="reference internal" href="configs/examples.html">Examples of Configuration Files</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Troubleshooting</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#out-of-gpu-memory">Out of GPU memory</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -107,7 +110,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">OpusDistillery</a>
+          <a href="index.html">OpusDistillery</a>
         
       </nav>
 
@@ -136,9 +139,9 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>OpusDistillery</li>
+      <li>Troubleshooting</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -155,45 +158,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="opusdistillery">
-<h1>OpusDistillery<a class="headerlink" href="#opusdistillery" title="Permalink to this headline">¶</a></h1>
-<p>Welcome to OpusDistillery’s documentation!</p>
-<p>OpusDistillery is an end-to-end pipeline to perform systematic multilingual distillation of MT models.
-It is built on top of the <a class="reference external" href="https://github.com/mozilla/firefox-translations-training">Firefox Translations Training pipeline</a>,
-originally developed within the <a class="reference external" href="https://browser.mt">Bergamot project</a>, for training efficient NMT models that can run locally in a web browser.</p>
-<p>The pipeline is capable of training a translation model for any language pair(s) end to end.
-Translation quality depends on the chosen datasets, data cleaning procedures and hyperparameters. Some settings, especially low resource languages might require extra tuning.</p>
-<p>We use <a class="reference external" href="https://marian-nmt.github.io/">Marian</a>, the fast neural machine translation engine .</p>
-<p>New features:</p>
-<ul class="simple">
-<li><p><strong>OPUS-MT models</strong>: We have added the option to simply provide the URL of an existing OPUS-MT model. Our tool is also able to select the best available OpusMT model per language pair.</p></li>
-<li><p><strong>GPU Utilisation</strong> With the hope of moving towards greener NLP and NMT, we have added GPU utilisation tracking so that we can report the amount of hours and energy consumed by the pipeline.</p></li>
-<li><p><strong>Multilinguality Support</strong>: The pipeline supports training multilingual models. This covers two aspects: support for using any combination of multilingual and bilingual teachers, as well as support for multilingual student training.</p></li>
-</ul>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Get started</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound" id="configs">
-<p class="caption"><span class="caption-text">Setting up your experiment</span><a class="headerlink" href="#configs" title="Permalink to this toctree">¶</a></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configs/downloading_and_selecting_data.html">Dataset importers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configs/examples.html">Examples of Configuration Files</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound" id="steps">
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Troubleshooting</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<p>This page reports some common issues when working with the pipeline. Please, if you encounter any issue, report it through our <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery">Github repostiory</a>.</p>
+<div class="section" id="out-of-gpu-memory">
+<h2>Out of GPU memory<a class="headerlink" href="#out-of-gpu-memory" title="Permalink to this headline">¶</a></h2>
+<p>Reduce the Marian workspace or batch size.</p>
 </div>
 </div>
 
@@ -205,8 +175,8 @@ Translation quality depends on the chosen datasets, data cleaning procedures and
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+        <a href="configs/examples.html" class="btn btn-neutral float-left" title="Examples of Configuration Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
