@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - name: Install dependencies
@@ -20,14 +20,11 @@ jobs:
         pip install --upgrade setuptools
         pip install -r docs/requirements.txt
     - name: Build docs
-      run: |
-        set -e
-        # Check that docs are built without errors
-        cd docs/ && make html && cd ..
+      run:  sphinx-build docs docs/build
     - name: Deploy docs
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
         GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
-        FOLDER: docs/build/html
+        FOLDER: docs/build
         CLEAN: true
