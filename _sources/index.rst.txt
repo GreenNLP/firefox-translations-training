@@ -3,27 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-OpusFilter
+OpusDistillery
 ==========
 
-Welcome to OpusFilter's documentation!
+Welcome to OpusDistillery's documentation!
 
-OpusFilter is a tool for filtering and combining parallel corpora. It
-uses the OpusTools library :cite:p:`aulamo-etal-2020-opustools` to
-download data from the OPUS corpus collection
-:cite:p:`tiedemann-2012-parallel`, but can be used with any corpora in
-raw text format.
+OpusDistillery is an end-to-end pipeline to perform systematic multilingual distillation of MT models.
+It is built on top of the [Firefox Translations Training pipeline](https://github.com/mozilla/firefox-translations-training),
+originally developed within the [Bergamot project](https://browser.mt), for training efficient NMT models that can run locally in a web browser.
 
-Features:
+New features:
 
-- Corpus preprocessing pipelines configured with YAML
-- Simple downloading of parallel corpora from OPUS with OpusTools
-- Implementations for many common text file operations on parallel files
-- Memory-efficient processing of large files
-- Implemented filters based e.g. on language identification, word aligment, n-gram language models, and multilingual sentence embeddings
-- Extendable with your own filters written in Python
+* **OPUS-MT models**: We have added the option to simply provide the URL of an existing OPUS-MT model. Our tool is also able to select the best available OpusMT model per language pair.
+* **GPU Utilisation** With the hope of moving towards greener NLP and NMT, we have added GPU utilisation tracking so that we can report the amount of hours and energy consumed by the pipeline.
+* **Multilinguality Support**: The pipeline supports training multilingual models. This covers two aspects: support for using any combination of multilingual and bilingual teachers, as well as support for multilingual student training.
 
-OpusFilter has been presented in `ACL 2020 system demonstrations <https://www.aclweb.org/anthology/2020.acl-demos.20>`_.
+<!-- OpusDistillery has been presented in `ACL 2020 system demonstrations <https://www.aclweb.org/anthology/2020.acl-demos.20>`_.-->
 
 .. toctree::
    :caption: Get started
