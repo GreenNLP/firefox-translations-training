@@ -87,9 +87,19 @@
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-processing">Data processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opusfilter">opusfilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opustrainer">opustrainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#teacher-models">Teacher models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backward-model">Backward model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#marian-arguments">Marian arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other">Other</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="downloading_and_selecting_data.html">Dataset importers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing_text.html">Data Cleaning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples of Configuration Files</a></li>
 </ul>
 
             
@@ -158,14 +168,118 @@
 At the top level, they have two sections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">experiment</span></code>: contains all the relevant information for your experiment, except the information on which datasets to use.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span></code>: contains the infromation regarding the datasets used for training, development and evaluation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span></code>: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in <span class="xref myst">Dataset importers</span>.</p></li>
 </ul>
-<p>Within <code class="docutils literal notranslate"><span class="pre">experiment</span></code> you should define at least the following:</p>
+<p>At the beginning of your <code class="docutils literal notranslate"><span class="pre">experiment</span></code> section, you should define the following:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dirname</span></code>: directory name where everything will be stored.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: name of the experiment you are running. All generated data and models will be stored in <code class="docutils literal notranslate"><span class="pre">dirname</span></code>/<code class="docutils literal notranslate"><span class="pre">name</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">langpairs</span></code>: a list of the language pairs you want in your student model, with <strong>two letter codes</strong></p></li>
 </ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dirname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fiu-eng</span>
+<span class="w">  </span><span class="nt">langpairs</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">et-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fi-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hu-en</span>
+</pre></div>
+</div>
+<div class="section" id="data-processing">
+<h2>Data processing<a class="headerlink" href="#data-processing" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="opusfilter">
+<h2>opusfilter<a class="headerlink" href="#opusfilter" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="opustrainer">
+<h2>opustrainer<a class="headerlink" href="#opustrainer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="teacher-models">
+<h2>Teacher models<a class="headerlink" href="#teacher-models" title="Permalink to this headline">¶</a></h2>
+<p>At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).</p>
+<p>It is defined by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code></p></li>
+</ul>
+<p>This can be either of the following:</p>
+<ol class="simple">
+<li><p>the URL to an OPUS-MT model</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip&quot;</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>the path to an OPUS-MT model,</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/opus-mt/model&quot;</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>a list of OPUS-MT models that will be used all together (any combination of the previous two).</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/gem-gem/opus-2020-10-04.zip&quot;</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-swe/opus+bt-2021-04-14.zip&quot;</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>In the case of multilingual students, you can combine different teachers. In this case, it should be a dictionary, specifying each teacher per language pair.</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">en-uk</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ukr/opus+bt-2021-04-14.zip&quot;</span>
+<span class="w">    </span><span class="nt">en-ru</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-rus/opus+bt-2021-04-14.zip&quot;</span>
+<span class="w">    </span><span class="nt">en-be</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-bel/opus+bt-2021-03-07.zip&quot;</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">best</span></code> which will select the best teacher available for each language pair by checking the FLORES200+ scores from the <a class="reference external" href="https://opus.nlpl.eu/dashboard">OPUS-MT dashboard</a>.</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;best&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="backward-model">
+<h2>Backward model<a class="headerlink" href="#backward-model" title="Permalink to this headline">¶</a></h2>
+<p>At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).</p>
+<p>It is defined by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code>: the URL or path to an OPUS-MT model to be used as a backward model for scoring translations. As the teacher, it can also be a dictionary specifying a backward model per language pair as well as <code class="docutils literal notranslate"><span class="pre">best</span></code>.</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-backward</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">uk-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-eng/opus+bt-2021-04-30.zip&quot;</span>
+<span class="w">    </span><span class="nt">ru-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/rus-eng/opus+bt-2021-04-30.zip&quot;</span>
+<span class="w">    </span><span class="nt">be-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multilinguality">
+<h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
+<p>Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">one2many-teacher</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code> is “best”, then this should be also “best”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one2many-backward</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code> is “best”, then this should be also “best”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one2many-student</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default).</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify if the teacher and the student are many2one</span>
+<span class="w">  </span><span class="nt">one2many-teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">  </span><span class="nt">one2many-student</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="marian-arguments">
+<h2>Marian arguments<a class="headerlink" href="#marian-arguments" title="Permalink to this headline">¶</a></h2>
+<p>These configs override pipeline/train/configs with <a class="reference external" href="https://marian-nmt.github.io/docs/cmd/marian/">Marian settings</a></p>
+</div>
+<div class="section" id="other">
+<h2>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel-max-sentences</span></code>: maximum parallel sentences to download from each dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">split-length</span></code>: the amount of sentences into which you want to split your training data for forward translation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">best-model</span></code>: metric to select your best model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spm-sample-size</span></code>: sample size to train spm vocabulary of the student.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">student-prefix</span></code>: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure.</p></li>
+</ul>
+</div>
 </div>
 
 
