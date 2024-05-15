@@ -1,5 +1,49 @@
 # Basic usage
 
+The pipeline is built with [Snakemake](https://snakemake.readthedocs.io/en/stable/).
+
+Snakemake workflow manager infers the DAG of tasks implicitly from the specified inputs and outputs of the steps. The workflow manager checks which files are missing and runs the corresponding jobs either locally or on a cluster depending on the configuration.
+
+Snakemake parallelizes steps that can be executed simultaneously.
+
+The main Snakemake process (scheduler) should be launched interactively. It runs the job processes on the worker nodes in cluster mode or on a local machine in local mode.
+
+## Configuration examples
+
+The pipeline is run with the [Makefile](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/Makefile) which takes a configuration file as an input. 
+Configuration files are in [YAML](https://yaml.org/) format. Although we report details of the configuration files in [Setting up your experiment](configs/downloading_and_selecting_data.md), a configuration file that trains a student model (Estonian, Finnish and Hungarian into English) looks like this:
+
+```yaml
+
+experiment:
+  dirname: test
+  name: fiu-eng
+  langpairs:
+    - et-en
+    - fi-en
+    - hu-en
+
+  #URL to the OPUS-MT model to use as the teacher
+  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
+
+  #URL to the OPUS-MT model to use as the backward model
+  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  one2many-backward: True
+  
+  parallel-max-sentences: 10000000
+  split-length: 1000000
+
+  best-model: perplexity
+
+datasets:
+  train:
+    - tc_Tatoeba-Challenge-v2023-09-26
+  devtest:
+    - flores_dev
+  test:
+    - flores_devtest
+```
+
 ## Running
 
 Load all the necessary modules as explained in [Installation](installation.md)
@@ -20,9 +64,9 @@ To test the whole pipeline end to end (it is supposed to run relatively quickly 
 ```
 make test
 ```
-You can also run a speicific profile or config by overriding variables from Makefile
+You can also run a specific profile or config by overriding variables from Makefile
 ```
-make run PROFILE=slurm-moz CONFIG=configs/config.test.yml
+make run PROFILE=slurm-puhti CONFIG=configs/config.test.yml
 ```
 
 ### Specific target
