@@ -1,1 +1,0 @@
-.. include:: {{ snakemake.output[0] }}

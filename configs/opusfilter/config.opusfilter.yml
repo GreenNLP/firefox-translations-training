@@ -1,7 +1,0 @@
-LengthFilter:
-      unit: word
-      min_length: 3
-      max_length: 100
-LengthRatioFilter:
-      unit: word
-      threshold: 3
