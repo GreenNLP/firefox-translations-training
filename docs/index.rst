@@ -35,14 +35,15 @@ New features:
    configs/examples.md
 
 .. toctree::
-   :caption: Pipeline steps
-   :name: steps/
+   :caption: The pipeline
+   :name: pipeline/
    :maxdepth: 1
 
-   steps/
+   pipeline/steps.md
+   pipeline/dir_structure.md
 
 .. toctree::
-   :caption: Troubleshooting
+   :caption: Other information
    :maxdepth: 1
 
    troubleshooting.md
