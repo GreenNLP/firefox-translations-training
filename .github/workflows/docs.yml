@@ -1,31 +1,33 @@
-name: Deploy docs
+name: Deploy Docs & Publish to PyPi
+
 on:
-  push:
-    branches:
-      - multi-ftt # needs to be updated
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  release:
+    types: [published]
+
 jobs:
-  build:
+  deploy-docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build
-        uses: actions/jekyll-build-pages@v1
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade setuptools
+        pip install -e .
+        pip install -r docs/requirements.txt
+    - name: Build docs
+      run: |
+        set -e
+        # Check that docs are built without errors
+        cd docs/ && make html && cd ..
+    - name: Deploy docs
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: docs/build/html
+        CLEAN: true
