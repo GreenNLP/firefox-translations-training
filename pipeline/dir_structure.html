@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Examples of Configuration Files &mdash; OpusDistillery  documentation</title>
+  <title>Directory structure &mdash; OpusDistillery  documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Pipeline steps" href="../pipeline/steps.html" />
-    <link rel="prev" title="Dataset importers" href="downloading_and_selecting_data.html" /> 
+    <link rel="next" title="Troubleshooting" href="../troubleshooting.html" />
+    <link rel="prev" title="Pipeline steps" href="steps.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,15 +86,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="downloading_and_selecting_data.html">Dataset importers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples of Configuration Files</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs/downloading_and_selecting_data.html">Dataset importers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs/examples.html">Examples of Configuration Files</a></li>
 </ul>
 <p class="caption"><span class="caption-text">The pipeline</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline/steps.html">Pipeline steps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline/dir_structure.html">Directory structure</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="steps.html">Pipeline steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Directory structure</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Other information</span></p>
 <ul>
@@ -148,7 +148,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Examples of Configuration Files</li>
+      <li>Directory structure</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -165,8 +165,89 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="examples-of-configuration-files">
-<h1>Examples of Configuration Files<a class="headerlink" href="#examples-of-configuration-files" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="directory-structure">
+<h1>Directory structure<a class="headerlink" href="#directory-structure" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>├ data
+│   └ ru-en
+│      └ test
+│        ├ original
+│        │   ├ corpus
+│        │   │   ├ mtdata_JW300.en.gz
+│        │   │   └ mtdata_JW300.ru.gz
+│        │   ├ devset
+│        │   │   ├ flores_dev.en.gz
+│        │   │   └ flores_dev.ru.gz
+│        │   ├ eval
+│        │   │   ├ sacrebleu_wmt20.en.gz
+│        │   │   └ sacrebleu_wmt20.ru.gz
+│        │   ├ mono
+│        │   │   ├ news-crawl_news.2020.ru.gz
+│        │   │   └ news-crawl_news.2020.en.gz
+│        │   ├ devset.ru.gz
+│        │   └ devset.en.gz
+│        ├ clean
+│        │   ├ corpus
+│        │   │   ├ mtdata_JW300.en.gz
+│        │   │   └ mtdata_JW300.ru.gz
+│        │   ├ mono
+│        │   │   ├ news-crawl_news.2020.ru.gz
+│        │   │   └ news-crawl_news.2020.en.gz
+│        │   ├ mono.ru.gz
+│        │   └ mono.en.gz
+│        ├ biclean
+│        │   ├ corpus
+│        │   │   ├ mtdata_JW300.en.gz
+│        │   │   └ mtdata_JW300.ru.gz
+│        │   ├ corpus.ru.gz
+│        │   ├ corpus.en.gz
+│        ├ translated
+│        │   ├ mono.ru.gz
+│        │   └ mono.en.gz
+│        ├ augmented
+│        │   ├ corpus.ru.gz
+│        │   └ corpus.en.gz
+│        ├ alignment
+│        │   ├ corpus.aln.gz
+│        │   └ lex.s2t.pruned.gz
+│        ├ merged
+│        │   ├ corpus.ru.gz
+│        │   └ corpus.en.gz
+│        └ filtered
+│            ├ corpus.ru.gz
+│            └ corpus.en.gz
+├ models
+│   └ ru-en
+│       └ test
+│          ├ backward
+│          ├ teacher-base0
+│          ├ teacher-base1
+│          ├ teacher-finetuned0
+│          ├ teacher-finetuned1
+│          ├ student
+│          ├ student-finetuned
+│          ├ speed
+│          ├ evaluation
+│          │  ├ backward
+│          │  ├ teacher-base0
+│          │  ├ teacher-base1
+│          │  ├ teacher-finetuned0
+│          │  ├ teacher-finetuned1
+│          │  ├ teacher-ensemble
+│          │  ├ student
+│          │  ├ student-finetuned
+│          │  └ speed
+│          └ exported
+│
+├ experiments
+│   └ ru-en
+│      └ test
+│         └ config.sh
+├ logs
+│   └ ru-en
+│      └ test
+│         └ clean_corpus.log
+</pre></div>
+</div>
 </div>
 
 
@@ -177,10 +258,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../pipeline/steps.html" class="btn btn-neutral float-right" title="Pipeline steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="downloading_and_selecting_data.html" class="btn btn-neutral float-left" title="Dataset importers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="steps.html" class="btn btn-neutral float-left" title="Pipeline steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Pipeline steps &mdash; OpusDistillery  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Directory structure" href="dir_structure.html" />
+    <link rel="prev" title="Examples of Configuration Files" href="../configs/examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> OpusDistillery
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Setting up your experiment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs/downloading_and_selecting_data.html">Dataset importers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs/examples.html">Examples of Configuration Files</a></li>
+</ul>
+<p class="caption"><span class="caption-text">The pipeline</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pipeline steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dir_structure.html">Directory structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpusDistillery</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Pipeline steps</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pipeline-steps">
+<h1>Pipeline steps<a class="headerlink" href="#pipeline-steps" title="Permalink to this headline">¶</a></h1>
+<p>The steps are based on <a class="reference external" href="https://github.com/browsermt/students/tree/master/train-student">train-student</a> recipe.</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Step</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Bottleneck</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Installation</p></td>
+<td><p>Installing dependencies and compiling</p></td>
+<td><p>CPU</p></td>
+<td><p>Takes ~1 hour</p></td>
+</tr>
+<tr class="row-odd"><td><p>Data downloading</p></td>
+<td><p>Downloads datasets, samples sentences</p></td>
+<td><p>Network, Disk</p></td>
+<td><p>Time depends on dataset size, sampling of huge mono datasets (100M+ sentences) is the most intensive operation.</p></td>
+</tr>
+<tr class="row-even"><td><p>Data cleaning</p></td>
+<td><p>Basic preprocessing, dataset specific, language specific, rule based and other attempts to clean noisy data in parallel and mono datasets</p></td>
+<td><p>CPU</p></td>
+<td><p>Good parallelization across CPU cores. To make cleaning of a new language more efficient add it to <span class="xref myst">clean_parallel.py</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bicleaner</p></td>
+<td><p>Filters noisy sentence pairs in a parallel corpus using <a class="reference external" href="https://github.com/bitextor/bicleaner">bicleaner</a> or <a class="reference external" href="https://github.com/bitextor/bicleaner-ai">bicleaner-ai</a> depending on available language packs.</p></td>
+<td><p>CPU, GPU</p></td>
+<td><p>If there are no pretrained language packs for bicleaner-ai, it uses bicleaner. If there are no ones for bicleaner either, this step is skipped. Cleaning thresholds are configurable per dataset, see [Dataset cleaning](##Dataset cleaning).</p></td>
+</tr>
+<tr class="row-even"><td><p>Merge and dedupe</p></td>
+<td><p>Merges clean dataset and applies deduplicaiton</p></td>
+<td><p>CPU, Disk</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>Training vocabulary</p></td>
+<td><p>Trains <a class="reference external" href="https://github.com/google/sentencepiece">SentencePiece</a> vocabulary/tokenizer model on parallel corpus.</p></td>
+<td><p>CPU</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p>Training s2s</p></td>
+<td><p>Trains a backward shallow s2s model, which is useful for back-translations and ce-filtering</p></td>
+<td><p>GPU</p></td>
+<td><p>Inspired by a <a class="reference external" href="https://github.com/marian-nmt/marian-examples/tree/master/training-basics-sentencepiece">marian example</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Augmentation with back-translations</p></td>
+<td><p>Translates mono corpus combined from monolingual datasets in target language using shallow s2s model.</p></td>
+<td><p>GPU</p></td>
+<td><p>It is more useful for low-resource languages and can be skipped for others.</p></td>
+</tr>
+<tr class="row-even"><td><p>Training teacher</p></td>
+<td><p>Trains an ensemble of big transformer models on augmented dataset</p></td>
+<td><p>GPU</p></td>
+<td><p>You might want to adjust <span class="xref myst">early stopping</span> or <code class="docutils literal notranslate"><span class="pre">after-epochs</span></code> parameters depending on datasets size.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Fine-tuning teacher</p></td>
+<td><p>Continue training an ensemble of teachers on parallel data only</p></td>
+<td><p>GPU</p></td>
+<td><p>You might want to adjust <span class="xref myst">early stopping</span> parameters depending on datasets size.</p></td>
+</tr>
+<tr class="row-even"><td><p>Translation by teacher</p></td>
+<td><p>Translates a corpus and monolingual data combined from configurable <code class="docutils literal notranslate"><span class="pre">dataset.mono-src</span></code> using the ensemble of teacher models</p></td>
+<td><p>GPU</p></td>
+<td><p>The slowest part of the pipeline. Can take days. It is possible to speed it up by using multiple nodes in cluster mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Cross-entropy filtering</p></td>
+<td><p>Scores translated corpus with backward s2s model and removes a part of the corpus with the lowest scores to reduce noise</p></td>
+<td><p>GPU, CPU, Disk</p></td>
+<td><p>At this point we work with huge datasets. Very disk intensive.</p></td>
+</tr>
+<tr class="row-even"><td><p>Training alignments and shortlist</p></td>
+<td><p>Trains alignments using <a class="reference external" href="https://github.com/clab/fast_align">fast_align</a> and extracts lexical shortlist using <a class="reference external" href="https://github.com/marian-nmt/extract-lex">extract_lex</a> tool</p></td>
+<td><p>CPU, Disk</p></td>
+<td><p>Some tools require uncompressed datasets on disk and they are huge at this point. Good CPU parallelization.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Training student</p></td>
+<td><p>Trains a small transformer student model on filtered data and using alignments. Shuffling in RAM might fail if dataset is huge and there’s not enough RAM on the machine, so it’s recommended to remove it and use <code class="docutils literal notranslate"><span class="pre">shuffle:</span> <span class="pre">batches</span></code> marian settings (see <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/issues/21">issue</a>).</p></td>
+<td><p>GPU</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p>Fine-tuning student</p></td>
+<td><p>Finetunes the student model by emulating 8bit GEMM during training</p></td>
+<td><p>GPU</p></td>
+<td><p>Converges very quickly and then degrades. It’s quick but you might want to reduce early stopping threshold.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Quantizaiton</p></td>
+<td><p>Applies 8 bit quantization to the fined-tuned student model and runs evaluation on CPU</p></td>
+<td><p>CPU</p></td>
+<td><p>CPU threads must be set to 1 for this step.</p></td>
+</tr>
+<tr class="row-even"><td><p>Evaluation</p></td>
+<td><p>Calculates metrics for all models (BLEU, chrf) using <a class="reference external" href="https://github.com/mjpost/sacrebleu">SacreBLEU</a></p></td>
+<td><p>GPU</p></td>
+<td><p>Uses <code class="docutils literal notranslate"><span class="pre">datasets.test</span></code> configuration section.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Export</p></td>
+<td><p>Exports trained model and shortlist to (bergamot-translator)(https://github.com/mozilla/bergamot-translator) format</p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dir_structure.html" class="btn btn-neutral float-right" title="Directory structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../configs/examples.html" class="btn btn-neutral float-left" title="Examples of Configuration Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
