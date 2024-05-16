@@ -88,14 +88,22 @@
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration files</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#data-processing">Data processing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#opusfilter">opusfilter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#opustrainer">opustrainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-processing">Data processing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#opusfilter">OpusFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bicleaner-ai">Bicleaner AI</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#teacher-models">Teacher models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#backward-model">Backward model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#marian-arguments">Marian arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other">Other</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backward-models">Backward models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#marian-arguments">Marian arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#opustrainer">Opustrainer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other">Other</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="downloading_and_selecting_data.html">Dataset importers</a></li>
@@ -109,9 +117,6 @@
 <p class="caption"><span class="caption-text">Other information</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
-</ul>
-<p class="caption"><span class="caption-text">References</span></p>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 </ul>
 
@@ -181,7 +186,7 @@
 At the top level, they have two sections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">experiment</span></code>: contains all the relevant information for your experiment, except the information on which datasets to use.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span></code>: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in <span class="xref myst">Dataset importers</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span></code>: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in <a class="reference internal" href="downloading_and_selecting_data.html"><span class="doc std std-doc">Dataset importers</span></a>.</p></li>
 </ul>
 <p>At the beginning of your <code class="docutils literal notranslate"><span class="pre">experiment</span></code> section, you should define the following:</p>
 <ul class="simple">
@@ -200,12 +205,19 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="data-processing">
 <h2>Data processing<a class="headerlink" href="#data-processing" title="Permalink to this headline">¶</a></h2>
-</div>
 <div class="section" id="opusfilter">
-<h2>opusfilter<a class="headerlink" href="#opusfilter" title="Permalink to this headline">¶</a></h2>
+<h3>OpusFilter<a class="headerlink" href="#opusfilter" title="Permalink to this headline">¶</a></h3>
+<p>We have added support for using <a class="reference external" href="https://github.com/Helsinki-NLP/OpusFilter">OpusFilter</a>, a tool for filtering and combining parallel corpora. For data filtering, instead of the default cleaning, you can choose to use opusfilter with a default configuration or with a specific configuration you provide.</p>
+<p>In the configuration file, if you want to use a <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13">default</a> configuration, you can see how in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.fiu-eng.opusfilter.yml#L33">this example</a>. Otherwise, you can specify the path to a specific file with an Opusfilter configuration such as <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml">this one</a>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusfilter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w"> </span><span class="c1"># Otherwise, specify path to opusfilter configuration &#39;configs/opusfilter/config.opusfilter.yaml&#39;</span>
+</pre></div>
 </div>
-<div class="section" id="opustrainer">
-<h2>opustrainer<a class="headerlink" href="#opustrainer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="bicleaner-ai">
+<h3>Bicleaner AI<a class="headerlink" href="#bicleaner-ai" title="Permalink to this headline">¶</a></h3>
+<p>At the moment, this is not working.</p>
+</div>
 </div>
 <div class="section" id="teacher-models">
 <h2>Teacher models<a class="headerlink" href="#teacher-models" title="Permalink to this headline">¶</a></h2>
@@ -251,8 +263,8 @@ At the top level, they have two sections:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="backward-model">
-<h2>Backward model<a class="headerlink" href="#backward-model" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backward-models">
+<h2>Backward models<a class="headerlink" href="#backward-models" title="Permalink to this headline">¶</a></h2>
 <p>At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).</p>
 <p>It is defined by:</p>
 <ul class="simple">
@@ -264,9 +276,8 @@ At the top level, they have two sections:</p>
 <span class="w">    </span><span class="nt">be-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip&quot;</span>
 </pre></div>
 </div>
-</div>
 <div class="section" id="multilinguality">
-<h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
+<h3>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h3>
 <p>Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">one2many-teacher</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code> is “best”, then this should be also “best”</p></li>
@@ -279,19 +290,50 @@ At the top level, they have two sections:</p>
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="marian-arguments">
-<h2>Marian arguments<a class="headerlink" href="#marian-arguments" title="Permalink to this headline">¶</a></h2>
+<h3>Marian arguments<a class="headerlink" href="#marian-arguments" title="Permalink to this headline">¶</a></h3>
 <p>These configs override pipeline/train/configs with <a class="reference external" href="https://marian-nmt.github.io/docs/cmd/marian/">Marian settings</a></p>
+<p>The options are: <code class="docutils literal notranslate"><span class="pre">training-teacher</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-teacher</span></code>,<code class="docutils literal notranslate"><span class="pre">training-backward</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-backward</span></code>,<code class="docutils literal notranslate"><span class="pre">training-student</span></code>, <code class="docutils literal notranslate"><span class="pre">training-student-finetuned</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">marian-args</span><span class="p">:</span>
+<span class="w">  </span><span class="c1">#these configs override pipeline/train/configs</span>
+<span class="w">  </span><span class="nt">training-student</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dec-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">enc-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">dim-emb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">    </span><span class="nt">tied-embeddings-all</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">transformer-decoder-autoreg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rnn</span>
+<span class="w">    </span><span class="nt">transformer-dim-ffn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2048</span>
+<span class="w">    </span><span class="nt">transformer-ffn-activation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">relu</span>
+<span class="w">    </span><span class="nt">transformer-ffn-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="nt">transformer-guided-alignment-layer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">last</span>
+<span class="w">    </span><span class="nt">transformer-heads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">transformer-postprocess</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dan</span>
+<span class="w">    </span><span class="nt">transformer-preprocess</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">    </span><span class="nt">transformer-tied-layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">    </span><span class="nt">transformer-train-position-embeddings</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transformer</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="opustrainer">
+<h3>Opustrainer<a class="headerlink" href="#opustrainer" title="Permalink to this headline">¶</a></h3>
+<p>We have also added support for using <a class="reference external" href="https://github.com/hplt-project/OpusTrainer">OpusTrainer</a>, a tool for curriculum training and data augmentation.</p>
+<p>In the configuration file, you can specify a path to the OpusTrainer configuration as in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37">here</a>. However, this assumes that you already now the final paths of the data as specified in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml">here</a>.</p>
+<p>At the moment, this is only implemented for student training.</p>
 </div>
 <div class="section" id="other">
-<h2>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h2>
+<h3>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">parallel-max-sentences</span></code>: maximum parallel sentences to download from each dataset.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">split-length</span></code>: the amount of sentences into which you want to split your training data for forward translation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">best-model</span></code>: metric to select your best model.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spm-sample-size</span></code>: sample size to train spm vocabulary of the student.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">student-prefix</span></code>: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">student-prefix</span></code>: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure. Find more about the directory structure <a class="reference internal" href="../pipeline/dir_structure.html"><span class="doc std std-doc">here</span></a>.</p></li>
 </ul>
+</div>
 </div>
 </div>
 

@@ -89,7 +89,12 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="downloading_and_selecting_data.html">Dataset importers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples of Configuration Files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples of Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-processing">Data Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">The pipeline</span></p>
 <ul>
@@ -99,9 +104,6 @@
 <p class="caption"><span class="caption-text">Other information</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
-</ul>
-<p class="caption"><span class="caption-text">References</span></p>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 </ul>
 
@@ -167,6 +169,119 @@
             
   <div class="section" id="examples-of-configuration-files">
 <h1>Examples of Configuration Files<a class="headerlink" href="#examples-of-configuration-files" title="Permalink to this headline">¶</a></h1>
+<p>Next we provide some configuration examples that will guide you for defining your own.</p>
+<div class="section" id="multilinguality">
+<h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
+<p>The different possible distilling scenarios that we envision and that are covered are the following (o2m: one2many, m2o: many2one, m2m: many2many):</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Configuration</p></th>
+<th class="head"><p>Teacher</p></th>
+<th class="head"><p>Student</p></th>
+<th class="head"><p>Example config</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>bilingual - bilingual</p></td>
+<td><p>en-et</p></td>
+<td><p>en-et</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.1.o2o.o2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>o2m - bilingual</p></td>
+<td><p>eng-fiu</p></td>
+<td><p>en-et</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.2.o2m.o2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>o2m - o2m</p></td>
+<td><p>eng-fiu</p></td>
+<td><p>eng-fiu</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.3.o2m.o2m.yml">Config file</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>m2o - bilingual</p></td>
+<td><p>fiu-eng</p></td>
+<td><p>et-en</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.4.m2o.o2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>m2o - m2o</p></td>
+<td><p>fiu-eng</p></td>
+<td><p>fiu-eng</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.5.m2o.m2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>m2m - bilingual</p></td>
+<td><p>fiu-gmw</p></td>
+<td><p>et-en</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.6.m2m.o2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>m2m - o2m</p></td>
+<td><p>gmw-fiu</p></td>
+<td><p>eng-fiu</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.7.m2m.o2m.yml">Config file</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>m2m - m2o</p></td>
+<td><p>fiu-gmw</p></td>
+<td><p>fiu-eng</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.8.m2m.m2o.yml">Config file</a></p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>m2m - m2m</p></td>
+<td><p>gmw-fiu</p></td>
+<td><p>gmw-fiu</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/config.9.m2m.m2m.yml">Config file</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data-processing">
+<h2>Data Processing<a class="headerlink" href="#data-processing" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Configuration</p></th>
+<th class="head"><p>Teacher</p></th>
+<th class="head"><p>Student</p></th>
+<th class="head"><p>Example config</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>10</p></td>
+<td><p>OpusFilter</p></td>
+<td><p>fiu-eng</p></td>
+<td><p>fiu-eng</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opusfilter/config.fiu-eng.opusfilter.yml">Config file</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Configuration</p></th>
+<th class="head"><p>Teacher</p></th>
+<th class="head"><p>Student</p></th>
+<th class="head"><p>Example config</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>OpusTrainer</p></td>
+<td><p>fiu-eng</p></td>
+<td><p>fiu-eng</p></td>
+<td><p><a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml">Config file</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 

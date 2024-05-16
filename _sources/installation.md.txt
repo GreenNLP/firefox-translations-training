@@ -13,7 +13,7 @@
 7. If the data directory is not located in the parent directory of the repository, edit _profiles/slurm-puhti/config.yaml_ or _profiles/slurm-mahti/config.yaml_ and change the bindings in the singularity-args section to point to your data directory, and also enter the _data_ directory path as the _root_ value of the _config_ section.
 8. Edit profiles/slurm-puhti/config.cluster.yaml to change the CSC account to one you have access to. 
 9. Load cuda modules: module load gcc/9.4.0 cuda cudnn
-10. Run pipeline: `make run-hpc PROFILE="slurm-puhti"` or `make run PROFILE="slurm-mahti"`. More information in [Basic Usage](usage.md)
+10. Run pipeline: `make run-hpc PROFILE="slurm-puhti"` or `make run PROFILE="slurm-mahti"`. More information in [Basic Usage](usage.md).
 
 ## Getting started on CSC's lumi
 1. Clone the repository.
@@ -30,4 +30,4 @@
 9. Load rocm module: module load rocm.
 10. Copy the marian executables to _3rd_party/lumi-marian/build_ (compiling lumi-marian is currently hacky, so this workaround makes things easier).
 11. Enter _export SINGULARITYENV_LD_LIBRARY_PATH=$LD_LIBRARY_PATH_ to make sure Marian can find all the libraries when it runs containerized.
-12. Run pipeline: `make run-hpc PROFILE="slurm-puhti"`
+12. Run pipeline: `make run-hpc PROFILE="slurm-lumi"`.  More information in [Basic Usage](usage.md).

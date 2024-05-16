@@ -103,9 +103,6 @@
 <p class="caption"><span class="caption-text">Other information</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-</ul>
-<p class="caption"><span class="caption-text">References</span></p>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 </ul>
 
@@ -189,7 +186,7 @@
 <li><p>If the data directory is not located in the parent directory of the repository, edit <em>profiles/slurm-puhti/config.yaml</em> or <em>profiles/slurm-mahti/config.yaml</em> and change the bindings in the singularity-args section to point to your data directory, and also enter the <em>data</em> directory path as the <em>root</em> value of the <em>config</em> section.</p></li>
 <li><p>Edit profiles/slurm-puhti/config.cluster.yaml to change the CSC account to one you have access to.</p></li>
 <li><p>Load cuda modules: module load gcc/9.4.0 cuda cudnn</p></li>
-<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run</span> <span class="pre">PROFILE=&quot;slurm-mahti&quot;</span></code>. More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a></p></li>
+<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run</span> <span class="pre">PROFILE=&quot;slurm-mahti&quot;</span></code>. More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a>.</p></li>
 </ol>
 </div>
 <div class="section" id="getting-started-on-csc-s-lumi">
@@ -212,7 +209,7 @@
 <li><p>Load rocm module: module load rocm.</p></li>
 <li><p>Copy the marian executables to <em>3rd_party/lumi-marian/build</em> (compiling lumi-marian is currently hacky, so this workaround makes things easier).</p></li>
 <li><p>Enter <em>export SINGULARITYENV_LD_LIBRARY_PATH=$LD_LIBRARY_PATH</em> to make sure Marian can find all the libraries when it runs containerized.</p></li>
-<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code></p></li>
+<li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-lumi&quot;</span></code>.  More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a>.</p></li>
 </ol>
 </div>
 </div>

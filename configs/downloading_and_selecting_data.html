@@ -89,7 +89,9 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration files</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset importers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#find-datasets">Find datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-a-new-importer">Adding a new importer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#issues">Issues</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples of Configuration Files</a></li>
@@ -102,9 +104,6 @@
 <p class="caption"><span class="caption-text">Other information</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
-</ul>
-<p class="caption"><span class="caption-text">References</span></p>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 </ul>
 
@@ -172,9 +171,13 @@
 <h1>Dataset importers<a class="headerlink" href="#dataset-importers" title="Permalink to this headline">¶</a></h1>
 <p>Dataset importers can be used in <code class="docutils literal notranslate"><span class="pre">datasets</span></code> sections of the <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/configs/test.yml#L66">training config</a>.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">train</span><span class="p">:</span>
-    <span class="o">-</span> <span class="n">opus_ada83</span><span class="o">/</span><span class="n">v1</span>
-    <span class="o">-</span> <span class="n">mtdata_newstest2014_ruen</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">datasets</span><span class="p">:</span>
+  <span class="n">train</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">tc_Tatoeba</span><span class="o">-</span><span class="n">Challenge</span><span class="o">-</span><span class="n">v2023</span><span class="o">-</span><span class="mi">09</span><span class="o">-</span><span class="mi">26</span>
+  <span class="n">devtest</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">flores_dev</span>
+  <span class="n">test</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">flores_devtest</span>
 </pre></div>
 </div>
 <table class="colwidths-auto docutils align-default">
@@ -243,16 +246,26 @@
 </tr>
 </tbody>
 </table>
+<div class="section" id="find-datasets">
+<h2>Find datasets<a class="headerlink" href="#find-datasets" title="Permalink to this headline">¶</a></h2>
 <p>You can also use <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/utils/find-corpus.py">find-corpus</a> tool to find all datasets for an importer and get them formatted to use in config.</p>
 <p>Set up a local <a class="reference external" href="https://python-poetry.org/">poetry</a> environment.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">task</span> <span class="n">find</span><span class="o">-</span><span class="n">corpus</span> <span class="o">--</span> <span class="n">en</span> <span class="n">ru</span>
 </pre></div>
 </div>
 <p>Make sure to check licenses of the datasets before using them.</p>
+</div>
 <div class="section" id="adding-a-new-importer">
 <h2>Adding a new importer<a class="headerlink" href="#adding-a-new-importer" title="Permalink to this headline">¶</a></h2>
-<p>Just add a shell script to <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/tree/main/pipeline/data/importers/corpus">corpus</a> or <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/tree/main/pipeline/data/importers/mono">mono</a> which is named as <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.sh</span></code>
+<p>Just add a shell script to <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/corpus">corpus</a> or <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/mono">mono</a> which is named as <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.sh</span></code>
 and accepts the same parameters as the other scripts from the same folder.</p>
+</div>
+<div class="section" id="issues">
+<h2>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Currently, it is not possible to download specific datasets per language pair, right now the tool only downloads the same dataset for all language pairs. If a dataset doesn’t exist for a given language pair, it creates dummy files.</p></li>
+<li><p>Currently, there is no support to download monolingual datasets. The use of monolingual data is not implemented and only supports the use of bilingual data at the moment.</p></li>
+</ul>
 </div>
 </div>
 
