@@ -8,10 +8,6 @@ from langcodes import *
 
 min_version("6.6.1")
 
-# `include` directive is not supported by Pycharm plugin, moving all rules to one file to enable live checks
-# https://github.com/JetBrains-Research/snakecharm/issues/195
-
-
 ### configuration
 
 containerized: 'Ftt.sif'
@@ -29,28 +25,20 @@ workspace = config['workspace']
 marian_cmake = config['mariancmake']
 marian_version = config.get('marianversion','marian-dev')
 
-# experiment
-# This only works for bilingual models
-src = config['experiment'].get('src')
-trg = config['experiment'].get('trg')
-src_three_letter = config['experiment'].get('src_three_letter')
-trg_three_letter = config['experiment'].get('trg_three_letter')
+# experiment parameters
+experiment = config['experiment']['name']
+dirname = config['experiment']['dirname']
 
-# multilinguality 
-o2m_teacher = config['experiment']['one2many-teacher']
-o2m_student = config['experiment']['one2many-student']
-o2m_backward = config['experiment']['one2many-backward']
-
-
-# Read langpairs from config; if not given, infer single langpair from source and target langs
-langpairs = config['experiment'].get('langpairs')
+# Read langpairs from config
+langpairs = config['experiment']['langpairs']
 if not langpairs:
     langpairs = [f"{src}-{trg}"]
 
-experiment = config['experiment']['name']
-dirname = config['experiment'].get('dirname')
-if not dirname:
-    dirname = {src}-{trg}
+# multilinguality 
+o2m_teacher = config['experiment'].get('one2many-teacher',False)
+o2m_student = config['experiment'].get('one2many-student',False)
+o2m_backward = config['experiment'].get('one2many-backward',False)
+
 
 # Modified variables to fit naming
 src="source"
@@ -69,7 +57,7 @@ forward_pretrained = config['experiment'].get('forward-model')
 
 experiment_dir=f"{data_root_dir}/experiments/{dirname}/{experiment}"
 
-# override marian cofings
+# override marian configs
 marian_args = {name: ' '.join([f'--{k} {v}' for k,v in conf.items() ])
                for name, conf in config.get('marian-args',{}).items()}
 
@@ -79,12 +67,6 @@ opusmt_teacher = config['experiment'].get('opusmt-teacher')
 if opusmt_teacher and not isinstance(opusmt_teacher,list):
     opusmt_teacher = [opusmt_teacher]
 opusmt_backward = config['experiment'].get('opusmt-backward')
-
-# if no target language token specified, use src (they might be different in rare cases)
-target_language_token = config['experiment'].get('target-language-token',trg)
-
-#this is for reverse scoring with multilingual model
-source_language_token = config['experiment'].get('target-language-token',src)
 
 # datasets
 train_datasets = config['datasets']['train']
@@ -200,7 +182,7 @@ else:
 eval_teacher_ens_dir = f'{eval_res_dir}/teacher-ensemble'
 
 # set common environment variables
-envs = f'''SRC="source" TRG="target" MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
+envs = f'''SRC="{src}" TRG="{trg}" MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
 BIN="{bin}" CUDA_DIR="{cuda_dir}" CUDNN_DIR="{cudnn_dir}" ROCM_PATH="{rocm_dir}" COMPRESSION_CMD=pigz ARTIFACT_EXT=gz'''
 # CUDA_VISIBLE_DEVICES is used by bicleaner ai. slurm sets this variable
 # it can be overriden manually by 'gpus' config setting to split GPUs in local mode
@@ -226,8 +208,8 @@ if not (opusmt_teacher or forward_pretrained):
 if len(ensemble) > 1:
     results.extend(expand(f'{eval_teacher_ens_dir}/{{langpair}}/{{dataset}}.metrics', dataset=eval_datasets, langpair=langpairs))
 
-#if install_deps:
-#    results.append("/tmp/flags/setup.done")
+if install_deps:
+    results.append("/tmp/flags/setup.done")
 
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:
