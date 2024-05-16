@@ -47,9 +47,4 @@ New features:
    :maxdepth: 1
 
    troubleshooting.md
-
-.. toctree::
-   :caption: References
-   :maxdepth: 1
-
    references.md

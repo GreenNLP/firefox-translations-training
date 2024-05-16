@@ -1,6 +1,8 @@
-## Pipeline steps
+# Pipeline steps
 
 The steps are based on [train-student](https://github.com/browsermt/students/tree/master/train-student) recipe.
+
+They can be represented as a Directly Acyclic Graph (DAG).
 
 Step | Description | Bottleneck | Comments
 --- | --- | --- | ---

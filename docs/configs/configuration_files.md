@@ -4,7 +4,7 @@ Configuration files are in [YAML](https://yaml.org/) format.
 At the top level, they have two sections:
 
 * `experiment`: contains all the relevant information for your experiment, except the information on which datasets to use.
-* `datasets`: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in [Dataset importers](docs/configs/downloading_and_selecting_data.md).
+* `datasets`: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in [Dataset importers](downloading_and_selecting_data.md).
 
 At the beginning of your `experiment` section, you should define the following:
 
@@ -23,11 +23,24 @@ experiment:
     - hu-en
 ```
 
-### Data processing
-### opusfilter
-### opustrainer
+## Data processing
 
-### Teacher models
+### OpusFilter
+
+We have added support for using [OpusFilter](https://github.com/Helsinki-NLP/OpusFilter), a tool for filtering and combining parallel corpora. For data filtering, instead of the default cleaning, you can choose to use opusfilter with a default configuration or with a specific configuration you provide.
+
+In the configuration file, if you want to use a [default](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13) configuration, you can see how in [this example](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.fiu-eng.opusfilter.yml#L33). Otherwise, you can specify the path to a specific file with an Opusfilter configuration such as [this one](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml).
+
+```yaml
+  opusfilter:
+    config: default # Otherwise, specify path to opusfilter configuration 'configs/opusfilter/config.opusfilter.yaml'
+```
+
+### Bicleaner AI
+
+At the moment, this is not working.
+
+## Teacher models
 
 At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).
 
@@ -71,7 +84,7 @@ This can be either of the following:
   opusmt-teacher: "best"
 ```
 
-### Backward model
+## Backward models
 
 At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).
 
@@ -98,9 +111,41 @@ Specify if the teacher, the backward and the student models are many-to-one to b
   one2many-teacher: True
   one2many-student: True
 ```
+## Training
 
 ### Marian arguments
 These configs override pipeline/train/configs with [Marian settings](https://marian-nmt.github.io/docs/cmd/marian/)
+
+The options are: `training-teacher`, `decoding-teacher`,`training-backward`, `decoding-backward`,`training-student`, `training-student-finetuned`
+
+```yaml
+  marian-args:
+  #these configs override pipeline/train/configs
+  training-student:
+    dec-depth: 3
+    enc-depth: 3
+    dim-emb: 512
+    tied-embeddings-all: true
+    transformer-decoder-autoreg: rnn
+    transformer-dim-ffn: 2048
+    transformer-ffn-activation: relu
+    transformer-ffn-depth: 2
+    transformer-guided-alignment-layer: last
+    transformer-heads: 8
+    transformer-postprocess: dan
+    transformer-preprocess: ""
+    transformer-tied-layers: []
+    transformer-train-position-embeddings: false
+    type: transformer
+```
+
+### Opustrainer
+
+We have also added support for using [OpusTrainer](https://github.com/hplt-project/OpusTrainer), a tool for curriculum training and data augmentation. 
+
+In the configuration file, you can specify a path to the OpusTrainer configuration as in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37). However, this assumes that you already now the final paths of the data as specified in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml).
+
+At the moment, this is only implemented for student training.
 
 ### Other
 
@@ -108,4 +153,4 @@ These configs override pipeline/train/configs with [Marian settings](https://mar
 * `split-length`: the amount of sentences into which you want to split your training data for forward translation.
 * `best-model`: metric to select your best model.
 * `spm-sample-size`: sample size to train spm vocabulary of the student.
-* `student-prefix`: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure.
+* `student-prefix`: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure. Find more about the directory structure [here](../pipeline/dir_structure.md).
