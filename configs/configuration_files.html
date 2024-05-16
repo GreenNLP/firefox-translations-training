@@ -94,10 +94,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#teacher-models">Teacher models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#backward-models">Backward models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#backward-models">Backward models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#marian-arguments">Marian arguments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#opustrainer">Opustrainer</a></li>
@@ -276,8 +274,9 @@ At the top level, they have two sections:</p>
 <span class="w">    </span><span class="nt">be-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip&quot;</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="multilinguality">
-<h3>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h3>
+<h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
 <p>Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">one2many-teacher</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code> is “best”, then this should be also “best”</p></li>
@@ -288,7 +287,6 @@ At the top level, they have two sections:</p>
 <span class="w">  </span><span class="nt">one2many-teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="w">  </span><span class="nt">one2many-student</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 </pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="training">
@@ -323,6 +321,11 @@ At the top level, they have two sections:</p>
 <p>We have also added support for using <a class="reference external" href="https://github.com/hplt-project/OpusTrainer">OpusTrainer</a>, a tool for curriculum training and data augmentation.</p>
 <p>In the configuration file, you can specify a path to the OpusTrainer configuration as in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37">here</a>. However, this assumes that you already now the final paths of the data as specified in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml">here</a>.</p>
 <p>At the moment, this is only implemented for student training.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opustrainer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">student</span><span class="w"> </span><span class="c1"># Ideally, could be teacher or backward</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;configs/opustrainer/config.fiu-eng.opustrainer.stages.yml&quot;</span><span class="w"> </span><span class="c1"># This assumes you already know the paths to the data</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="other">
 <h3>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h3>

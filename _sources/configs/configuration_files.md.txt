@@ -99,7 +99,7 @@ It is defined by:
     be-en: "https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip"
 ```
 
-### Multilinguality
+## Multilinguality
 Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  `False`.
 
 * `one2many-teacher`: `True` or `False` (default). If `opusmt-teacher` is "best", then this should be also "best"
@@ -146,6 +146,12 @@ We have also added support for using [OpusTrainer](https://github.com/hplt-proje
 In the configuration file, you can specify a path to the OpusTrainer configuration as in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37). However, this assumes that you already now the final paths of the data as specified in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml).
 
 At the moment, this is only implemented for student training.
+
+```yaml
+  opustrainer:
+    model: student # Ideally, could be teacher or backward
+    path: "configs/opustrainer/config.fiu-eng.opustrainer.stages.yml" # This assumes you already know the paths to the data
+```
 
 ### Other
 
