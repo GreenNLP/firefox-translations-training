@@ -2,6 +2,8 @@
 
 OpusDistillery is an end-to-end pipeline to perform systematic multilingual distillation of MT models. It is built on top of the [Firefox Translations Training pipeline](https://github.com/mozilla/firefox-translations-training), originally developed within the [Bergamot project](https://browser.mt), for training efficient NMT models that can run locally in a web browser.
 
+Read our [docs](https://helsinki-nlp.github.io/OpusDistillery/).
+
 We have implemented the use of pre-trained OPUS-MT models, the tracking of GPU utilisation and multilinguality support.
 
 * **OPUS-MT models**: We have added the option to simply provide the URL of an existing OPUS-MT model. Our tool is also able to select the best available OpusMT model per language pair.
