@@ -86,6 +86,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Basic usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#configuration-examples">Configuration examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#on-lumi">On LUMI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usual-run">Usual run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#specific-target">Specific target</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rerunning">Rerunning</a></li>
 </ul>
@@ -212,7 +214,28 @@ Configuration files are in <a class="reference external" href="https://yaml.org/
 </div>
 <div class="section" id="running">
 <h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
-<p>Load all the necessary modules as explained in <a class="reference internal" href="installation.html"><span class="doc std std-doc">Installation</span></a></p>
+<div class="section" id="on-lumi">
+<h3>On LUMI<a class="headerlink" href="#on-lumi" title="Permalink to this headline">¶</a></h3>
+<p>On LUMI, the pipeline is run from the login node from your local copy of the root repository.</p>
+<p>Start a tmux session: <code class="docutils literal notranslate"><span class="pre">tmux</span></code>
+You can read more about <a class="reference external" href="https://github.com/tmux/tmux/wiki">tmux</a> here.</p>
+<p>Load LUMI specific modules:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module<span class="w"> </span>load<span class="w"> </span>CrayEnv
+module<span class="w"> </span>load<span class="w"> </span>PrgEnv-cray/8.3.3
+module<span class="w"> </span>load<span class="w"> </span>craype-accel-amd-gfx90a
+module<span class="w"> </span>load<span class="w"> </span>cray-python
+module<span class="w"> </span>load<span class="w"> </span>rocm/5.3.3
+<span class="nb">export</span><span class="w"> </span><span class="nv">SINGULARITYENV_LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>
+</pre></div>
+</div>
+<p>Activate snakemake environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>../snakemake_env/bin/activate
+</pre></div>
+</div>
+<p>Now, you can move on and continue to the next section.</p>
+</div>
+<div class="section" id="usual-run">
+<h3>Usual run<a class="headerlink" href="#usual-run" title="Permalink to this headline">¶</a></h3>
 <p>Dry run first to check that everything was installed correctly:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">dry</span><span class="o">-</span><span class="n">run</span>
 </pre></div>
@@ -228,6 +251,7 @@ Configuration files are in <a class="reference external" href="https://yaml.org/
 <p>You can also run a specific profile or config by overriding variables from Makefile</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=</span><span class="n">slurm</span><span class="o">-</span><span class="n">puhti</span> <span class="n">CONFIG</span><span class="o">=</span><span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
+</div>
 </div>
 <div class="section" id="specific-target">
 <h3>Specific target<a class="headerlink" href="#specific-target" title="Permalink to this headline">¶</a></h3>

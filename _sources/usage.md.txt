@@ -46,7 +46,33 @@ datasets:
 
 ## Running
 
-Load all the necessary modules as explained in [Installation](installation.md)
+### On LUMI
+
+On LUMI, the pipeline is run from the login node from your local copy of the root repository.
+
+Start a tmux session: `tmux`
+You can read more about [tmux](https://github.com/tmux/tmux/wiki) here.
+
+Load LUMI specific modules:
+
+```bash
+module load CrayEnv
+module load PrgEnv-cray/8.3.3
+module load craype-accel-amd-gfx90a
+module load cray-python
+module load rocm/5.3.3
+export SINGULARITYENV_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+```
+
+Activate snakemake environment:
+
+```bash
+source ../snakemake_env/bin/activate
+```
+
+Now, you can move on and continue to the next section.
+
+### Usual run
 
 Dry run first to check that everything was installed correctly:
 
