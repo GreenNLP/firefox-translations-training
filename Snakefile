@@ -4,178 +4,39 @@ import glob
 import hashlib
 
 from snakemake.utils import min_version
-from pipeline.bicleaner import packs
-
 
 min_version("6.6.1")
+# include statement will include the code in the file as is, into the same variable scope. This is why the configuration (specifying directories etc.) is done with include, those configuration settings need to be in the global scope in the main Snakefile (but it's cleaner to have them in a separate file to reduce clutter). 
+include: "./configuration.smk" 
 
-# `include` directive is not supported by Pycharm plugin, moving all rules to one file to enable live checks
-# https://github.com/JetBrains-Research/snakecharm/issues/195
+#Sub-workflows are included as modules, which have their own variable scope, they don't inherit variables from the main Snakefile. Now it would be possible to also include the configuration.smk in the sub-workflow files, but that seems like a bad practise since most sub-workflows only use a couple of the global settings, they don't need access to the whole configuration.
 
+#There are examples of sub-workflows as modules below. The module rat is a semi-complete example of how I think we should proceed. The compile_deps and data modules use a different approach which I decided not to pursue, so ignore them.
 
-### configuration
+# There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
+rat_config = {"clean-dir": biclean_scored, "testset-dir": os.getcwd(), "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
+config["rat"] = rat_config
 
-containerized: 'Ftt.sif'
+# The prefix value is a directory that will be appended to all the relative paths in the module, so effectively it's the output dir value. So we control input using the configuration file, and output using the prefix value in the module statement.
+module rat:
+    snakefile: "./rat.smk"
+    config: config["rat"]
+    prefix: simple_rat
 
-install_deps = config['deps'] == 'true'
-data_root_dir = config.get('root', srcdir("../data"))
-cuda_dir = config.get('cuda', os.environ.get("CUDA_INSTALL_ROOT")) 
-cudnn_dir = config.get('cudnn', os.environ.get("CUDNN_INSTALL_ROOT"))
-rocm_dir = config.get('rocm',os.environ.get("ROCM_PATH"))
+use rule * from rat as *
 
-gpus_num = config['numgpus']
-# marian occupies all GPUs on a machine if `gpus` are not specified
-gpus = config['gpus'] if config['gpus'] else ' '.join([str(n) for n in range(int(gpus_num))])
-workspace = config['workspace']
-marian_cmake = config['mariancmake']
-marian_version = config.get('marianversion','marian-dev')
+#Ignore these modules, they use a dead-end approach, will change it later.
+module compile_deps:
+    snakefile: "./compile_deps.smk"
+    config: config
 
-# experiment
-src = config['experiment']['src']
-trg = config['experiment']['trg']
-src_three_letter = config['experiment'].get('src_three_letter')
-trg_three_letter = config['experiment'].get('trg_three_letter')
-experiment = config['experiment']['name']
+use rule * from compile_deps
 
-mono_max_sent_src = config['experiment'].get('mono-max-sentences-src')
-mono_max_sent_trg = config['experiment'].get('mono-max-sentences-trg')
-parallel_max_sents = config['experiment'].get('parallel-max-sentences',"inf")
+module data:
+    snakefile: "./data.smk"
+    config: config
 
-
-
-backward_pretrained = config['experiment'].get('backward-model')
-backward_pretrained_vocab = config['experiment'].get('backward-vocab')
-vocab_pretrained = config['experiment'].get('vocab')
-forward_pretrained = config['experiment'].get('forward-model')
-
-train_student = config['experiment'].get('train-student')
-quantize_student = config['experiment'].get('quantize-student')
-
-experiment_dir=f"{data_root_dir}/experiments/{src}-{trg}/{experiment}"
-
-# override marian cofings
-marian_args = {name: ' '.join([f'--{k} {v}' for k,v in conf.items() ])
-               for name, conf in config.get('marian-args',{}).items()}
-
-# There can be multiple opus teachers, but a single teacher can also be provided
-# as string, so convert it to list here
-opusmt_teacher = config['experiment'].get('opusmt-teacher')
-if opusmt_teacher and not isinstance(opusmt_teacher,list):
-    opusmt_teacher = [opusmt_teacher]
-
-opusmt_backward = config['experiment'].get('opusmt-backward')
-
-# if no target language token specified, use src (they might be different in rare cases)
-target_language_token = config['experiment'].get('target-language-token',trg)
-
-#this is for reverse scoring with multilingual model
-source_language_token = config['experiment'].get('target-language-token',src)
-
-# datasets
-train_datasets = config['datasets'].get('train')
-tc_scored = config['datasets'].get('tc_scored')
-valid_datasets = config['datasets']['devtest']
-eval_datasets = config['datasets']['test']
-mono_src_datasets = config['datasets'].get('mono-src')
-mono_trg_datasets = config['datasets'].get('mono-trg')
-mono_datasets = {src: mono_src_datasets, trg: mono_trg_datasets}
-mono_max_sent = {src: mono_max_sent_src, trg: mono_max_sent_trg}
-
-# wmt23 term task (TODO: generalize this to generic term support)
-wmt23_termtask = config['experiment'].get('wmt23_termtask')
-# this applies to finetuning teacher with terms, omitting means fine tuning only with term-augmented data
-omit_unannotated = ["-omit",""]
-
-# parallelization
-
-ensemble = list(range(config['experiment'].get('teacher-ensemble',0)))
-
-split_length = config['experiment']['split-length']
-
-# logging
-log_dir = f"{data_root_dir}/logs/{src}-{trg}/{experiment}"
-reports_dir = f"{data_root_dir}/reports/{src}-{trg}/{experiment}"
-
-# binaries
-cwd = os.getcwd()
-third_party_dir = f'{cwd}/3rd_party'
-
-if marian_version == 'lumi-marian':
-    marian_dir = f'{third_party_dir}/lumi-marian/build/'
-else:
-    marian_dir = f'{third_party_dir}/marian-dev/build/'
-    
-bmt_marian_dir = f'{third_party_dir}/browsermt-marian-dev/build'
-trainer = f'{marian_dir}marian'
-decoder = f'{marian_dir}marian-decoder'
-scorer = f'{marian_dir}marian-scorer'
-spm_encoder = f'{marian_dir}spm_encode'
-spm_trainer = f'{marian_dir}spm_train'
-spm_exporter = f'{marian_dir}spm_export_vocab'
-bmt_decoder = f'{bmt_marian_dir}/marian-decoder'
-bmt_converter = f'{bmt_marian_dir}/marian-conv'
-
-kenlm = f'{third_party_dir}/kenlm'
-fast_align_build = f'{third_party_dir}/fast_align/build'
-extract_lex_build = f'{third_party_dir}/extract-lex/build'
-preprocess_build_dir=f'{third_party_dir}/preprocess/build'
-bin = f'{cwd}/bin'
-deduper = f'{cwd}/bin/dedupe'
-
-# data
-data_dir = f"{data_root_dir}/data/{src}-{trg}/{experiment}"
-clean = f"{data_dir}/clean"
-biclean = f"{data_dir}/biclean"
-biclean_scored = f"{data_dir}/biclean_scored"
-cache_dir = f"{data_dir}/cache"
-original = f"{data_dir}/original"
-translated = f"{data_dir}/translated"
-augmented = f"{data_dir}/augmented"
-merged = f"{data_dir}/merged"
-filtered = f'{data_dir}/filtered'
-align_dir = f"{data_dir}/alignment"
-teacher_align_dir = f"{data_dir}/teacher_alignment"
-term_data_dir = f"{data_dir}/termdata"
-
-
-# models
-models_dir = f"{data_root_dir}/models/{src}-{trg}/{experiment}"
-teacher_base_dir = f"{models_dir}/teacher-base"
-teacher_finetuned_dir = f"{models_dir}/teacher-finetuned"
-student_dir = f"{models_dir}/student"
-student_finetuned_dir = f"{models_dir}/student-finetuned"
-speed_dir = f"{models_dir}/speed"
-exported_dir = f"{models_dir}/exported"
-best_model_metric = config['experiment']['best-model']
-best_model = f"final.model.npz.best-{best_model_metric}.npz"
-backward_dir = f'{models_dir}/backward'
-spm_sample_size=config['experiment'].get('spm-sample-size')
-spm_vocab_size=config['experiment'].get('spm-vocab-size',"32000")
-
-#forward pretrained models are trained with sentencepiece integration, the value is a path to the directory
-if forward_pretrained:
-    teacher_base_dir = forward_pretrained
-    #this means that the when the model dirs are expanded, the result is only the teacher_base_dir
-    ensemble = [""] 
-
-
-#default vocab path used with base ftt
-vocab_path = vocab_pretrained or f"{models_dir}/vocab/vocab.spm"
-
-if opusmt_backward:
-   backward_vocab = f"{backward_dir}/vocab.yml"
-else:
-   backward_vocab = vocab_path
-
-#evaluation
-eval_data_dir = f"{original}/eval"
-eval_res_dir = f"{models_dir}/evaluation"
-eval_backward_dir = f'{eval_res_dir}/backward'
-eval_student_dir = f'{eval_res_dir}/student'
-eval_student_finetuned_dir = f'{eval_res_dir}/student-finetuned'
-eval_speed_dir = f'{eval_res_dir}/speed'
-eval_teacher_ens_dir = f'{eval_res_dir}/teacher-ensemble'
-
+use rule * from data
 # set common environment variables
 envs = f'''SRC={src} TRG={trg} MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
 BIN="{bin}" CUDA_DIR="{cuda_dir}" CUDNN_DIR="{cudnn_dir}" ROCM_PATH="{rocm_dir}" '''
@@ -202,6 +63,9 @@ if quantize_student:
         *expand(f'{eval_speed_dir}/{{dataset}}.metrics',dataset=eval_datasets)
     ])
 
+#if rat:
+    	
+mixture_hash = None
 if wmt23_termtask:
     finetune_teacher_with_terms = wmt23_termtask.get('finetune-teacher-with-terms') 
     train_term_teacher = wmt23_termtask.get('train-term-teacher') 
@@ -304,43 +168,6 @@ else:
     else:
         do_train_backward=False
 
-# bicleaner
-
-
-if 'bicleaner' in config['experiment']:
-    bicl_default_threshold = config['experiment']['bicleaner']['default-threshold']
-    bicl_dataset_thresholds = config['experiment']['bicleaner']['dataset-thresholds']
-
-    bicleaner_type = packs.find(src, trg)
-    # bicleaner-ai does not work with multiple AMD gpus currently, so set gpu amount to 1
-    if rocm_dir:
-        #if gpus_num % 8 != 0:
-        #    raise ValueError("Only use multiples of 8 for gpu_num on LUMI")       
-        bicleaner_ai_gpus = gpus_num
-    else:
-        bicleaner_ai_gpus = gpus_num	
-else:
-    bicleaner_type = None    
-
-bicleaner_env = "envs/bicleaner-ai.yml" if bicleaner_type == 'bicleaner-ai' else 'envs/bicleaner.yml'
-
-if bicleaner_type:
-    clean_corpus_prefix = f'{biclean}/corpus'
-    teacher_corpus = f'{biclean}/corpus'
-    use_bicleaner = True
-elif tc_scored:
-    clean_corpus_prefix = f'{biclean_scored}/corpus'
-    teacher_corpus = f'{teacher_align_dir}/corpus.spm'
-    use_bicleaner = False
-else:
-    clean_corpus_prefix = f'{clean}/corpus'
-    teacher_corpus = f'{clean}/corpus'
-    use_bicleaner = False
-
-clean_corpus_src = f'{clean_corpus_prefix}.{src}.gz'
-clean_corpus_trg = f'{clean_corpus_prefix}.{trg}.gz'
-
-
 # augmentation
 
 if mono_trg_datasets and not (opusmt_teacher or forward_pretrained):
@@ -374,7 +201,8 @@ def get_args(section):
 shell.prefix(f"{envs} ")
 
 rule all:
-    input: results
+    input: f"{simple_rat}/corpus/output/test/tester.en-fi.en"
+    #input: results
 
 wildcard_constraints:
     term_ratio="\d+",
@@ -405,215 +233,6 @@ if install_deps:
         # group: 'setup'
         output: touch("/tmp/flags/setup.done")  # specific to local machine
         shell: 'bash pipeline/setup/install-deps.sh >> {log} 2>&1'
-
-rule marian:
-    message: "Compiling marian"
-    log: f"{log_dir}/compile-{{marian_type}}.log"
-    conda: "envs/base.yml"
-    threads: 16
-    resources: gpu=1
- #   group: 'setup'
-    output:
-        trainer=protected(f"{third_party_dir}/{{marian_type}}/build/marian"),
-        decoder=protected(f"{third_party_dir}/{{marian_type}}/build/marian-decoder"),
-        scorer=protected(f"{third_party_dir}/{{marian_type}}/build/marian-scorer"),
-        converter=protected(f'{third_party_dir}/{{marian_type}}/build/marian-conv'),
-        spm_trainer=protected(f'{third_party_dir}/{{marian_type}}/build/spm_train'),
-        spm_encoder=protected(f'{third_party_dir}/{{marian_type}}/build/spm_encode'),
-        spm_exporter=protected(f'{third_party_dir}/{{marian_type}}/build/spm_export_vocab')
-    params: build_dir=f'{third_party_dir}/{{marian_type}}/build',marian_type=f'{{marian_type}}'
-    shell: 'bash pipeline/setup/compile-{params.marian_type}.sh {params.build_dir} {threads} {marian_cmake} >> {log} 2>&1'
-
-rule fast_align:
-    message: "Compiling fast align"
-    log: f"{log_dir}/compile-fast-align.log"
-    conda: "envs/base.yml"
-    threads: 4
-#    group: 'setup'
-    output: fast_align=protected(f"{bin}/fast_align"), atools=protected(f"{bin}/atools")
-    shell: 'bash pipeline/setup/compile-fast-align.sh {fast_align_build} {threads}  >> {log} 2>&1'
-
-rule compile_preprocess:
-    message: "Compiling preprocess"
-    log: f"{log_dir}/compile-preprocess.log"
-    conda: "envs/base.yml"
-    threads: 4
-    # group: 'setup'
-    output: deduper=f'{bin}/dedupe'
-    shell: 'bash pipeline/setup/compile-preprocess.sh {preprocess_build_dir} {threads}  >> {log} 2>&1'
-
-rule extract_lex:
-    message: "Compiling fast align"
-    log: f"{log_dir}/compile-extract-lex.log"
-    conda: "envs/base.yml"
-    threads: 4
-#    group: 'setup'
-    output: protected(f"{bin}/extract_lex")
-    shell: 'bash pipeline/setup/compile-extract-lex.sh {extract_lex_build} {threads} >> {log} 2>&1'
-
-# data downloading
-# Tatoeba data has dev, test and train in same big tar, this is a rule producing them all,
-# use snakemake ruleorder to prioritize it over normal download
-ruleorder: download_tatoeba_corpus > download_corpus
-
-rule download_tatoeba_corpus:
-    message: "Downloading Tatoeba corpus"
-    log: f"{log_dir}/download_corpus/corpus_devset_test/tc_{{version}}.log"
-    conda: "envs/base.yml"
-    threads: 1
-#    group: 'data'
-    output: multiext(f"{original}/corpus/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/devset/tc_{{version}}", f".{src}.gz", f".{trg}.gz"),multiext(f"{original}/eval/tc_{{version}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix=f"{original}", version="{version}",max_sents=parallel_max_sents
-    shell: 'bash pipeline/data/download-tc-data.sh {src_three_letter} {trg_three_letter} {src} {trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
-
-rule download_corpus:
-    message: "Downloading parallel corpus"
-    log: f"{log_dir}/download_corpus/{{kind}}/{{dataset}}.log"
-    conda: "envs/base.yml"
-    threads: 1
-#    group: 'data'
-    cache: False # caching is broken in snakemake
-    wildcard_constraints: kind="corpus|devset|eval"
-    output: multiext(f"{original}/{{kind}}/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix=f"{original}/{{kind}}/{{dataset}}", dataset="{dataset}"
-    shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}"  >> {log} 2>&1'
-
-rule download_mono:
-    message: "Downloading monolingual dataset"
-    log: f"{log_dir}/download_mono/{{dataset}}.{{lang}}.log"
-    conda: "envs/base.yml"
-    threads: 1
-#    group: 'data'
-    cache: False # caching is broken in snakemake
-    wildcard_constraints: lang=f"{src}|{trg}"
-    output: f'{original}/mono/{{dataset}}.{{lang}}.gz'
-    params: max_sent=lambda wildcards: mono_max_sent[wildcards.lang], dataset='{dataset}', lang='{lang}'
-    shell: '''bash pipeline/data/download-mono.sh \
-                "{params.dataset}" {params.lang} {params.max_sent} "{output}"  >> {log} 2>&1'''
-
-# cleaning
-
-rule clean_corpus:
-    message: "Cleaning dataset"
-    log: f"{log_dir}/clean_corpus/{{dataset}}.log"
-    conda: "envs/base.yml"
-#    group: "clean_corpus"
-    threads: 16
-    input: multiext(f"{original}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    output: multiext(f"{clean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix_input=f"{original}/corpus/{{dataset}}",prefix_output=f"{clean}/corpus/{{dataset}}",
-            dataset=lambda wildcards: dataset_norm(wildcards.dataset)
-    shell: '''bash pipeline/clean/clean-corpus.sh "{params.prefix_input}" "{params.prefix_output}" {threads} {params.dataset} \
-                >> {log} 2>&1'''
-
-rule clean_mono:
-    message: "Cleaning monolingual dataset"
-    log: f"{log_dir}/clean_mono/{{dataset}}.{{lang}}.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-#    group: "clean_mono{lang}"
-    cache: False
-    wildcard_constraints: lang=f"{src}|{trg}"
-    input: f'{original}/mono/{{dataset}}.{{lang}}.gz'
-    output: f'{clean}/mono/{{dataset}}.{{lang}}.gz'
-    params: prefix_input=f"{original}/mono/{{dataset}}", prefix_output=f"{clean}/mono/{{dataset}}",
-            dataset=lambda wildcards: dataset_norm(wildcards.dataset)
-    shell: '''bash pipeline/clean/clean-mono.sh {wildcards.lang} "{params.prefix_input}" "{params.prefix_output}" \
-                {threads} {params.dataset} >> {log} 2>&1'''
-
-if use_bicleaner:
-    rule kenlm:
-        message: "Installing kenlm"
-        log: f"{log_dir}/kenlm.log"
-        conda: bicleaner_env
-        threads: 4
-#        group: 'setup'
-        output: directory(f"{bin}/kenlm")
-        shell: 'bash pipeline/setup/install-kenlm.sh {kenlm} {threads}  >> {log} 2>&1'
-
-    rule bicleaner_pack:
-        message: f"Downloading language pack for bicleaner"
-        log: f"{log_dir}/bicleaner_pack.log"
-        conda: bicleaner_env
-#        group: "clean_corpus"
-        threads: 1
-        input: rules.kenlm.output
-        output: directory(f"{biclean}/pack")
-        shell: '''bash pipeline/bicleaner/download-pack.sh "{output}" {bicleaner_type} >> {log} 2>&1'''
-
-    rule bicleaner:
-        message: f"Cleaning corpus using {bicleaner_type}"
-        log: f"{log_dir}/bicleaner/{{dataset}}.log"
-        conda: bicleaner_env
-#       group: "bicleaner"
-        threads: (bicleaner_ai_gpus * 8) if bicleaner_type == "bicleaner-ai" else workflow.cores
-        resources: gpu=bicleaner_ai_gpus if bicleaner_type == "bicleaner-ai" else 0
-        input: ancient(rules.kenlm.output), multiext(f"{clean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz"),
-                pack_dir=rules.bicleaner_pack.output
-        output: multiext(f"{biclean}/corpus/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-        params:
-            prefix_input=f"{clean}/corpus/{{dataset}}",prefix_output=f"{biclean}/corpus/{{dataset}}",
-            threshold=lambda wildcards: bicl_dataset_thresholds[wildcards.dataset]
-                                            if wildcards.dataset in bicl_dataset_thresholds
-                                            else bicl_default_threshold
-        shell: '''bash pipeline/bicleaner/bicleaner.sh \
-                    "{params.prefix_input}" "{params.prefix_output}" {params.threshold} {bicleaner_type} {threads} \
-                    "{input.pack_dir}" >> {log} 2>&1'''
-
-
-
-rule extract_tc_scored:
-    message: "Extracting corpora from scored tc training set"
-    log: f"{log_dir}/extract_tc_scored.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input: tc_scored
-    output: src=clean_corpus_src,trg=clean_corpus_trg,scores=f"{clean_corpus_src}.scores.gz"
-    params: max_sents=parallel_max_sents
-    # extract sent pairs with more than 0.8 bicleaner score
-    shell: '''zcat {input} | grep -P "(1.000|0.[89]\d\d)$" | head -n {params.max_sents} | tee >(cut -f 1 | gzip > {output.src}) | tee >(cut -f 2 | gzip > {output.trg}) | cut -f 3 | gzip > {output.scores} 2> {log}'''
-    # the approach of just taking the best scored sentences risks bias for the type of sentences that score very high (and also increases near-duplicates), so don't do it
-    #shell: '''zcat {input} | sort -u -k3,3nr -k1,2 -t$'\t' | head -n {params.max_sents} | tee >(cut -f 1 | gzip > {output.src}) | tee >(cut -f 2 | gzip > {output.trg}) | cut -f 3 | gzip > {output.scores} 2> {log}'''
-
-rule merge_corpus:
-    message: "Merging clean parallel datasets"
-    log: f"{log_dir}/merge_corpus.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    # group: "clean_corpus"
-    input:  expand(f"{clean_corpus_prefix}/{{dataset}}.{{lang}}.gz", dataset=train_datasets, lang=[src, trg]),
-            bin=ancient(deduper)
-    output: src=clean_corpus_src,trg=clean_corpus_trg
-    params: prefix_output=clean_corpus_prefix, 
-            prefixes=expand(f"{clean_corpus_prefix}/{{dataset}}", dataset=train_datasets),
-            max_sents=parallel_max_sents
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" {params.max_sents} {params.prefixes} >> {log} 2>&1'''
-
-rule merge_devset:
-    message: "Merging devsets"
-    log: f"{log_dir}/merge_devset.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    # group: "clean_corpus"
-    input:  expand(f"{original}/devset/{{dataset}}.{{lang}}.gz", dataset=valid_datasets, lang=[src, trg]),
-            bin=ancient(deduper)
-    output: multiext(f"{original}/devset", f".{src}.gz", f".{trg}.gz")
-    params: prefix_output=f"{original}/devset", prefixes=expand(f"{original}/devset/{{dataset}}", dataset=valid_datasets)
-    shell: '''bash pipeline/clean/merge-corpus.sh "{params.prefix_output}" inf {params.prefixes} >> {log} 2>&1'''
-
-rule merge_mono:
-    message: "Merging clean monolingual datasets"
-    log: f"{log_dir}/merge_mono_{{lang}}.log"
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    #group "clean_mono{lang}"
-    input:
-        corpora=lambda wildcards: expand(f"{clean}/mono/{{dataset}}.{{lang}}.gz",
-            dataset=mono_datasets[wildcards.lang], lang=wildcards.lang),
-            bin=ancient(deduper)
-    output: f"{clean}/mono.{{lang}}.gz"
-    params: max_sent=lambda wildcards: mono_max_sent[wildcards.lang]
-    shell: '''bash pipeline/clean/merge-mono.sh "{output}" {params.max_sent} {input.corpora} >> {log} 2>&1'''
 
 # augmentation and teacher training
 
