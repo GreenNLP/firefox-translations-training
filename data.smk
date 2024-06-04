@@ -132,7 +132,7 @@ rule extract_tc_scored:
     conda: "envs/base.yml"
     threads: workflow.cores
     input: tc_scored
-    output: src=f"{biclean_scored}/{{corpus}}/corpus.{src}",trg=f"{biclean_scored}/{{corpus}}/corpus.{trg}",scores=f"{biclean_scored}/{{corpus}}/corpus.scores.gz"
+    output: src=f"{biclean_scored}/{{corpus}}/corpus.{src}.gz",trg=f"{biclean_scored}/{{corpus}}/corpus.{trg}.gz",scores=f"{biclean_scored}/{{corpus}}/corpus.scores.gz"
     params: max_sents=parallel_max_sents
     # extract sent pairs with more than 0.8 bicleaner score
     shell: '''zcat {input} | grep -P "(1.000|0.[89]\d\d)$" | head -n {params.max_sents} | tee >(cut -f 1 | gzip > {output.src}) | tee >(cut -f 2 | gzip > {output.trg}) | cut -f 3 | gzip > {output.scores} 2> {log}'''

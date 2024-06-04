@@ -14,7 +14,7 @@ include: "./configuration.smk"
 #There are examples of sub-workflows as modules below. The module rat is a semi-complete example of how I think we should proceed. The compile_deps and data modules use a different approach which I decided not to pursue, so ignore them.
 
 # There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
-rat_config = {"clean-dir": biclean_scored, "testset-dir": os.getcwd(), "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
+rat_config = {"clean-dir": biclean_scored, "testset-dir": eval_data_dir, "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
 config["rat"] = rat_config
 
 # The prefix value is a directory that will be appended to all the relative paths in the module, so effectively it's the output dir value. So we control input using the configuration file, and output using the prefix value in the module statement.
@@ -201,7 +201,7 @@ def get_args(section):
 shell.prefix(f"{envs} ")
 
 rule all:
-    input: f"{simple_rat}/corpus/output/test/tester.en-fi.en"
+    input: f"{simple_rat}/corpus/output/eval/sacrebleu_wmt17.en-fi.en.gz"
     #input: results
 
 wildcard_constraints:

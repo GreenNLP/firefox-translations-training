@@ -14,7 +14,7 @@ keep-going: false
 default-resources: "mem_mb=64000"
 use-singularity: false
 use-conda: false
-cores: 8
+cores: 128
 #cache: false
 reason: true
 
