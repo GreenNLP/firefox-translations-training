@@ -1,6 +1,6 @@
 #!/bin/bash -x
 # properties = {properties}
-
+set -x
 #parse properties json and get log file name
 log_file=$(echo '{properties}' | jq -r .log[0])
 gpu=$(echo '{properties}' | jq -r .resources.gpu)

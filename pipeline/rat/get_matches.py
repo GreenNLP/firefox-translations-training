@@ -27,18 +27,25 @@ def main(args):
     src_sentences = read_sentence_file(args.src_sentence_file)
     trg_sentences = read_sentence_file(args.trg_sentence_file)
     scores = read_score_file(args.score_file)
-    index_src_sentences = read_sentence_file(args.index_src_sentence_file)
-    index_trg_sentences = read_sentence_file(args.index_trg_sentence_file)
 
-    with gzip.open(args.src_augmented_file,'w') as output_file:
-        print("Looking for fuzzies")
+    #if index set is the same as test, don't read it twice
+    if (args.src_sentence_file == args.index_src_sentence_file):
+        index_src_sentences = src_sentences
+        index_trg_sentences = trg_sentences
+    else:
+        index_src_sentences = read_sentence_file(args.index_src_sentence_file)
+        index_trg_sentences = read_sentence_file(args.index_trg_sentence_file)
+
+    with gzip.open(args.src_augmented_file,'wt') as src_output_file, \
+        gzip.open(args.trg_augmented_file,'wt') as trg_output_file:
+        print("Augmenting with fuzzies")
         for index, sentence in enumerate(src_sentences):
             if index in scores:
                 score_indices = scores[index]
                 corresponding_sentences = [index_trg_sentences[i-1] for score, i in score_indices if score > args.min_score][0:args.max_fuzzies]
                 if len(corresponding_sentences) >= args.min_fuzzies:
-                    output_file.write(f"{args.fuzzy_separator.join(corresponding_sentences)}{args.fuzzy_separator}{sentence}")
-
+                    src_output_file.write(f"{args.fuzzy_separator.join(corresponding_sentences)}{args.fuzzy_separator}{sentence}\n")
+                    trg_output_file.write(trg_sentences[index]+"\n")
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Augment data with fuzzies from index.")
@@ -56,5 +63,4 @@ if __name__ == "__main__":
 
     # Parse the arguments
     args = parser.parse_args()
-    print(args)
     main(args)

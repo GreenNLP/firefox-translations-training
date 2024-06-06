@@ -15,12 +15,11 @@ include: "./configuration.smk"
 
 # There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
 rat_config = {"clean-dir": biclean_scored, "testset-dir": eval_data_dir, "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
-config["rat"] = rat_config
 
 # The prefix value is a directory that will be appended to all the relative paths in the module, so effectively it's the output dir value. So we control input using the configuration file, and output using the prefix value in the module statement.
 module rat:
     snakefile: "./rat.smk"
-    config: config["rat"]
+    config: rat_config
     prefix: simple_rat
 
 use rule * from rat as *
@@ -37,6 +36,22 @@ module data:
     config: config
 
 use rule * from data
+
+vocab_config = {
+    "trainset-dir": simple_rat, 
+    "spm-train": f"{marian_dir}/spm_train",
+    "devset-dir":"", 
+    "evalset-dir":"",
+    "user-defined-symbols":"FUZZYBREAK",
+    "spm-sample-size": spm_sample_size}
+
+module vocab:
+    snakefile: "./vocab.smk"
+    prefix: f"{models_dir}/vocab"
+    config: vocab_config
+
+use rule * from vocab
+
 # set common environment variables
 envs = f'''SRC={src} TRG={trg} MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
 BIN="{bin}" CUDA_DIR="{cuda_dir}" CUDNN_DIR="{cudnn_dir}" ROCM_PATH="{rocm_dir}" '''
@@ -201,7 +216,7 @@ def get_args(section):
 shell.prefix(f"{envs} ")
 
 rule all:
-    input: f"{simple_rat}/corpus/output/eval/sacrebleu_wmt17.en-fi.en.gz"
+    input: f"{models_dir}/vocab/vocab.corpus.en-fi.50000.spm"
     #input: results
 
 wildcard_constraints:
@@ -236,17 +251,6 @@ if install_deps:
 
 # augmentation and teacher training
 
-if not vocab_pretrained:
-    rule train_vocab:
-        message: "Training spm vocab"
-        log: f"{log_dir}/train_vocab.log"
-        conda: "envs/base.yml"
-        threads: 2
-        input: bin=ancient(spm_trainer), corpus_src=clean_corpus_src, corpus_trg=clean_corpus_trg
-        output: vocab_path
-        params: prefix_train=clean_corpus_prefix,prefix_test=f"{original}/devset"
-        shell: '''bash pipeline/train/spm-vocab.sh "{input.corpus_src}" "{input.corpus_trg}" "{output}" {spm_sample_size} \
-                   {threads} {spm_vocab_size} >> {log} 2>&1'''
 
 if do_train_backward: 
     mono_trg_file = f'{translated}/mono_trg/file.{{part}}'

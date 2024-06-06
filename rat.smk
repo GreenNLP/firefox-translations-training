@@ -28,13 +28,14 @@ rule find_fuzzy_matches:
         index=rules.build_fuzzy_index.output.index,
         testset=lambda wildcards: source if wildcards.type == "train" else testset_source 
     output: matches=f"{{corpus}}/output/{{type}}/{{testset}}.{{src}}-{{trg}}.{{src}}.matches"
-    shell: f'''{fuzzy_match_cli} --index {{input.index}} --action match --fuzzy 0.5 --no-perfect --nthreads {{threads}} --nmatch 100 <(zcat "{{input.testset}}") > "{{output.matches}}" 2> {{log}}'''
+    shell: f'''bash pipeline/rat/find_matches.sh "{{input.testset}}" "{fuzzy_match_cli}" "{{input.index}}" {{threads}} "{{output.matches}}" >> {{log}} 2>&1'''
 
 rule augment_data_with_fuzzies:
     message: "Augmenting data with fuzzies"
-    log: f"{{corpus}}/{{type}}/{{testset}}.{{src}}-{{trg}}.augment.log"
+    log: f"{{corpus}}/output/{{type}}/{{testset}}.{{src}}-{{trg}}.augment.log"
     conda: "envs/base.yml"
     threads: 1
+    resources: mem_mb=64000
     input:
         source=source,
         target=target, 

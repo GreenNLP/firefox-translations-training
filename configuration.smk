@@ -83,9 +83,9 @@ cwd = os.getcwd()
 third_party_dir = f'{cwd}/3rd_party'
 
 if marian_version == 'lumi-marian':
-    marian_dir = f'{third_party_dir}/lumi-marian/build/'
+    marian_dir = f'{third_party_dir}/lumi-marian/build'
 else:
-    marian_dir = f'{third_party_dir}/marian-dev/build/'
+    marian_dir = f'{third_party_dir}/marian-dev/build'
     
 bmt_marian_dir = f'{third_party_dir}/browsermt-marian-dev/build'
 trainer = f'{marian_dir}marian'
