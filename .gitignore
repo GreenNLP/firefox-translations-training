@@ -148,4 +148,8 @@ Ftt.sif
 .mtdata/
 .parallel/
 .sacrebleu/
+.wget-hsts
+profiles/slurm-lumi/config_1.yaml
+utils/significance_testing.sh
+requirements.txt
 
