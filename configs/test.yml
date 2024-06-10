@@ -74,8 +74,3 @@ datasets:
   test:
     - flores_devtest
     - sacrebleu_wmt20
-  mono-src:
-    - news-crawl_news.2020
-  mono-trg:
-    - news-crawl_news.2020
-
