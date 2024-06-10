@@ -7,8 +7,15 @@ from pipeline.bicleaner import packs
 from langcodes import *
 
 min_version("6.6.1")
+
+## Started modularization work - 10.06.2024
+
 # include statement will include the code in the file as is, into the same variable scope. This is why the configuration (specifying directories etc.) is done with include, those configuration settings need to be in the global scope in the main Snakefile (but it's cleaner to have them in a separate file to reduce clutter). 
 include: "rules/configuration.smk" 
+
+#Sub-workflows are included as modules, which have their own variable scope, they don't inherit variables from the main Snakefile. Now it would be possible to also include the configuration.smk in the sub-workflow files, but that seems like a bad practise since most sub-workflows only use a couple of the global settings, they don't need access to the whole configuration.
+
+# There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
 
 # set common environment variables
 envs = f'''SRC="{src}" TRG="{trg}" MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
@@ -91,8 +98,6 @@ rule experiment:
         os.makedirs(experiment_dir, exist_ok=True)
         with open(f'{experiment_dir}/config.yml', 'w') as f:
             yaml.dump(config, f)
-
-# todo: fix jobs grouping in cluster mode
 
 # setup
 
@@ -1148,3 +1153,32 @@ rule eval_quantized:
         o2m=o2m_student
     shell: '''bash pipeline/eval/eval-quantized.sh "{wildcards.langpair}" "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
             "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" {params.o2m} >> {log} 2>&1'''
+
+# Configuration for the evaluation module
+eval_config = {
+    "decoder": decoder,  
+    "bmt_decoder": bmt_decoder,
+    "log_dir": log_dir,
+    "eval_data_dir": eval_data_dir,
+    "models_dir": models_dir,
+    "eval_datasets": eval_datasets,  
+    "langpairs": langpairs,
+    "best_model": best_model, 
+    "final_teacher_dir": final_teacher_dir,
+    "ensemble": ensemble,  
+    "eval_res_dir": eval_res_dir,
+    "o2m_teacher": o2m_teacher,
+    "o2m_backward": o2m_backward,
+    "o2m_student": o2m_student,  
+    "gpus_num": gpus_num,
+    "quantized_model": rules.quantize.output.model,
+    "shortlist": rules.alignments.output.shortlist,
+    "vocab": vocab_path,
+    "eval_speed_dir": eval_speed_dir
+}
+
+module evaluate:
+    snakefile: "rules/evaluate.smk"
+    config: eval_config
+
+use rule * from evaluate as *
