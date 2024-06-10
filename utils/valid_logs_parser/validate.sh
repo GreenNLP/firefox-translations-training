@@ -90,4 +90,4 @@ else
     python plot_bleu_all_pairs.py $valid_dir
 fi
 
-cp $valid_dir/bleu_all_pairs.png /scratch/project_462000088/members/degibert/data/logs/images/$session.png
+cp $valid_dir/bleu_all_pairs.png /scratch/project_462000447/members/degibert/ftt/logs/images/$session.png
