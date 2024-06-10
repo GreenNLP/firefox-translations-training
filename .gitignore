@@ -133,3 +133,19 @@ dmypy.json
 .models
 .bin
 .snakemake
+
+# Personal files
+utils/valid_logs_parser/submit_jobs*
+pipeline/clean/tools/lid.176.bin
+pipeline/data/en-ru.txt.zip*
+configs/opustrainer/*
+configs/best/*
+configs/dec23/*
+configs/download_teacher_test/*
+bin/
+Ftt.sif
+3rd_party/lumi-marian
+.mtdata/
+.parallel/
+.sacrebleu/
+
