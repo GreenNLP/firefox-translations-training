@@ -33,31 +33,23 @@ else
 fi
 
 if [ $o2m == "True" ]; then # If the model is multitarget, add language tag for decoding
-  pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | #Add language tag for decoding
-    tee "${res_prefix}.${src}" | 
+  pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | tee "${res_prefix}.${src}" | 
     "${marian}"/marian-decoder \
       -c "${decoder_config}" \
       --quiet \
       --quiet-translation \
       --log "${res_prefix}.log" \
-      "${args[@]}" |
-    tee "${res_prefix}.${trg}" |
-    sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf  |
-    tee "${res_prefix}.metrics"
+      "${args[@]}" | tee "${res_prefix}.${trg}"
 else 
-  pigz -dc "${dataset_prefix}.${src}.gz" | 
-    tee "${res_prefix}.${src}" |
+  pigz -dc "${dataset_prefix}.${src}.gz" | tee "${res_prefix}.${src}" |
     "${marian}"/marian-decoder \
       -c "${decoder_config}" \
       --quiet \
       --quiet-translation \
       --log "${res_prefix}.log" \
-      "${args[@]}" |
-    tee "${res_prefix}.${trg}" |
-    sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf  |
-    tee "${res_prefix}.metrics"
+      "${args[@]}" | tee "${res_prefix}.${trg}"
 fi
 
-
+sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf | tee "${res_prefix}.metrics"
 
 echo "###### Done: Evaluation of a model"
