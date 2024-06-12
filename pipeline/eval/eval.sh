@@ -23,31 +23,34 @@ mkdir -p "$(basename "${res_prefix}")"
 
 echo "### Evaluating dataset: ${dataset_prefix}, pair: ${langpair}, Results prefix: ${res_prefix}"
 
+if [ ! -f "${res_prefix}.${trg}" ]; then
+  if [ -s "${dataset_prefix}.${trg}.gz" ]; then
+      pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
+  else
+      echo "File ${dataset_prefix}.${trg}.gz is empty. We assume that the dataset ${dataset_prefix} does not exist for the language pair ${langpair}. Creating dummy file and exiting the script."
+      touch "${res_prefix}.metrics"
+      exit 0
+  fi
 
-if [ -s "${dataset_prefix}.${trg}.gz" ]; then
-    pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
+  if [ $o2m == "True" ]; then # If the model is multitarget, add language tag for decoding
+    pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | tee "${res_prefix}.${src}" | 
+      "${marian}"/marian-decoder \
+        -c "${decoder_config}" \
+        --quiet \
+        --quiet-translation \
+        --log "${res_prefix}.log" \
+        "${args[@]}" | tee "${res_prefix}.${trg}"
+  else 
+    pigz -dc "${dataset_prefix}.${src}.gz" | tee "${res_prefix}.${src}" |
+      "${marian}"/marian-decoder \
+        -c "${decoder_config}" \
+        --quiet \
+        --quiet-translation \
+        --log "${res_prefix}.log" \
+        "${args[@]}" | tee "${res_prefix}.${trg}"
+  fi
 else
-    echo "File ${dataset_prefix}.${trg}.gz is empty. We assume that the dataset ${dataset_prefix} does not exist for the language pair ${langpair}. Creating dummy file and exiting the script."
-    touch "${res_prefix}.metrics"
-    exit 0
-fi
-
-if [ $o2m == "True" ]; then # If the model is multitarget, add language tag for decoding
-  pigz -dc "${dataset_prefix}.${src}.gz" | sed "s/^/${trg_langtag}/" | tee "${res_prefix}.${src}" | 
-    "${marian}"/marian-decoder \
-      -c "${decoder_config}" \
-      --quiet \
-      --quiet-translation \
-      --log "${res_prefix}.log" \
-      "${args[@]}" | tee "${res_prefix}.${trg}"
-else 
-  pigz -dc "${dataset_prefix}.${src}.gz" | tee "${res_prefix}.${src}" |
-    "${marian}"/marian-decoder \
-      -c "${decoder_config}" \
-      --quiet \
-      --quiet-translation \
-      --log "${res_prefix}.log" \
-      "${args[@]}" | tee "${res_prefix}.${trg}"
+  echo "Translation already exists. Remove if you want to overwrite!"
 fi
 
 sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf < "${res_prefix}.${trg}" | tee "${res_prefix}.metrics"
