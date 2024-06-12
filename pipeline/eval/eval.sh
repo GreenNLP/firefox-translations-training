@@ -50,6 +50,6 @@ else
       "${args[@]}" | tee "${res_prefix}.${trg}"
 fi
 
-sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf | tee "${res_prefix}.metrics"
+sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf < "${res_prefix}.${trg}" | tee "${res_prefix}.metrics"
 
 echo "###### Done: Evaluation of a model"
