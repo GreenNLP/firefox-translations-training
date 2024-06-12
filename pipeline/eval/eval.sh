@@ -54,5 +54,6 @@ else
 fi
 
 sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${langpair}" -m bleu chrf < "${res_prefix}.${trg}" | tee "${res_prefix}.metrics"
+comet-score -s "${res_prefix}.${src}" -t "${res_prefix}.${trg}" -r "${res_prefix}.${trg}.ref" --quiet --only_system | tee -a "${res_prefix}.metrics"
 
 echo "###### Done: Evaluation of a model"
