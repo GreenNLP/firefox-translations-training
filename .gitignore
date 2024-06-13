@@ -152,4 +152,5 @@ Ftt.sif
 profiles/slurm-lumi/config_1.yaml
 utils/significance_testing.sh
 requirements.txt
-
+DAG.txt
+dag.txt
