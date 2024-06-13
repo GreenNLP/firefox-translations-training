@@ -230,3 +230,10 @@ if 'opustrainer' in config['experiment']:
         do_train_student_opustrainer = False
 else:
         do_train_student_opustrainer = False
+
+# huggingface
+
+if "huggingface" in config["experiment"]:
+    hf_teacher = config['experiment']['huggingface'].get('model')
+    hf_task = config['experiment']['huggingface'].get('task',"translation")
+    hf_prompt = config['experiment']['huggingface'].get('prompt',"")

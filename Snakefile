@@ -685,21 +685,42 @@ else:
     translated_mono_src_extension = ".out"
     deseg_nbest_file = teacher_target_file
 
-rule translate_corpus:
-    message: "Translating corpus with teacher"
-    log: f"{log_dir}/translate_corpus/{{langpair}}/{{part}}.{{model_index}}.log"
-    conda: "envs/base.yml"
-    threads: gpus_num*2
-    resources: gpu=gpus_num
-    input:
-        ancient(decoder),
-        file=teacher_source_file,
-        vocab=teacher_source_file if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
-        teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True)
-    output: file=teacher_target_file
-    params: args=get_args('decoding-teacher')
-    shell: '''bash pipeline/translate/translate-nbest.sh \
-                "{input.file}" "{output.file}" "{input.vocab}" "{input.teacher_models}" {params.args} >> {log} 2>&1'''
+if hf_teacher:
+    # Configuration for the evaluation module
+    hf_config = {
+        "log_dir": log_dir,
+        "hf_teacher": hf_teacher,
+        "final_teacher_dir": final_teacher_dir,
+        "teacher_source_file": teacher_source_file,
+        "teacher_target_file": teacher_target_file,
+        "langpairs": langpairs,
+        "task": hf_task,
+        "prompt": hf_prompt,
+        "gpus_num": gpus_num,
+        "log_dir": log_dir
+    }
+
+    module translate_hf:
+        snakefile: "rules/translate_hf.smk"
+        config: hf_config
+
+    use rule * from translate_hf as *
+else:
+    rule translate_corpus:
+        message: "Translating corpus with teacher"
+        log: f"{log_dir}/translate_corpus/{{langpair}}/{{part}}.{{model_index}}.log"
+        conda: "envs/base.yml"
+        threads: gpus_num*2
+        resources: gpu=gpus_num
+        input:
+            ancient(decoder),
+            file=teacher_source_file,
+            vocab=teacher_source_file if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
+            teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True)
+        output: file=teacher_target_file
+        params: args=get_args('decoding-teacher')
+        shell: '''bash pipeline/translate/translate-nbest.sh \
+                    "{input.file}" "{output.file}" "{input.vocab}" "{input.teacher_models}" {params.args} >> {log} 2>&1'''
 
 rule extract_best:
     message: "Extracting best translations for the corpus"
