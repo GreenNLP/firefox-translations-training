@@ -8,7 +8,7 @@ config:
   # install dependencies on a local machine
   - deps=true
   # root path to a folder with data, models and logs
-  - root=/home/degibert/Documents/0_Work/multi-ftt/data
+  - root=/home/degibert/Documents/0_Work/OpusDistillery/data
   - cuda=/usr/local/cuda
   - cudnn=/cudnn
   # how much memory Marian reserves on a GPU

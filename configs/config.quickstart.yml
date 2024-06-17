@@ -1,0 +1,26 @@
+experiment:
+  dirname: test
+  name: fiu-eng
+  langpairs:
+    - et-en
+    - fi-en
+    - hu-en
+
+  #URL to the OPUS-MT model to use as the teacher
+  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
+
+  #URL to the OPUS-MT model to use as the backward model
+  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  one2many-backward: True
+    
+  split-length: 10000
+
+  best-model: perplexity
+
+datasets:
+  train:
+    - opus_ELRC_2922
+  devtest:
+    - flores_dev
+  test:
+    - flores_devtest
