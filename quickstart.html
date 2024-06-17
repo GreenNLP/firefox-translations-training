@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>QuickStart Tutorial &mdash; OpusDistillery  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration files" href="configs/configuration_files.html" />
+    <link rel="prev" title="Basic usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> OpusDistillery
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Get started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">QuickStart Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-overview">Pipeline Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-setup">Pipeline Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#experiment-setup">Experiment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-pipeline">Running the pipeline</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Setting up your experiment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/downloading_and_selecting_data.html">Dataset importers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/examples.html">Examples of Configuration Files</a></li>
+</ul>
+<p class="caption"><span class="caption-text">The pipeline</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pipeline/steps.html">Pipeline steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline/dir_structure.html">Directory structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpusDistillery</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>QuickStart Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quickstart-tutorial">
+<h1>QuickStart Tutorial<a class="headerlink" href="#quickstart-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>This is a quickstart tutorial to run the OpusDistillery pipeline from scratch in your local machine for learning purposes.
+On this example, we will use OPUS-MT models for sequence-level distillation from a multilingual teacher into a multilingual student.</p>
+<div class="section" id="pipeline-overview">
+<h2>Pipeline Overview<a class="headerlink" href="#pipeline-overview" title="Permalink to this headline">¶</a></h2>
+<p>Next, you can see an overview of the pipeline steps:</p>
+<p><img alt="Alt text" src="_images/pipeline.png" /></p>
+<p>It mainly has four steps:</p>
+<ul class="simple">
+<li><p><strong>Data Preprocessing</strong>: downloads data from publicly available repositories and takes care of basic data cleaning.</p></li>
+<li><p><strong>Synthetic Dataset Generation</strong>: downloads the relevant teacher and backward models, forward translates all source sentences with our teacher model(s) into our target languages, computes cross-entropy scores with a backward model and then use them for filtering the synthetic dataset.</p></li>
+<li><p><strong>Student Training</strong>: trains a small transformer model on the filtered synthetic dataset with guided alignment.</p></li>
+<li><p><strong>Evaluation</strong>: evaluates the trained model.</p></li>
+</ul>
+<p>For a more detailed description of the pipeline, check the <a class="reference internal" href="pipeline/steps.html"><span class="doc std std-doc">Pipeline Steps</span></a> section.</p>
+</div>
+<div class="section" id="pipeline-setup">
+<h2>Pipeline Setup<a class="headerlink" href="#pipeline-setup" title="Permalink to this headline">¶</a></h2>
+<p>For this tutorial, we will be running the pipeline locally.</p>
+<ol class="simple">
+<li><p>Clone the repository and checkout to the multilingual branch <code class="docutils literal notranslate"><span class="pre">multi-ftt</span></code></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Helsinki-NLP/OpusDistillery.git
+git<span class="w"> </span>checkout<span class="w"> </span>multi-ftt
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Install Mamba - fast Conda package manager</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">conda</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Install Snakemake</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">snakemake</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Update git submodules</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">git</span><span class="o">-</span><span class="n">modules</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>micromamba activate /home/degibert/Documents/0_Work/mambaforge
+mamba activate snakemake
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Edit the local profile from <span class="xref myst">profiles/local/config.yaml</span>’ and enter the data directory path as the root value of the config section. This is the folder where all the outputs of the pipeline will be stored.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">degibert</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="mi">0</span><span class="n">_Work</span><span class="o">/</span><span class="n">OpusDistillery</span><span class="o">/</span><span class="n">data</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Make sure that everything is installed properly</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">../</span><span class="n">mambaforge</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">profile</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">conda</span><span class="o">.</span><span class="n">sh</span> <span class="p">;</span> <span class="n">conda</span> <span class="n">activate</span> <span class="p">;</span> <span class="n">conda</span> <span class="n">activate</span> <span class="n">snakemake</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">make</span> <span class="n">dry</span><span class="o">-</span><span class="n">run</span> <span class="n">CONFIG</span><span class="o">=</span><span class="s2">&quot;configs/config.quickstart.yml&quot;</span> <span class="n">PROFILE</span><span class="o">=</span><span class="s2">&quot;local&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="experiment-setup">
+<h2>Experiment Setup<a class="headerlink" href="#experiment-setup" title="Permalink to this headline">¶</a></h2>
+<p>Let’s define a simple configuration file in YAML format. We will be using the <span class="xref myst">configs/config.quickstart.yml</span>.</p>
+<ol class="simple">
+<li><p>We define the directory structure (<code class="docutils literal notranslate"><span class="pre">data-dir/test/fiu-eng</span></code>) and specify the language pairs of the student model we want to distill.</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dirname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fiu-eng</span>
+<span class="w">  </span><span class="nt">langpairs</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">et-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fi-en</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hu-en</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>We define the OPUS-MT models that we want to use for forward translation and for backward scoring:</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1">#URL to the OPUS-MT model to use as the teacher</span>
+<span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip&quot;</span>
+
+<span class="c1">#URL to the OPUS-MT model to use as the backward model</span>
+<span class="nt">opusmt-backward</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip&quot;</span>
+</pre></div>
+</div>
+<p>The backward model is multilingual at the target side, it has multiple target languages, so we need to specify it:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">one2many-backward</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>We define the metric to select our best model.</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">best-model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">perplexity</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>We define the maximum lines for splitting our files for forward translation.</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">split-length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-the-pipeline">
+<h2>Running the pipeline<a class="headerlink" href="#running-the-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>To run the pipeline, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>run<span class="w"> </span><span class="nv">CONFIG</span><span class="o">=</span><span class="s2">&quot;configs/config.quickstart.yml&quot;</span><span class="w"> </span><span class="nv">PROFILE</span><span class="o">=</span><span class="s2">&quot;local&quot;</span>
+</pre></div>
+</div>
+<p>You can also create a directed acyclic graph to represent the steps the pipeline will take.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>dag<span class="w"> </span><span class="nv">CONFIG</span><span class="o">=</span><span class="s2">&quot;configs/config.quickstart.yml&quot;</span><span class="w"> </span><span class="nv">PROFILE</span><span class="o">=</span><span class="s2">&quot;local&quot;</span>
+</pre></div>
+</div>
+<p>This will create a pdf in the root directory, named DAG.pdf, with the steps for this specific run.</p>
+<p>By default, all Snakemake rules are executed. To run the pipeline up to a specific rule use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>run<span class="w"> </span><span class="nv">CONFIG</span><span class="o">=</span><span class="s2">&quot;configs/config.quickstart.yml&quot;</span><span class="w"> </span><span class="nv">PROFILE</span><span class="o">=</span><span class="s2">&quot;local&quot;</span><span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span><span class="s2">&quot;/home/degibert/Documents/0_Work/OpusDistillery/data/data/test/fiu-eng/original/et-en/devset.source.gz&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configs/configuration_files.html" class="btn btn-neutral float-right" title="Configuration files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Basic usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

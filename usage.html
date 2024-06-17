@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Configuration files" href="configs/configuration_files.html" />
+    <link rel="next" title="QuickStart Tutorial" href="quickstart.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -90,10 +90,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#usual-run">Usual run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#specific-target">Specific target</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rerunning">Rerunning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#canceling">Canceling</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">QuickStart Tutorial</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul>
@@ -280,6 +282,10 @@ Snakemake might complain about a missing file and suggest to run it with <code c
 </pre></div>
 </div>
 </div>
+<div class="section" id="canceling">
+<h3>Canceling<a class="headerlink" href="#canceling" title="Permalink to this headline">¶</a></h3>
+<p>Be aware that if you cancel a pipeline that is currently running on a cluster, you also need to cancel the related SLURM jobs, as these won’t be canceled automatically. You also need to delete the result files that you want to overwrite.</p>
+</div>
 </div>
 </div>
 
@@ -291,7 +297,7 @@ Snakemake might complain about a missing file and suggest to run it with <code c
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="configs/configuration_files.html" class="btn btn-neutral float-right" title="Configuration files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="QuickStart Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
