@@ -86,7 +86,7 @@ This can be either of the following:
 
 ## Backward models
 
-At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).
+At the moment, the type of backward models available are only OPUS-MT.
 
 It is defined by:
 

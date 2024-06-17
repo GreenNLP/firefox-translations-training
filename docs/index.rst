@@ -24,6 +24,7 @@ New features:
 
    installation.md
    usage.md
+   quickstart.md
 
 .. toctree::
    :caption: Setting up your experiment

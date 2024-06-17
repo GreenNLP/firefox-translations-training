@@ -121,3 +121,7 @@ and then as usual:
 ```
 make run
 ```
+
+### Canceling
+
+Be aware that if you cancel a pipeline that is currently running on a cluster, you also need to cancel the related SLURM jobs, as these won't be canceled automatically. You also need to delete the result files that you want to overwrite.
