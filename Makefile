@@ -65,11 +65,10 @@ pull:
 dry-run:
 	echo "Dry run with config $(CONFIG) and profile $(PROFILE)"
 	$(CONDA_ACTIVATE) snakemake
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
 	  -n \
-	  $(TARGET) \
 	  $(EXTRA) \
 
 dry-run-hpc:
@@ -90,10 +89,9 @@ run:
 	echo "Running with config $(CONFIG) and profile $(PROFILE)"
 	$(CONDA_ACTIVATE) snakemake
 	chmod +x profiles/$(PROFILE)/*
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  $(TARGET) \
 	  $(EXTRA)
 
 # /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/oc-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/es-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/ca-en/flores_devtest.metrics 
@@ -139,8 +137,7 @@ dag:
 	$(SNAKEMAKE) \
 	  --profile=profiles/local \
 	  --configfile $(CONFIG) \
-	  --dag > DAG.txt
-#| dot -Tpdf > DAG.pdf
+	  --dag | dot -Tpdf > DAG.pdf
 
 dag-hpc: CONFIG=configs/config.mtm23.eng-fiu.yml
 dag-hpc:
