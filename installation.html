@@ -173,7 +173,7 @@
 <h2>Getting started on CSC’s puhti and mahti<a class="headerlink" href="#getting-started-on-csc-s-puhti-and-mahti" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
-<li><p>Download the Ftt.sif container to the repository root.</p></li>
+<li><p>Download the Ftt.sif container to the repository root (ask Ona)</p></li>
 <li><p>Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):</p>
 <ol class="simple">
 <li><p>The environment needs to be created with a non-containerized python, as otherwise Apptainer integration will not work. On puhti and mahti, the python executables in /usr/bin/ should work: <code class="docutils literal notranslate"><span class="pre">/usr/bin/python3.9</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">snakemake_env</span></code>.</p></li>
@@ -194,7 +194,7 @@
 <h2>Getting started on CSC’s lumi<a class="headerlink" href="#getting-started-on-csc-s-lumi" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
-<li><p>Download the Ftt.sif container to the repository root.</p></li>
+<li><p>Download the Ftt.sif container to the repository root (ask Ona)</p></li>
 <li><p>Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):</p>
 <ol class="simple">
 <li><p>The environment needs to be created with a non-containerized python, as otherwise Apptainer integration will not work. On lumi, use the <em>cray-python</em> module (it is not containerized): <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span> <span class="pre">cray-python;</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">snakemake_env</span></code>.</p></li>
@@ -208,7 +208,7 @@
 <li><p>If the data directory is not located in the parent directory of the repository, edit profiles/slurm-lumi/config.yaml and change the bindings in the singularity-args section to point to your data directory, and also enter the <em>data</em> directory path as the <em>root</em> value of the <em>config</em> section.</p></li>
 <li><p>Edit profiles/slurm-puhti/config.cluster.yaml to change the CSC account to one you have access to.</p></li>
 <li><p>Load rocm module: module load rocm.</p></li>
-<li><p>Copy the marian executables to <em>3rd_party/lumi-marian/build</em> (compiling lumi-marian is currently hacky, so this workaround makes things easier).</p></li>
+<li><p>Copy the marian executables to <em>3rd_party/lumi-marian/build</em> (compiling lumi-marian is currently hacky, so this workaround makes things easier) from <code class="docutils literal notranslate"><span class="pre">/scratch/project_462000447/lumi-marian</span></code></p></li>
 <li><p>Enter <em>export SINGULARITYENV_LD_LIBRARY_PATH=$LD_LIBRARY_PATH</em> to make sure Marian can find all the libraries when it runs containerized.</p></li>
 <li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-lumi&quot;</span></code>.  More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a>.</p></li>
 </ol>
