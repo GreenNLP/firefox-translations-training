@@ -23,45 +23,45 @@ For this tutorial, we will be running the pipeline locally.
 
 1. Clone the repository and checkout to the multilingual branch `multi-ftt`
 
-```bash
-git clone https://github.com/Helsinki-NLP/OpusDistillery.git
-git checkout multi-ftt
-```
+  ```bash
+  git clone https://github.com/Helsinki-NLP/OpusDistillery.git
+  git checkout multi-ftt
+  ```
 
 2. Install Mamba - fast Conda package manager
 
-```
-make conda
-```
+  ```
+  make conda
+  ```
 
 3. Install Snakemake
 
-```
-make snakemake
-```
+  ```
+  make snakemake
+  ```
 
 4. Update git submodules
 
-```
-make git-modules
-```
+  ```
+  make git-modules
+  ```
 
-    micromamba activate /home/degibert/Documents/0_Work/mambaforge
-    mamba activate snakemake
+  micromamba activate /home/degibert/Documents/0_Work/mambaforge
+  mamba activate snakemake
 
-4. Edit the local profile from [profiles/local/config.yaml](../profiles/local/config.yaml)' and enter the data directory path as the root value of the config section. This is the folder where all the outputs of the pipeline will be stored.
+5. Edit the local profile from [profiles/local/config.yaml](../profiles/local/config.yaml)' and enter the data directory path as the root value of the config section. This is the folder where all the outputs of the pipeline will be stored.
 
-```
-root=/home/degibert/Documents/0_Work/OpusDistillery/data
-```
+  ```
+  root=/home/degibert/Documents/0_Work/OpusDistillery/data
+  ```
 
-5. Make sure that everything is installed properly
+6. Make sure that everything is installed properly
 
-```
-source ../mambaforge/etc/profile.d/conda.sh ; conda activate ; conda activate snakemake
-pip install -r requirements.txt
-make dry-run CONFIG="configs/config.quickstart.yml" PROFILE="local"
-```
+  ```
+  source ../mambaforge/etc/profile.d/conda.sh ; conda activate ; conda activate snakemake
+  pip install -r requirements.txt
+  make dry-run CONFIG="configs/config.quickstart.yml" PROFILE="local"
+  ```
 
 ##  Experiment Setup
 
@@ -69,44 +69,44 @@ Let's define a simple configuration file in YAML format. We will be using the [c
 
 1. We define the directory structure (`data-dir/test/fiu-eng`) and specify the language pairs of the student model we want to distill.
 
-```yaml
+  ```yaml
 
-experiment:
-  dirname: test
-  name: fiu-eng
-  langpairs:
-    - et-en
-    - fi-en
-    - hu-en
-```
+  experiment:
+    dirname: test
+    name: fiu-eng
+    langpairs:
+      - et-en
+      - fi-en
+      - hu-en
+  ```
 
 2. We define the OPUS-MT models that we want to use for forward translation and for backward scoring:
 
-```yaml
-#URL to the OPUS-MT model to use as the teacher
-opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
+  ```yaml
+  #URL to the OPUS-MT model to use as the teacher
+  opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
 
-#URL to the OPUS-MT model to use as the backward model
-opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
-```
+  #URL to the OPUS-MT model to use as the backward model
+  opusmt-backward: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fiu/opus2m-2020-08-01.zip"
+  ```
 
-The backward model is multilingual at the target side, it has multiple target languages, so we need to specify it:
+  The backward model is multilingual at the target side, it has multiple target languages, so we need to specify it:
 
-```yaml
-one2many-backward: True
-```
+  ```yaml
+  one2many-backward: True
+  ```
 
 3. We define the metric to select our best model.
 
-```yaml  
-  best-model: perplexity
-```
+  ```yaml  
+    best-model: perplexity
+  ```
 
 4. We define the maximum lines for splitting our files for forward translation.
 
-```yaml  
-  split-length: 1000
-```
+  ```yaml  
+    split-length: 1000
+  ```
 
 ## Running the pipeline
 
