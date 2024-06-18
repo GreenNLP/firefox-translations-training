@@ -154,3 +154,4 @@ utils/significance_testing.sh
 requirements.txt
 DAG.txt
 dag.txt
+slurm-*.out
