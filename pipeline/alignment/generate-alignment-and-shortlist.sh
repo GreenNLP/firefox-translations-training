@@ -82,8 +82,10 @@ rm -rf "${dir}"
 
 # If there are language tags, we need to modify the alignments by adding index 1 to every source token
 if [ $o2m_student == "True" ]; then
+
     echo "###### Correcting alignments taking into account language tags"
-    pigz -dc "${output_dir}/corpus.aln.gz" | sed -E 's/([0-9]+)-([0-9]+)/echo $((\1+1))"-\2"/ge' |  sed 's/echo //g' | gzip > "${output_dir}/corpus.aln.fixed.gz"
+    pigz -dc "${output_dir}/corpus.aln.gz" | parallel --no-notice --pipe -k -j "${threads}" --block 50M \
+    'sed -E "s/([0-9]+)-([0-9]+)/echo \$((\1+1))-\2/ge" | sed "s/echo //g"'| gzip > "${output_dir}/corpus.aln.fixed.gz"
     mv "${output_dir}/corpus.aln.fixed.gz" "${output_dir}/corpus.aln.gz"
 fi
 echo "###### Done: Generating alignments and shortlist"
