@@ -53,6 +53,8 @@ if backward_pretrained:
     backward_dir = backward_pretrained
 elif opusmt_backward:
     do_train_backward = False 
+elif huggingface:
+    do_train_backward = False
 else:
     # don't evaluate pretrained model
     results.extend(expand(f'{eval_backward_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs))
@@ -351,11 +353,12 @@ rule merge_devset:
     log: f"{log_dir}/merge_devset.log"
     conda: "envs/base.yml"
     threads: workflow.cores
-    input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+    input:  expand(f"{original}/{{langpair}}/devset.{{lang}}.gz", langpair=langpairs, lang=['target']), #removed source.langtagged from here, to deal with huggingface strategy
             bin=ancient(deduper)
     output: src=f"{original}/devset.source.gz",trg=f"{original}/devset.target.gz"
     params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
-    shell: '''cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    shell: '''[ ! -f {params.prefix_input}.source.langtagged.gz ] && cp {params.prefix_input}.source.gz {params.prefix_input}.source.langtagged.gz 
+    cat $(echo {params.prefix_input}.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
     cat $(echo {params.prefix_input}.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
 
 if do_train_backward: 
@@ -454,19 +457,6 @@ if augment_corpus:
                     "{input.src1}" "{input.src2}" "{input.trg1}" "{input.trg2}" "{output.res_src}" "{output.res_trg}" "" \
                       >> {log} 2>&1'''
 
-
-rule add_lang_tag_corpus_src:
-    message: "Adding language tag id for corpus translation"
-    log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" 
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input: f"{clean_corpus_prefix}.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
-    output: f"{clean_corpus_prefix}.source.langtagged.gz"
-    params: prefix=f"{clean_corpus_prefix}",
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source"
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" "{input.model_dir}" >> {log} 2>&1'''
-
 if do_train_backward:
     rule add_lang_tag_corpus_backward:
         message: "Adding language tag id for backward model training"
@@ -514,29 +504,24 @@ if do_train_backward:
         params: prefix_input=f"{original}/*/devset", prefix_output=f"{original}/devset"
         shell: '''cat $(echo {params.prefix_input}.target.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.langtagged.gz" '''
 
-rule add_lang_tag_devset:
-    message: "Adding language tag id for devset"
-    log: f"{log_dir}/add_langid_devset_{{langpair}}.log" 
-    conda: "envs/base.yml"
-    threads: workflow.cores
-    input: f"{original}/{{langpair}}/devset.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
-    output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
-    params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
-            suffix="source"
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}"  "{input.model_dir}" >> {log} 2>&1'''
-
 rule merge_corpus: 
     message: "Merging clean parallel datasets"
     log: f"{log_dir}/merge_corpus.log"
     conda: "envs/base.yml"
     threads: workflow.cores
-    input:  expand(f"{clean_corpus_prefix}.{{lang}}.gz", langpair=langpairs, lang=['source.langtagged', 'target']),
+    input: expand(f"{clean_corpus_src}",langpair=langpairs),
+            expand(f"{clean_corpus_trg}", langpair=langpairs),
             bin=ancient(deduper)
     output: src=f"{teacher_corpus}.source.gz",trg=f"{teacher_corpus}.target.gz"
     params: prefix_input = f"{teacher_corpus}".replace('corpus', ''), prefix_output=f"{teacher_corpus}"
-    shell: '''cat $(echo {params.prefix_input}*/corpus.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
-    cat $(echo {params.prefix_input}*/corpus.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz" '''
+    shell: '''
+    if ls {params.prefix_input}*/corpus.source.langtagged.gz 1> /dev/null 2>&1; then
+        cat $(echo {params.prefix_input}*/corpus.source.langtagged.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    else
+        cat $(echo {params.prefix_input}*/corpus.source.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.source.gz"
+    fi
+    cat $(echo {params.prefix_input}*/corpus.target.gz | tr ' ' '\n' | tr '\n' ' ') > "{params.prefix_output}.target.gz"
+    '''
 
 # Three options for teacher: 1. download opus-mt model, 2. train teacher with pipeline, 3. path to pretrained teacher model
 # TODO: make it possible to combine any of the above options, i.e. use opus-mt, train and use 
@@ -544,6 +529,31 @@ rule merge_corpus:
 # models to use, and then prefixes (opusmt_, train_, pretrained_, nllb_ etc.) determine how the models are
 # created/used/connected to (in case of e.g. external APIs).
 if 'opusmt-teacher' in config['experiment']:
+
+    rule add_lang_tag_corpus_src:
+        message: "Adding language tag id for corpus translation"
+        log: f"{log_dir}/add_langid_corpus_{{langpair}}.log" 
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: f"{clean_corpus_prefix}.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
+        output: f"{clean_corpus_prefix}.source.langtagged.gz"
+        params: prefix=f"{clean_corpus_prefix}",
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+                suffix="source"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}" "{params.suffix}" "{input.model_dir}" >> {log} 2>&1'''
+
+    rule add_lang_tag_devset:
+        message: "Adding language tag id for devset"
+        log: f"{log_dir}/add_langid_devset_{{langpair}}.log" 
+        conda: "envs/base.yml"
+        threads: workflow.cores
+        input: f"{original}/{{langpair}}/devset.source.gz", model_dir=f"{final_teacher_dir}0-0/" # BEWARE: only works for one model per language pair
+        output: f"{original}/{{langpair}}/devset.source.langtagged.gz"
+        params: output_dir=f"{original}/{{langpair}}/", prefix=f"{original}/{{langpair}}/devset",
+                trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+                suffix="source"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_teacher}"  "{params.suffix}"  "{input.model_dir}" >> {log} 2>&1'''
+
     if not isinstance(opusmt_teacher[0],dict):
         rule download_teacher_models:
             message: "Downloading OPUS-MT teacher model for {wildcards.langpair}"
@@ -623,7 +633,7 @@ checkpoint split_corpus:
     log: f"{log_dir}/split_corpus_{{langpair}}.log"
     conda: "envs/base.yml"
     threads: 1
-    input: corpus_src=f"{clean_corpus_prefix}.source.langtagged.gz",corpus_trg=f"{clean_corpus_prefix}.target.gz"
+    input: corpus_src=clean_corpus_src, corpus_trg=clean_corpus_trg
     output: output_dir=directory(f"{translated}/{{langpair}}/corpus"), file=f"{translated}/{{langpair}}/corpus/file.00"
     shell: '''bash pipeline/translate/split-corpus.sh \
                 {input.corpus_src} {input.corpus_trg} {output.output_dir} {split_length} >> {log} 2>&1'''
@@ -685,8 +695,8 @@ else:
     translated_mono_src_extension = ".out"
     deseg_nbest_file = teacher_target_file
 
-if hf_teacher:
-    # Configuration for the evaluation module
+if huggingface:
+    # Configuration for the huggingface module
     hf_config = {
         "log_dir": log_dir,
         "hf_teacher": hf_teacher,
@@ -822,7 +832,7 @@ rule merge_translated:
     resources: mem_mb=64000
     #group 'mono_src'
     input:
-        src1=f"{clean_corpus_prefix}.source.langtagged.gz",
+        src1=clean_corpus_src,
         src2=f"{clean}/{{langpair}}/mono.{src}.gz",
         trg1=lambda wildcards: expand(f"{translated}/{{langpair}}/corpus.{{model_index}}.target.gz",model_index=model_indices, allow_missing=True),
         trg2=lambda wildcards: expand(f"{translated}/{{langpair}}/mono.{{model_index}}.{trg}.gz",model_index=model_indices, allow_missing=True),
@@ -903,8 +913,8 @@ rule add_lang_tag_corpus_src_for_student:
     log: f"{log_dir}/add_langid_corpus_{{langpair}}_student.log" 
     conda: "envs/base.yml"
     threads: workflow.cores
-    input: expand(f"{filtered}/{{langpair}}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
-    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz"
+    input: expand(f"{train_student_dir}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
+    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz",f"{filtered}/{{langpair}}/corpus.target.gz"
     params: prefix=f"{filtered}/{{langpair}}/corpus",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
             suffix="source"

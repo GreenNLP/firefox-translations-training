@@ -14,10 +14,12 @@ experiment:
 
   parallel-max-sentences: 10000000
   split-length: 1000000
-
+  
+  one2many-student: True
+  
   best-model: perplexity
   spm-sample-size: 1000000
-
+  
   huggingface:
     model: "facebook/nllb-200-distilled-600M"
     task: translation #if not in config, assumes "translation by default"

@@ -217,6 +217,9 @@ else:
     teacher_corpus = f'{clean}/corpus'
 
 clean_corpus_src = f'{clean_corpus_prefix}.source.gz'
+if opusmt_teacher:
+    clean_corpus_src = f'{clean_corpus_prefix}.source.langtagged.gz'
+
 clean_corpus_trg = f'{clean_corpus_prefix}.target.gz'
 
 # opustrainer
@@ -237,3 +240,8 @@ if "huggingface" in config["experiment"]:
     hf_teacher = config['experiment']['huggingface'].get('model')
     hf_task = config['experiment']['huggingface'].get('task',"translation")
     hf_prompt = config['experiment']['huggingface'].get('prompt',"")
+    huggingface = True
+    train_student_dir = f"{merged}/{{langpair}}"
+else:
+    huggingface = False
+    train_student_dir = f"{filtered}/{{langpair}}"
