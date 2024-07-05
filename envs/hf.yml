@@ -11,4 +11,6 @@ dependencies:
     - transformers==4.38.2
     - sentencepiece==0.1.99
     - accelerate==0.31.0
-    - torch==2.2.1
+    - torch==2.2.1+rocm5.3
+    - torchvision==0.15.2+rocm5.3
+    - torchaudio==0.13.0+rocm5.3
