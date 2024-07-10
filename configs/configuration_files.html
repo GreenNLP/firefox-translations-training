@@ -94,12 +94,19 @@
 <li class="toctree-l3"><a class="reference internal" href="#bicleaner-ai">Bicleaner AI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#teacher-models">Teacher models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#teacher-models">Teacher models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#opus-mt-teachers">OPUS-MT Teachers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hugging-face-teachers">Hugging Face Teachers</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#backward-models">Backward models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multilinguality">Multilinguality</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#marian-arguments">Marian arguments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#opustrainer">Opustrainer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#exporting">Exporting</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#other">Other</a></li>
 </ul>
 </li>
@@ -220,7 +227,9 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="teacher-models">
 <h2>Teacher models<a class="headerlink" href="#teacher-models" title="Permalink to this headline">¶</a></h2>
-<p>At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).</p>
+<p>You can choose a teacher from OPUS-MT or from Hugging Face (beware, runs on CPU!).</p>
+<div class="section" id="opus-mt-teachers">
+<h3>OPUS-MT Teachers<a class="headerlink" href="#opus-mt-teachers" title="Permalink to this headline">¶</a></h3>
 <p>It is defined by:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code></p></li>
@@ -262,6 +271,18 @@ At the top level, they have two sections:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="hugging-face-teachers">
+<h3>Hugging Face Teachers<a class="headerlink" href="#hugging-face-teachers" title="Permalink to this headline">¶</a></h3>
+<p>It is defined like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">huggingface</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;facebook/nllb-200-distilled-600M&quot;</span>
+<span class="w">    </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">translation</span><span class="w"> </span><span class="c1">#if not in config, assumes &quot;translation by default&quot;</span>
+</pre></div>
+</div>
+<p>Where model is the identifier from the hub and the task is a sequence-to-sequence task that produces translations with the pipeline implementation.</p>
+<p>When using a HF model as teacher, there is no scoring and no cross-entropy filtering.</p>
+</div>
+</div>
 <div class="section" id="backward-models">
 <h2>Backward models<a class="headerlink" href="#backward-models" title="Permalink to this headline">¶</a></h2>
 <p>At the moment, the type of backward models available are only OPUS-MT.</p>
@@ -275,6 +296,7 @@ At the top level, they have two sections:</p>
 <span class="w">    </span><span class="nt">be-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip&quot;</span>
 </pre></div>
 </div>
+<p>If left empty, the cross-entropy filtering step will be skipped.</p>
 </div>
 <div class="section" id="multilinguality">
 <h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
@@ -327,6 +349,13 @@ At the top level, they have two sections:</p>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;configs/opustrainer/config.fiu-eng.opustrainer.stages.yml&quot;</span><span class="w"> </span><span class="c1"># This assumes you already know the paths to the data</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="exporting">
+<h2>Exporting<a class="headerlink" href="#exporting" title="Permalink to this headline">¶</a></h2>
+<p>The final student model is in the Bergamot format, which makes use of shortlists for training (and these shorlists are trained using alignments). For that reason, we have also implemented the option to only train a student with the tiny architecture without the guided alignment. For that purpose, the user needs to specify “export” in the configuration file like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">export</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
+</pre></div>
 </div>
 <div class="section" id="other">
 <h3>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h3>
