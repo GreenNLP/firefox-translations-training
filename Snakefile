@@ -53,6 +53,10 @@ if backward_pretrained:
     backward_dir = backward_pretrained
 elif opusmt_backward:
     do_train_backward = False 
+elif opusmt_backward == "":
+# Skip CE filtering:
+    train_student_dir = f"{merged}/{{langpair}}"
+    do_train_backward = False
 elif huggingface:
     do_train_backward = False
 else:
