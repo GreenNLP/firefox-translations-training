@@ -239,7 +239,6 @@ else:
 if "huggingface" in config["experiment"]:
     hf_teacher = config['experiment']['huggingface'].get('model')
     hf_task = config['experiment']['huggingface'].get('task',"translation")
-    hf_prompt = config['experiment']['huggingface'].get('prompt',"")
     huggingface = True
     train_student_dir = f"{merged}/{{langpair}}"
 else:

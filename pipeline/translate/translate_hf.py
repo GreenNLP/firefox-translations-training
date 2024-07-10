@@ -13,7 +13,6 @@ def parse_args():
     parser.add_argument('src', type=str, help='Source language prefix')
     parser.add_argument('trg', type=str, help='Target language prefix')
     parser.add_argument('task', type=str, help='Translation task')
-    parser.add_argument('--prompt', type=str, default=None, help='Optional prompt for the translation')
     return parser.parse_args()
 
 def main():
@@ -64,12 +63,6 @@ def main():
     with open(args.filein, 'r', encoding='utf-8') as infile:
         text = infile.readlines()
     
-    if args.prompt:
-        # Modify the input text based on the prompt
-        text = [args.prompt.replace('<sourcetext>', line.strip()) for line in text]
-        # Show an example of how the prompt is added to the input text
-        print(f"Added prompt like this:\n{text[0]}")
-
     # Prepare for batch processing
     batch_size = 32
 
