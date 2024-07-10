@@ -172,6 +172,14 @@ At the moment, this is only implemented for student training.
     path: "configs/opustrainer/config.fiu-eng.opustrainer.stages.yml" # This assumes you already know the paths to the data
 ```
 
+## Exporting
+
+The final student model is in the Bergamot format, which makes use of shortlists for training (and these shorlists are trained using alignments). For that reason, we have also implemented the option to only train a student with the tiny architecture without the guided alignment. For that purpose, the user needs to specify "export" in the configuration file like this:
+
+```yaml
+  export: "no"
+```
+
 ### Other
 
 * `parallel-max-sentences`: maximum parallel sentences to download from each dataset.

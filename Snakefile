@@ -47,6 +47,18 @@ if len(ensemble) > 1:
 if install_deps:
     results.append("/tmp/flags/setup.done")
 
+## To train only until student step, without exporting the model. Also, no alignment for student training.
+
+export_model = config['experiment'].get('export') # If yes, all the same. If no, run until student training step.
+
+if export_model == "no":
+    results = [
+        f'{experiment_dir}/config.yml',
+        *expand(f'{eval_student_dir}/{{langpair}}/{{dataset}}.metrics',dataset=eval_datasets, langpair=langpairs),
+        ]
+    
+    ruleorder: train_student_no_alignment > train_student
+
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:
     do_train_backward = False
@@ -993,6 +1005,25 @@ rule train_student:
             args=get_args("training-student")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
+                "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
+
+rule train_student_no_alignment:
+    message: "Training student without alignment"
+    log: f"{log_dir}/train_student.log"
+    conda: "envs/base.yml"
+    threads: gpus_num*2
+    resources: gpu=gpus_num
+    #group 'student'
+    input:
+        ancient(trainer),
+        train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
+        vocab=vocab_path,
+        dev_src=rules.merge_devset_for_student.output.src
+    output: model=f'{student_dir}/{best_model}'
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset.student",
+            args=get_args("training-student")
+    shell: '''bash pipeline/train/train.sh \
+                student train "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
                 "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 if do_train_student_opustrainer:
