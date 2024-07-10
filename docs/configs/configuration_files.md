@@ -42,7 +42,9 @@ At the moment, this is not working.
 
 ## Teacher models
 
-At the moment, the type of teacher models available are only OPUS-MT (HuggingFace models coming soon!).
+You can choose a teacher from OPUS-MT or from Hugging Face (beware, runs on CPU!).
+
+### OPUS-MT Teachers
 
 It is defined by:
 
@@ -84,6 +86,21 @@ This can be either of the following:
   opusmt-teacher: "best"
 ```
 
+### Hugging Face Teachers
+
+
+It is defined like:
+
+```yaml
+  huggingface:
+    model: "facebook/nllb-200-distilled-600M"
+    task: translation #if not in config, assumes "translation by default"
+```
+
+Where model is the identifier from the hub and the task is a sequence-to-sequence task that produces translations with the pipeline implementation.
+
+When using a HF model as teacher, there is no scoring and no cross-entropy filtering.
+
 ## Backward models
 
 At the moment, the type of backward models available are only OPUS-MT.
@@ -98,6 +115,8 @@ It is defined by:
     ru-en: "https://object.pouta.csc.fi/Tatoeba-MT-models/rus-eng/opus+bt-2021-04-30.zip"
     be-en: "https://object.pouta.csc.fi/Tatoeba-MT-models/bel-eng/opus+bt-2021-04-30.zip"
 ```
+
+If left empty, the cross-entropy filtering step will be skipped.
 
 ## Multilinguality
 Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  `False`.
