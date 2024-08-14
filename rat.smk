@@ -7,7 +7,7 @@ fuzzy_match_cli=f'{config["fuzzy-match-cli"]}'
 
 #testset specifies the corpus for which fuzzies are looked for and augmented
 testset_source=f'{config["testset-dir"]}/{{testset}}.{{src}}.gz'
-testset_target=f'{config["testset-dir"]}/{{testset}}.{{src}}.gz'
+testset_target=f'{config["testset-dir"]}/{{testset}}.{{trg}}.gz'
 
 # Note that log files are saved in the work directory. To save them in a centralized logs directory would require including the path to the log dir in the config, which can be done. However, it might just be easier for debugging to keep the logs with data.
 rule build_fuzzy_index:
@@ -56,4 +56,4 @@ rule augment_data_with_fuzzies:
     --fuzzy_separator "FUZZY_BREAK" \
     --min_score 0.5 \
     --min_fuzzies 1 \
-    --max_fuzzies 3 >> {{log}} 2>&1'''
+    --max_fuzzies 1 >> {{log}} 2>&1'''

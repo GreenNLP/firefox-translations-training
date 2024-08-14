@@ -5,16 +5,37 @@ import hashlib
 
 from snakemake.utils import min_version
 
+containerized: 'Ftt.sif'
+
 min_version("6.6.1")
 # include statement will include the code in the file as is, into the same variable scope. This is why the configuration (specifying directories etc.) is done with include, those configuration settings need to be in the global scope in the main Snakefile (but it's cleaner to have them in a separate file to reduce clutter). 
 include: "./configuration.smk" 
+
+### helper functions
+
+def find_parts(wildcards, checkpoint):
+    checkpoint_output = checkpoint.get(**wildcards).output[0]
+    return glob_wildcards(os.path.join(checkpoint_output,"file.{part,\d+}")).part
+
+def find_annotation_parts(wildcards, checkpoint):
+    checkpoint_output = checkpoint.get(**wildcards).output[0]
+    return glob_wildcards(os.path.join(checkpoint_output,"file.src.{part,\d+}.gz")).part
+
+def dataset_norm(name: str):
+    return name.replace('/','_')
+
+def get_args(section):
+    return marian_args.get(section) or ""
 
 #Sub-workflows are included as modules, which have their own variable scope, they don't inherit variables from the main Snakefile. Now it would be possible to also include the configuration.smk in the sub-workflow files, but that seems like a bad practise since most sub-workflows only use a couple of the global settings, they don't need access to the whole configuration.
 
 #There are examples of sub-workflows as modules below. The module rat is a semi-complete example of how I think we should proceed. The compile_deps and data modules use a different approach which I decided not to pursue, so ignore them.
 
 # There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
-rat_config = {"clean-dir": biclean_scored, "testset-dir": eval_data_dir, "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
+rat_config = {
+    "clean-dir": biclean_scored, 
+    "testset-dir": original, 
+    "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
 
 # The prefix value is a directory that will be appended to all the relative paths in the module, so effectively it's the output dir value. So we control input using the configuration file, and output using the prefix value in the module statement.
 module rat:
@@ -23,19 +44,6 @@ module rat:
     prefix: simple_rat
 
 use rule * from rat as *
-
-#Ignore these modules, they use a dead-end approach, will change it later.
-module compile_deps:
-    snakefile: "./compile_deps.smk"
-    config: config
-
-use rule * from compile_deps
-
-module data:
-    snakefile: "./data.smk"
-    config: config
-
-use rule * from data
 
 vocab_config = {
     "trainset-dir": simple_rat, 
@@ -51,6 +59,37 @@ module vocab:
     config: vocab_config
 
 use rule * from vocab
+
+train_config = {
+    "trainset-dir": simple_rat,
+    "marian": f"{marian_dir}/marian",
+    "devset-dir":f"{simple_rat}/{{trainset}}/output/eval",
+    "vocab-dir": f"{models_dir}/vocab",
+    "gpus-num": gpus_num,
+    "best-model": best_model,
+    "best-model-metric": best_model_metric,
+    "training-teacher-args": get_args("training-teacher")}
+
+
+module train:
+    snakefile: "./train.smk"
+    prefix: f"{models_dir}"
+    config: train_config
+
+use rule * from train
+
+#Ignore these modules, they use a dead-end approach, will change it later.
+module compile_deps:
+    snakefile: "./compile_deps.smk"
+    config: config
+
+use rule * from compile_deps
+
+module data:
+    snakefile: "./data.smk"
+    config: config
+
+use rule * from data
 
 # set common environment variables
 envs = f'''SRC={src} TRG={trg} MARIAN="{marian_dir}" BMT_MARIAN="{bmt_marian_dir}" GPUS="{gpus}" WORKSPACE={workspace} \
@@ -195,28 +234,12 @@ else:
     final_teacher_dir = teacher_base_dir
 
 
-### helper functions
-
-def find_parts(wildcards, checkpoint):
-    checkpoint_output = checkpoint.get(**wildcards).output[0]
-    return glob_wildcards(os.path.join(checkpoint_output,"file.{part,\d+}")).part
-
-def find_annotation_parts(wildcards, checkpoint):
-    checkpoint_output = checkpoint.get(**wildcards).output[0]
-    return glob_wildcards(os.path.join(checkpoint_output,"file.src.{part,\d+}.gz")).part
-
-def dataset_norm(name: str):
-    return name.replace('/','_')
-
-def get_args(section):
-    return marian_args.get(section) or ""
-
 ### rules
 
 shell.prefix(f"{envs} ")
 
 rule all:
-    input: f"{models_dir}/vocab/vocab.corpus.en-fi.50000.spm"
+    input: f"{models_dir}/en-fi/corpus-50000-rat-train-baseteacher-0/{best_model}"
     #input: results
 
 wildcard_constraints:
