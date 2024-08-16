@@ -40,12 +40,22 @@ def main(args):
         gzip.open(args.trg_augmented_file,'wt') as trg_output_file:
         print("Augmenting with fuzzies")
         for index, sentence in enumerate(src_sentences):
+            if args.lines_to_augment and index == args.lines_to_augment -1:
+                break
             if index in scores:
                 score_indices = scores[index]
-                corresponding_sentences = [index_trg_sentences[i-1] for score, i in score_indices if score > args.min_score][0:args.max_fuzzies]
+                corresponding_sentences = [(index_src_sentences[i-1],index_trg_sentences[i-1]) for score, i in score_indices if score > args.min_score][0:args.max_fuzzies]
                 if len(corresponding_sentences) >= args.min_fuzzies:
-                    src_output_file.write(f"{args.fuzzy_separator.join(corresponding_sentences)}{args.fuzzy_separator}{sentence}\n")
-                    trg_output_file.write(trg_sentences[index]+"\n")
+                    if args.include_source:
+                        fuzzies = [f"{x[0]}{args.source_separator}{x[1]}{args.target_separator}" for x in corresponding_sentences]
+                        src_output_file.write(f"{fuzzies}{sentence}\n")
+                        trg_output_file.write(trg_sentences[index]+"\n")
+
+                    else:
+                        target_fuzzies = [x[1] for x in corresponding_sentences]
+                        src_output_file.write(f"{args.target_separator.join(target_fuzzies)}{args.target_separator}{sentence}\n")
+                        trg_output_file.write(trg_sentences[index]+"\n")
+
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Augment data with fuzzies from index.")
@@ -56,10 +66,13 @@ if __name__ == "__main__":
     parser.add_argument("--trg_augmented_file", help="Path to save the target file augmented with fuzzies.")
     parser.add_argument("--index_src_sentence_file", help="Path to the file containing the source sentences corresponding to the fuzzy indices in the score file")
     parser.add_argument("--index_trg_sentence_file", help="Path to the file containing the target sentences corresponding to the fuzzy indices in the score file")
-    parser.add_argument("--fuzzy_separator", help="Separator token that separates the fuzzies from other fuzzies and the source sentence")
+    parser.add_argument("--source_separator", help="Separator token that separates the source side of fuzzies from other fuzzies and the source sentence")
+    parser.add_argument("--target_separator", help="Separator token that separates the target side of fuzzies from other fuzzies and the source sentence")
     parser.add_argument("--min_score", type=float, help="Only consider fuzzies that have a score equal or higher than this")
     parser.add_argument("--min_fuzzies", type=int, help="Augment sentence if it has at least this many fuzzies")
     parser.add_argument("--max_fuzzies", type=int, help="Augment the sentence with at most this many fuzzies (use n best matches if more than max fuzzies found)") 
+    parser.add_argument("--lines_to_augment", type=int, help="Augment this many lines, default is all lines") 
+    parser.add_argument("--include_source", action="store_true", help="Also include source in the augmented line") 
 
     # Parse the arguments
     args = parser.parse_args()
