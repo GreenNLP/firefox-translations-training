@@ -1,5 +1,5 @@
 verbose: false
-use-conda: true
+use-conda: false
 resources: gpu=0
 cores: 1
 cache: false

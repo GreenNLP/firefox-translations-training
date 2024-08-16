@@ -410,24 +410,24 @@ elif not forward_pretrained:
     # This is normal teacher with alignments, NOT needed for term models, but might be useful later.
     # Note that it uses train-student script, but that just adds the guided alignment
     #NOT TESTED YET!
-    rule train_teacher_with_alignment:
-        message: "Training student"
-        log: f"{log_dir}/train_student.log"
-        conda: "envs/base.yml"
-        threads: gpus_num*3
-        resources: gpu=gpus_num
-        #group 'student'
-        input:
-            rules.merge_devset.output, ancient(trainer),
-            train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
-            alignments=rules.teacher_alignments.output.alignment,
-            vocab=vocab_path
-        output: model=f'{teacher_base_dir}-align/{best_model}'
-        params: prefix_train=teacher_corpus,prefix_test=f"{original}/devset",
-                args=get_args("training-teacher")
-        shell: '''bash pipeline/train/train-student.sh \
-                    "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
-                    "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
+#    rule train_teacher_with_alignment:
+#        message: "Training student"
+#        log: f"{log_dir}/train_student.log"
+#        conda: "envs/base.yml"
+#        threads: gpus_num*3
+#        resources: gpu=gpus_num
+#        #group 'student'
+#        input:
+#            rules.merge_devset.output, ancient(trainer),
+#            train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
+#            alignments=rules.teacher_alignments.output.alignment,
+#            vocab=vocab_path
+#        output: model=f'{teacher_base_dir}-align/{best_model}'
+#        params: prefix_train=teacher_corpus,prefix_test=f"{original}/devset",
+#                args=get_args("training-teacher")
+#        shell: '''bash pipeline/train/train-student.sh \
+#                    "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
+#                    "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
     rule train_term_teacher:
         message: "Training teacher with term constraints"

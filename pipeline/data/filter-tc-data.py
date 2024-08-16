@@ -4,26 +4,27 @@ import os
 from collections import defaultdict
 
 def process_files(src_file, trg_file, id_file, score_file, min_score, domain_eval_lines, output_dir):
+    print(f"Creating output dir in {output_dir}")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    train_src_path = f"{output_dir}/train.src.gz"
-    train_trg_path = f"{output_dir}/train.trg.gz"
+    train_src_path = f"{output_dir}/{os.path.basename(src_file)}"
+    train_trg_path = f"{output_dir}/{os.path.basename(trg_file)}"
     
     eval_lines = defaultdict(lambda: ([], []))  # dictionary to store eval lines per corpus
     domain_files = {}  # dictionary to store open file handles for domains
     
     with gzip.open(src_file, 'rt', encoding='utf-8') as src, \
          gzip.open(trg_file, 'rt', encoding='utf-8') as trg, \
-         open(id_file, 'r', encoding='utf-8') as ids, \
-         open(score_file, 'r', encoding='utf-8') as scores, \
+         gzip.open(id_file, 'rt', encoding='utf-8') as ids, \
+         gzip.open(score_file, 'rt', encoding='utf-8') as scores, \
          gzip.open(train_src_path, 'wt', encoding='utf-8') as train_src, \
          gzip.open(train_trg_path, 'wt', encoding='utf-8') as train_trg:
 
         eval_counts = defaultdict(int)
         
         for src_line, trg_line, id_line, score_line in zip(src, trg, ids, scores):
-            score = float(score_line.strip())
+            score = float(score_line.strip().split("\t")[-1])
             if score < min_score:
                 continue
 
