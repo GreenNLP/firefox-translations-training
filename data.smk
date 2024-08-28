@@ -5,6 +5,8 @@ include: "./configuration.smk"
 # use snakemake ruleorder to prioritize it over normal download
 ruleorder: download_tatoeba_corpus > download_corpus
 
+
+#TODO switch max sents to filtering, make it a wildcard
 rule download_tatoeba_corpus:
     message: "Downloading Tatoeba corpus"
     log: "{project_name}/{src}-{trg}/download_tc_{version}/download_tc_{version}.log"
@@ -16,15 +18,25 @@ rule download_tatoeba_corpus:
     params: prefix="{project_name}/{src}-{trg}/download_tc_{version}", version="{version}",max_sents=parallel_max_sents
     shell: 'bash pipeline/data/download-tc-data.sh {wildcards.src} {wildcards.trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
 
-#TODO: this should be combined with the Tatoeba-Challenge download, also the threshould should be configurable, and there should be a split between domains (at least for test purposes)
+#TODO: explicitly defined dev and eval linking, the glob might cause problems
 rule extract_tc_scored:
     message: "Extracting corpora from scored tc training set"
     log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/extract_tc_scored.log"
     conda: "envs/base.yml"
+    wildcard_constraints: min_score="0\.\d+"
     threads: workflow.cores
-    input: train_src="{project_name}/{src}-{trg}/{download_tc_dir}/train.{src}.gz", train_trg="{project_name}/{src}-{trg}/{download_tc_dir}/train.{trg}.gz", train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/train.id.gz", scores="../scores/{src}-{trg}.scored.gz"
-    output: src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",outdir=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}")
-    shell: '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {output.outdir} --min_score {wildcards.min_score} 2> {log}'''
+    input: train_src="{project_name}/{src}-{trg}/{download_tc_dir}/train.{src}.gz", train_trg="{project_name}/{src}-{trg}/{download_tc_dir}/train.{trg}.gz", train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/train.id.gz", scores="../data/scores/{src}-{trg}.scored.gz"
+    output: 
+        src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
+        trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
+        dev_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{src}.gz",
+        dev_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{trg}.gz",
+        eval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{src}.gz",
+        eval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{trg}.gz"
+    params:
+        input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/"
+    shell: '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} && ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
 
 rule download_corpus:
     message: "Downloading parallel corpus"

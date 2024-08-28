@@ -3,6 +3,7 @@
 
 #parse properties json and get log file name
 log_file=$(echo '{properties}' | jq -r .log[0])
+mkdir -p $(dirname $log_file)
 
 export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES
 

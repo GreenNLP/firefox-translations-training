@@ -7,10 +7,6 @@ reason: true
 config:
   # install dependencies on a local machine
   - deps=true
-  # root path to a folder with data, models and logs
-  - root=/home/tommin/greennlp/data
-  - cuda=/usr/local/cuda
-  - cudnn=/cudnn
   # how much memory Marian reserves on a GPU
   - workspace=2000
   # a number of GPUs you want to use

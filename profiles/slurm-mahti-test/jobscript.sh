@@ -3,11 +3,12 @@
 
 #parse properties json and get log file name
 log_file=$(echo '{properties}' | jq -r .log[0])
-
+mkdir -p $(dirname $log_file)
 export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES
 
 if command -v nvidia-smi &> /dev/null
 then
+    echo test	
     nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,power.draw,memory.total,memory.free,memory.used --format=csv -l 1 > $log_file.gpu &
 fi
 

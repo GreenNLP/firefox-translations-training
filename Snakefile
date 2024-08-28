@@ -27,53 +27,45 @@ def dataset_norm(name: str):
 def get_args(section):
     return marian_args.get(section) or ""
 
+wildcard_constraints:
+    src="\w{2,3}",
+    trg="\w{2,3}"
+
 #Sub-workflows are included as modules, which have their own variable scope, they don't inherit variables from the main Snakefile. Now it would be possible to also include the configuration.smk in the sub-workflow files, but that seems like a bad practise since most sub-workflows only use a couple of the global settings, they don't need access to the whole configuration.
 
 #There are examples of sub-workflows as modules below. The module rat is a semi-complete example of how I think we should proceed. The compile_deps and data modules use a different approach which I decided not to pursue, so ignore them.
 
-# There should be a separate config for each sub-workflow, here's an example: two input directories and a path to a binary used in the workflow.
 rat_config = {
-    "clean-dir": biclean_scored, 
-    "testset-dir": original, 
     "fuzzy-match-cli": f"{bin}/FuzzyMatch-cli"}
 
 # The prefix value is a directory that will be appended to all the relative paths in the module, so effectively it's the output dir value. So we control input using the configuration file, and output using the prefix value in the module statement.
 module rat:
     snakefile: "./rat.smk"
     config: rat_config
-    prefix: simple_rat
 
 use rule * from rat as *
 
 vocab_config = {
-    "trainset-dir": simple_rat, 
     "spm-train": f"{marian_dir}/spm_train",
-    "devset-dir":"", 
-    "evalset-dir":"",
-    "user-defined-symbols":"FUZZYBREAK",
-    "spm-sample-size": spm_sample_size}
+    "user-defined-symbols":"FUZZY_BREAK",
+    "spm-sample-size": 1000000
+    }
 
 module vocab:
     snakefile: "./vocab.smk"
-    prefix: f"{models_dir}/vocab"
     config: vocab_config
 
 use rule * from vocab
 
 train_config = {
-    "trainset-dir": simple_rat,
     "marian": f"{marian_dir}/marian",
-    "devset-dir":f"{simple_rat}/{{trainset}}/output/eval",
-    "vocab-dir": f"{models_dir}/vocab",
     "gpus-num": gpus_num,
-    "best-model": best_model,
     "best-model-metric": best_model_metric,
     "training-teacher-args": get_args("training-teacher")}
 
 
 module train:
     snakefile: "./train.smk"
-    prefix: f"{models_dir}"
     config: train_config
 
 use rule * from train

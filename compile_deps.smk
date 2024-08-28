@@ -6,7 +6,7 @@ rule marian:
     conda: "envs/base.yml"
     threads: 16
     resources: gpu=1
- #   group: 'setup'
+#   group: 'setup'
     output:
         trainer=protected(f"{third_party_dir}/{{marian_type}}/build/marian"),
         decoder=protected(f"{third_party_dir}/{{marian_type}}/build/marian-decoder"),

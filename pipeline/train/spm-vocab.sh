@@ -14,6 +14,14 @@ threads=$5
 vocab_size="${6:-32000}"
 user_defined_symbols=$7
 spm_train=$8
+prepend_spaces=$9
+
+if [ "$prepend_spaces" = "prepend" ]; then
+  prepend_spaces=true
+else
+  prepend_spaces=false
+  user_defined_symbols="${user_defined_symbols},▁"
+fi
 
 if [ "$threads" = "auto" ]; then
   threads=$(nproc)
@@ -31,7 +39,7 @@ ${COMPRESSION_CMD} -dc "${corpus_trg}" >"${vocab_dir}/data.trg.txt"
   --model_prefix="${vocab_dir}/vocab" --vocab_size="${vocab_size}" \
   --input="${vocab_dir}/data.src.txt,${vocab_dir}/data.trg.txt" \
   --input_sentence_size="${sample_size}" --shuffle_input_sentence=true \
-  --num_threads "${threads}"
+  --num_threads "${threads}" --add_dummy_prefix=$prepend_spaces
 
 rm "${vocab_dir}/data.src.txt" "${vocab_dir}/data.trg.txt"
 

@@ -56,6 +56,11 @@ def main(args):
                         src_output_file.write(f"{args.target_separator.join(target_fuzzies)}{args.target_separator}{sentence}\n")
                         trg_output_file.write(trg_sentences[index]+"\n")
 
+            else:
+                if not args.exclude_non_augmented:
+                    src_output_file.write(f"{sentence}\n")
+                    trg_output_file.write(trg_sentences[index]+"\n")
+
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Augment data with fuzzies from index.")
@@ -66,14 +71,15 @@ if __name__ == "__main__":
     parser.add_argument("--trg_augmented_file", help="Path to save the target file augmented with fuzzies.")
     parser.add_argument("--index_src_sentence_file", help="Path to the file containing the source sentences corresponding to the fuzzy indices in the score file")
     parser.add_argument("--index_trg_sentence_file", help="Path to the file containing the target sentences corresponding to the fuzzy indices in the score file")
-    parser.add_argument("--source_separator", help="Separator token that separates the source side of fuzzies from other fuzzies and the source sentence")
-    parser.add_argument("--target_separator", help="Separator token that separates the target side of fuzzies from other fuzzies and the source sentence")
+    parser.add_argument("--source_separator", default="FUZZY_BREAK", help="Separator token that separates the source side of fuzzies from other fuzzies and the source sentence")
+    parser.add_argument("--target_separator", default="FUZZY_BREAK", help="Separator token that separates the target side of fuzzies from other fuzzies and the source sentence")
     parser.add_argument("--min_score", type=float, help="Only consider fuzzies that have a score equal or higher than this")
     parser.add_argument("--min_fuzzies", type=int, help="Augment sentence if it has at least this many fuzzies")
     parser.add_argument("--max_fuzzies", type=int, help="Augment the sentence with at most this many fuzzies (use n best matches if more than max fuzzies found)") 
     parser.add_argument("--lines_to_augment", type=int, help="Augment this many lines, default is all lines") 
     parser.add_argument("--include_source", action="store_true", help="Also include source in the augmented line") 
-
+    parser.add_argument("--exclude_non_augmented", action="store_true", help="Also include source in the augmented line") 
     # Parse the arguments
     args = parser.parse_args()
+    print(args)
     main(args)
