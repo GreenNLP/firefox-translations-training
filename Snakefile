@@ -59,6 +59,9 @@ if export_model == "no":
     
     ruleorder: train_student_no_alignment > train_student
 
+else:
+    ruleorder: train_student > train_student_no_alignment
+
 #three options for backward model: pretrained path, url to opus-mt, or train backward
 if backward_pretrained:
     do_train_backward = False
