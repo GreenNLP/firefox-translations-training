@@ -482,24 +482,24 @@ if do_train_backward:
         log: f"{log_dir}/add_langid_corpus_{{langpair}}_backward.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{clean_corpus_prefix}.target.gz", model_dir=f'{models_dir}/{{langpair}}/backward'
+        input: f"{clean_corpus_prefix}.target.gz"
         output: f"{clean_corpus_prefix}.target.langtagged.gz"
         params: prefix=f"{clean_corpus_prefix}",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target"
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" "{input.model_dir}" >> {log} 2>&1'''
+                suffix="target", model_dir="" # Model dir can be empty because this is only used if backward model is "best"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}" "{params.suffix}" "{params.model_dir}" >> {log} 2>&1'''
     
     rule add_lang_tag_devset_backward:
         message: "Adding language tag id for devset for backward model training"
         log: f"{log_dir}/add_langid_devset_{{langpair}}_backward.log" 
         conda: "envs/base.yml"
         threads: workflow.cores
-        input: f"{original}/{{langpair}}/devset.target.gz",  model_dir=f'{models_dir}/{{langpair}}/backward'
+        input: f"{original}/{{langpair}}/devset.target.gz"
         output: f"{original}/{{langpair}}/devset.target.langtagged.gz"
         params: prefix=f"{original}/{{langpair}}/devset",
                 src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-                suffix="target"
-        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}"  "{input.model_dir}" >> {log} 2>&1'''
+                suffix="target", model_dir="" # Model dir can be empty because this is only used if backward model is "best"
+        shell: '''bash pipeline/clean/add-lang-tag.sh "{params.src_three_letter}" "{params.prefix}" "{o2m_backward}"  "{params.suffix}"  "{params.model_dir}" >> {log} 2>&1'''
 
     rule merge_corpus_backward: 
         message: "Merging clean parallel datasets for backward training" 
