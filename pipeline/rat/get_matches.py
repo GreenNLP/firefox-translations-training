@@ -78,7 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_fuzzies", type=int, help="Augment the sentence with at most this many fuzzies (use n best matches if more than max fuzzies found)") 
     parser.add_argument("--lines_to_augment", type=int, help="Augment this many lines, default is all lines") 
     parser.add_argument("--include_source", action="store_true", help="Also include source in the augmented line") 
-    parser.add_argument("--exclude_non_augmented", action="store_true", help="Also include source in the augmented line") 
+    parser.add_argument("--exclude_non_augmented", action="store_true", help="Do not include non-augmented in the output") 
     # Parse the arguments
     args = parser.parse_args()
     print(args)

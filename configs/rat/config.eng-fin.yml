@@ -45,11 +45,11 @@ datasets:
   # datasets to merge for validation while training
   devtest:
     - flores_dev
-    - sacrebleu_wmt15
-    - sacrebleu_wmt16
   # datasets for evaluation
   test:
     - flores_devtest
+    - sacrebleu_wmt15
+    - sacrebleu_wmt16
     - sacrebleu_wmt17
     - sacrebleu_wmt18
     - sacrebleu_wmt19

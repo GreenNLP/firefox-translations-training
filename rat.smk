@@ -31,10 +31,15 @@ rule find_fuzzy_matches:
 
 rule augment_data_with_fuzzies:
     message: "Augmenting data with fuzzies"
+    wildcard_constraints:
+        fuzzy_score="[01]\.\d+",
+        min_fuzzies="\d+",
+        max_fuzzies="\d+",
+        set="[\w\d_-]+"
     log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/augment_{set}_matches.log"
     conda: "envs/base.yml"
     threads: 1
-    resources: mem_mb=64000
+    resources: mem_mb=60000
     input:
         index_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz", 
         index_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
@@ -43,7 +48,9 @@ rule augment_data_with_fuzzies:
         matches="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/{set}.{src}-{trg}.matches"
     output: 
         source="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{set}.{src}.gz",
-        target="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{set}.{trg}.gz",
+        target="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{set}.{trg}.gz"
+    params:
+        max_sents=lambda wildcards: 2000 if wildcards.set == "dev" else -1
     shell: f'''python pipeline/rat/get_matches.py \
     --src_sentence_file "{{input.augment_source}}" \
     --trg_sentence_file "{{input.augment_target}}" \
@@ -52,6 +59,7 @@ rule augment_data_with_fuzzies:
     --trg_augmented_file "{{output.target}}" \
     --index_src_sentence_file "{{input.index_source}}" \
     --index_trg_sentence_file "{{input.index_target}}" \
+    --lines_to_augment {{params.max_sents}} \
     --min_score {{wildcards.fuzzy_score}} \
     --min_fuzzies {{wildcards.min_fuzzies}} \
     --max_fuzzies {{wildcards.max_fuzzies}} >> {{log}} 2>&1'''

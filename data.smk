@@ -5,8 +5,9 @@ include: "./configuration.smk"
 # use snakemake ruleorder to prioritize it over normal download
 ruleorder: download_tatoeba_corpus > download_corpus
 
+# light rules can run on login node
+localrules: download_corpus
 
-#TODO switch max sents to filtering, make it a wildcard
 rule download_tatoeba_corpus:
     message: "Downloading Tatoeba corpus"
     log: "{project_name}/{src}-{trg}/download_tc_{version}/download_tc_{version}.log"
@@ -15,16 +16,19 @@ rule download_tatoeba_corpus:
     threads: 1
 #    group: 'data'
     output: multiext("{project_name}/{src}-{trg}/download_tc_{version}/train", ".{src}.gz", ".{trg}.gz"),multiext("{project_name}/{src}-{trg}/download_tc_{version}/dev", ".{src}.gz", ".{trg}.gz"),multiext("{project_name}/{src}-{trg}/download_tc_{version}/eval", ".{src}.gz", ".{trg}.gz"), "{project_name}/{src}-{trg}/download_tc_{version}/train.id.gz",
-    params: prefix="{project_name}/{src}-{trg}/download_tc_{version}", version="{version}",max_sents=parallel_max_sents
-    shell: 'bash pipeline/data/download-tc-data.sh {wildcards.src} {wildcards.trg} {params.prefix} {params.version} {params.max_sents}  >> {log} 2>&1'
+    params: 
+        prefix="{project_name}/{src}-{trg}/download_tc_{version}",
+        version="{version}"
+    shell: 'bash pipeline/data/download-tc-data.sh {wildcards.src} {wildcards.trg} {params.prefix} {params.version} inf >> {log} 2>&1'
 
 #TODO: explicitly defined dev and eval linking, the glob might cause problems
 rule extract_tc_scored:
     message: "Extracting corpora from scored tc training set"
     log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/extract_tc_scored.log"
     conda: "envs/base.yml"
-    wildcard_constraints: min_score="0\.\d+"
-    threads: workflow.cores
+    wildcard_constraints:
+        min_score="0\.\d+",
+    threads: 1
     input: train_src="{project_name}/{src}-{trg}/{download_tc_dir}/train.{src}.gz", train_trg="{project_name}/{src}-{trg}/{download_tc_dir}/train.{trg}.gz", train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/train.id.gz", scores="../data/scores/{src}-{trg}.scored.gz"
     output: 
         src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
@@ -36,18 +40,51 @@ rule extract_tc_scored:
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
         output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/"
+        
     shell: '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} && ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
+
+rule subset_corpus:
+    message: "Extracting N million lines from corpus as training set"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/subset_corpus.log"
+    conda: "envs/base.yml"
+    wildcard_constraints:
+        max_train_sents="\d+[KM]"
+    threads: 1
+    input:         
+        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
+    output: 
+        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{trg}.gz",
+        eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{src}.gz",
+        eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz"
+    params:
+        input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/"
+    shell:
+        """
+        ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1 && \
+        {{ pigz -dc {input.train_source} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_source} ; }} 2>> {log} && \
+        {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log}
+        """
 
 rule download_corpus:
     message: "Downloading parallel corpus"
-    log: f"{log_dir}/download_corpus/{{kind}}/{{dataset}}.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/download_{kind}-{dataset}.log"
     conda: "envs/base.yml"
     threads: 1
 #    group: 'data'
     cache: False # caching is broken in snakemake
-    wildcard_constraints: kind="corpus|devset|eval"
-    output: multiext(f"{original}/{{kind}}/{{dataset}}", f".{src}.gz", f".{trg}.gz")
-    params: prefix=f"{original}/{{kind}}/{{dataset}}", dataset="{dataset}"
+    wildcard_constraints:
+        kind="corpus|devset|eval",
+        dataset="[\w\d_]+",
+        max_train_sents="\d+[KM]"
+    output:
+        source="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{src}.gz",
+        target="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{trg}.gz"
+    params: prefix="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}", dataset="{dataset}"
     shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}"  >> {log} 2>&1'
 
 rule download_mono:

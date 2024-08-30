@@ -12,7 +12,7 @@ res_prefix=$1
 dataset_prefix=$2
 src=$3
 trg=$4
-marian=$5
+marian_decoder=$5
 decoder_config=$6
 args=( "${@:7}" )
 
@@ -24,7 +24,7 @@ pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
 
 pigz -dc "${dataset_prefix}.${src}.gz" |
   tee "${res_prefix}.${src}" |
-  "${marian}"/marian-decoder \
+  "${marian_decoder}" \
     -c "${decoder_config}" \
     --quiet \
     --quiet-translation \

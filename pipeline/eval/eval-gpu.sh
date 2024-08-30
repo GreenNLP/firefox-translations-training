@@ -19,9 +19,8 @@ res_prefix=$1
 dataset_prefix=$2
 src=$3
 trg=$4
-decoder_config=$5
-vocab=$6
-models=( "${@:7}" )
+marian_decoder=$5
+decoder_config=$6
 
 cd "$(dirname "${0}")"
 
@@ -30,9 +29,7 @@ bash eval.sh \
       "${dataset_prefix}" \
       "${src}" \
       "${trg}" \
-      "${MARIAN}" \
+      "${marian_decoder}" \
       "${decoder_config}" \
       -w "${WORKSPACE}" \
       --devices ${GPUS} \
-      -m "${models[@]}" \
-      --vocabs "${vocab}" "${vocab}"

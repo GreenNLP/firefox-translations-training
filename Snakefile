@@ -70,6 +70,31 @@ module train:
 
 use rule * from train
 
+eval_config = {
+    "marian-decoder": f"{marian_dir}/marian-decoder",
+    "gpus-num": gpus_num,
+    "best-model-metric": best_model_metric}
+
+
+module eval:
+    snakefile: "./eval.smk"
+    config: eval_config
+
+use rule * from eval
+
+translate_config = {
+    "decoder": f"{marian_dir}/marian-decoder",
+    "gpus-num": gpus_num,
+    "best-model-metric": best_model_metric,
+    "decoding-teacher-args": get_args("decoding-teacher")}
+
+
+module translate:
+    snakefile: "./translate.smk"
+    config: translate_config
+
+use rule * from translate
+
 #Ignore these modules, they use a dead-end approach, will change it later.
 module compile_deps:
     snakefile: "./compile_deps.smk"
@@ -600,7 +625,7 @@ if augment_corpus:
 
 ### translation with teacher
 
-checkpoint split_corpus:
+"""checkpoint split_corpus:
     message: "Splitting the corpus to translate"
     log: f"{log_dir}/split_corpus.log"
     conda: "envs/base.yml"
@@ -1287,4 +1312,4 @@ rule wmt23_termtask_score:
                             #else f'{final_teacher_dir}0-0/{best_model}.decoder.yml'
     shell: '''bash pipeline/wmt23_termtask/eval.sh "{input.wmt23_dev_src}" "{input.wmt23_dev_dict}" "{src}" "{trg}" \
             "{params.decoder_config}" {input.models} {input.vocab} {params.res_prefix} >> {log} 2>&1'''
-
+"""
