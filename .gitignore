@@ -156,3 +156,4 @@ DAG.txt
 dag.txt
 slurm-*.out
 test*
+data/
