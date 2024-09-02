@@ -16,25 +16,25 @@ dataset=$4
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
-name=${dataset%%/*}
+name=${dataset%%__*}
 name_and_version="${dataset//[^A-Za-z0-9_- ]/_}"
-version=${dataset##*/}
+version=${dataset##*__}
 
 tmp="$(dirname "${output_prefix}")/opus/${name_and_version}"
 mkdir -p "${tmp}"
 
 archive_path="${tmp}/${name}.txt.zip"
 
-wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/${version}/moses/${src}-${trg}.txt.zip"
+wget -q "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${src}-${trg}.txt.zip"
 wget_output_1=$?
 
-wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/${version}/moses/${trg}-${src}.txt.zip"
+wget -q "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${trg}-${src}.txt.zip"
 wget_output_2=$?
 
 # Attempt to download the file using the first URL
 if [ $wget_output_1 -eq 0 ] || [ $wget_output_2 -eq 0 ]; then
-  wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${src}-${trg}.txt.zip" ||
-    wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${trg}-${src}.txt.zip"
+  wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${src}-${trg}.txt.zip" ||
+    wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${trg}-${src}.txt.zip"
 
   unzip -o "${archive_path}" -d "${tmp}"
 
