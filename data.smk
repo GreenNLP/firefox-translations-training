@@ -1,12 +1,17 @@
+import langcodes
 include: "./configuration.smk" 
+
+wildcard_constraints:
+    src="\w{2,3}",
+    trg="\w{2,3}"
 
 # data downloading
 # Tatoeba data has dev, test and train in same big tar, this is a rule producing them all,
 # use snakemake ruleorder to prioritize it over normal download
 ruleorder: download_tatoeba_corpus > download_corpus
 
-# light rules can run on login node
-localrules: download_corpus
+# light-weight rules can run on login node
+localrules: download_corpus, download_tatoeba_corpus, extract_tc_scored, subset_corpus, baseline_preprocessing 
 
 rule download_tatoeba_corpus:
     message: "Downloading Tatoeba corpus"
@@ -43,6 +48,38 @@ rule extract_tc_scored:
         
     shell: '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} && ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
 
+rule baseline_preprocessing:
+    message: "Preprocessing data for baseline training"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/preprocess_baseline.log"
+    conda: "envs/base.yml"
+    wildcard_constraints:
+        max_dev_sents="\d+"
+    threads: 1
+    input:         
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/dev.{trg}.gz",
+        eval_source="{project_name}/{src}-{trg}/{preprocessing}/eval.{src}.gz",
+        eval_target="{project_name}/{src}-{trg}/{preprocessing}/eval.{trg}.gz"
+    output: 
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/dev.{trg}.gz",
+        eval_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/eval.{src}.gz",
+        eval_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/eval.{trg}.gz"
+    params:
+        input_dir="{project_name}/{src}-{trg}/{preprocessing}/",
+        output_dir="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/"
+    shell:
+        """
+        ln {params.input_dir}/{{eval,train}}.*.gz {params.output_dir} >> {log} 2>&1 && \
+        {{ pigz -dc {input.dev_source} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_source} ; }} 2>> {log} && \
+        {{ pigz -dc {input.dev_target} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_target} ; }} 2>> {log}
+        """
+
+
 rule subset_corpus:
     message: "Extracting N million lines from corpus as training set"
     log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/subset_corpus.log"
@@ -59,13 +96,17 @@ rule subset_corpus:
         dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{src}.gz",
         dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{src}.gz",
-        eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz"
+        eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz",
+        all_filtered_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{src}.gz",
+        all_filtered_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{trg}.gz"
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
         output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/"
     shell:
         """
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1 && \
+        ln {input.train_source} {output.all_filtered_source} >> {log} 2>&1 && \
+        ln {input.train_target} {output.all_filtered_target} >> {log} 2>&1 && \
         {{ pigz -dc {input.train_source} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_source} ; }} 2>> {log} && \
         {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log}
         """
@@ -73,7 +114,8 @@ rule subset_corpus:
 rule download_corpus:
     message: "Downloading parallel corpus"
     log: "{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/download_{kind}-{dataset}.log"
-    conda: "envs/base.yml"
+    conda: None
+    container: None
     threads: 1
 #    group: 'data'
     cache: False # caching is broken in snakemake
@@ -84,8 +126,17 @@ rule download_corpus:
     output:
         source="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{src}.gz",
         target="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{trg}.gz"
-    params: prefix="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}", dataset="{dataset}"
-    shell: 'bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}"  >> {log} 2>&1'
+    params: 
+        prefix="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}",
+        dataset="{dataset}",
+        source_lng=lambda wildcards: langcodes.standardize_tag(wildcards.src),
+        target_lng=lambda wildcards: langcodes.standardize_tag(wildcards.trg)
+    shell: 
+        """
+        bash pipeline/data/download-corpus.sh "{params.dataset}" "{params.prefix}" "{params.source_lng}" "{params.target_lng}" >> {log} 2>&1 && \
+        mv "{params.prefix}.{params.source_lng}.gz" "{output.source}" >> {log} 2>&1 && \
+        mv "{params.prefix}.{params.target_lng}.gz" "{output.target}" >> {log} 2>&1
+        """
 
 rule download_mono:
     message: "Downloading monolingual dataset"

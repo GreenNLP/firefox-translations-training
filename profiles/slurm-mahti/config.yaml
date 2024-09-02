@@ -14,7 +14,7 @@ keep-going: false
 use-singularity: false
 use-conda: false
 default-resources: "mem_mb=60000"
-resources: gpu=4
+resources: gpu=2
 cores: 32
 cache: false
 reason: true
@@ -25,6 +25,6 @@ singularity-args: "--bind $PWD/../data,$CUDA_INSTALL_ROOT,$CUDNN_INSTALL_ROOT:/c
 config:
   - deps=false
   - workspace=30000
-  - numgpus=4
+  - numgpus=2
   - mariancmake=""
   - gpus=""

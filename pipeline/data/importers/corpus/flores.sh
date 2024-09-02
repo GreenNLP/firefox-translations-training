@@ -20,7 +20,7 @@ ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 tmp="$(mktemp -d)/flores/${dataset}"
 mkdir -p "${tmp}"
 
-wget "https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz" -O "${tmp}/flores101_dataset.tar.gz"
+wget -O "${tmp}/flores101_dataset.tar.gz" "https://dl.fbaipublicfiles.com/flores101/dataset/flores101_dataset.tar.gz"
 tar -xzf "${tmp}/flores101_dataset.tar.gz" -C "${tmp}" --no-same-owner
 
 flores_code() {
@@ -42,8 +42,18 @@ flores_code() {
 src_flores=$(flores_code "${src}")
 trg_flores=$(flores_code "${trg}")
 
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.${src}.${ARTIFACT_EXT}"
-${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
+# Check if both files exist
+src_file="${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}"
+trg_file="${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}"
+
+if [ -e "$src_file" ] && [ -e "$trg_file" ]; then
+  ${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${src_flores}.${dataset}" > "${output_prefix}.${src}.${ARTIFACT_EXT}"
+  ${COMPRESSION_CMD} -c "${tmp}/flores101_dataset/${dataset}/${trg_flores}.${dataset}" > "${output_prefix}.${trg}.${ARTIFACT_EXT}"
+else #Otherwise create fake dummy empty files
+    touch "${output_prefix}.${src}.${ARTIFACT_EXT}"
+    touch "${output_prefix}.${trg}.${ARTIFACT_EXT}" 
+    echo "Fake touch files created since dataset doesn't exist: ${output_prefix}.source.${ARTIFACT_EXT}"
+fi
 
 rm -rf "${tmp}"
 

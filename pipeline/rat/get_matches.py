@@ -40,21 +40,22 @@ def main(args):
         gzip.open(args.trg_augmented_file,'wt') as trg_output_file:
         print("Augmenting with fuzzies")
         for index, sentence in enumerate(src_sentences):
-            if args.lines_to_augment and index == args.lines_to_augment -1:
+            if args.lines_to_augment and index == args.lines_to_augment-1:
                 break
             if index in scores:
                 score_indices = scores[index]
                 corresponding_sentences = [(index_src_sentences[i-1],index_trg_sentences[i-1]) for score, i in score_indices if score > args.min_score][0:args.max_fuzzies]
-                if len(corresponding_sentences) >= args.min_fuzzies:
-                    if args.include_source:
-                        fuzzies = [f"{x[0]}{args.source_separator}{x[1]}{args.target_separator}" for x in corresponding_sentences]
-                        src_output_file.write(f"{fuzzies}{sentence}\n")
-                        trg_output_file.write(trg_sentences[index]+"\n")
-
-                    else:
-                        target_fuzzies = [x[1] for x in corresponding_sentences]
-                        src_output_file.write(f"{args.target_separator.join(target_fuzzies)}{args.target_separator}{sentence}\n")
-                        trg_output_file.write(trg_sentences[index]+"\n")
+            else:
+                corresponding_sentences = []
+            if len(corresponding_sentences) >= args.min_fuzzies:
+                if args.include_source:
+                    fuzzies = [f"{x[0]}{args.source_separator}{x[1]}{args.target_separator}" for x in corresponding_sentences]
+                    src_output_file.write(f"{fuzzies}{sentence}\n")
+                    trg_output_file.write(trg_sentences[index]+"\n")
+                else:
+                    target_fuzzies = [x[1] for x in corresponding_sentences]
+                    src_output_file.write(f"{args.target_separator.join(target_fuzzies)}{args.target_separator}{sentence}\n")
+                    trg_output_file.write(trg_sentences[index]+"\n")
 
             else:
                 if not args.exclude_non_augmented:

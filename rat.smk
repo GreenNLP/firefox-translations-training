@@ -3,30 +3,33 @@ fuzzy_match_cli=f'{config["fuzzy-match-cli"]}'
 
 wildcard_constraints:
     src="\w{2,3}",
-    trg="\w{2,3}"
+    trg="\w{2,3}",
+    index_type="(train|all_filtered)"
 
 rule build_fuzzy_index:
     message: "Building fuzzy index"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/build_index.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/build_index_{index_type}.log"
     conda: None
     container: None
     threads: workflow.cores
-    input: index_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz", index_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz"
-    output: index="{project_name}/{src}-{trg}/{preprocessing}/build_index/index.{src}-{trg}.fmi"
+    input:	
+    	index_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{src}.gz",
+    	index_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{trg}.gz"
+    output: index="{project_name}/{src}-{trg}/{preprocessing}/build_index/index.{index_type}.{src}-{trg}.fmi"
     shell: f'''bash pipeline/rat/build_index.sh "{fuzzy_match_cli}" "{{input.index_source}}" "{{input.index_target}}" {{threads}} "{{output.index}}" >> {{log}} 2>&1'''
  
 rule find_fuzzy_matches:
     message: "Finding fuzzies"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/find_{set}_matches.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/find_{index_type}-{set}_matches.log"
     conda: None
     container: None
     threads: workflow.cores/2
     input: 
         source="{project_name}/{src}-{trg}/{preprocessing}/{set}.{src}.gz", 
         target="{project_name}/{src}-{trg}/{preprocessing}/{set}.{trg}.gz",
-        index="{project_name}/{src}-{trg}/{preprocessing}/build_index/index.{src}-{trg}.fmi"
+        index="{project_name}/{src}-{trg}/{preprocessing}/build_index/index.{index_type}.{src}-{trg}.fmi"
     output: 
-        matches="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/{set}.{src}-{trg}.matches"
+        matches="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/{index_type}-{set}.{src}-{trg}.matches"
     shell: f'''bash pipeline/rat/find_matches.sh "{fuzzy_match_cli}" "{{input.source}}" {{threads}} "{{input.index}}" "{{output.matches}}" {{wildcards.contrast_factor}} >> {{log}} 2>&1'''
 
 rule augment_data_with_fuzzies:
@@ -35,20 +38,20 @@ rule augment_data_with_fuzzies:
         fuzzy_score="[01]\.\d+",
         min_fuzzies="\d+",
         max_fuzzies="\d+",
-        set="[\w\d_-]+"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/augment_{set}_matches.log"
+        set="[\w\d_-]+",
+    log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/augment_{index_type}-{set}_matches.log"
     conda: "envs/base.yml"
     threads: 1
     resources: mem_mb=60000
     input:
-        index_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz", 
-        index_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
+        index_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{src}.gz", 
+        index_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{trg}.gz",
         augment_source="{project_name}/{src}-{trg}/{preprocessing}/{set}.{src}.gz", 
         augment_target="{project_name}/{src}-{trg}/{preprocessing}/{set}.{trg}.gz",
-        matches="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/{set}.{src}-{trg}.matches"
+        matches="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/{index_type}-{set}.{src}-{trg}.matches"
     output: 
-        source="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{set}.{src}.gz",
-        target="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{set}.{trg}.gz"
+        source="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{index_type}-{set}.{src}.gz",
+        target="{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/augment_train_{fuzzy_score}_{min_fuzzies}_{max_fuzzies}/{index_type}-{set}.{trg}.gz"
     params:
         max_sents=lambda wildcards: 2000 if wildcards.set == "dev" else -1
     shell: f'''python pipeline/rat/get_matches.py \
