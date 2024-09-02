@@ -38,8 +38,10 @@ rule evaluate:
 rule evaluate_ct2:
     message: "Evaluating a model using ctranslate2"
     log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/eval/evaluate_ct2_{dataset}.log"
-    conda: "envs/base.yml"
-    threads: 32
+    #conda: "envs/base.yml"
+    conda: None
+    container: None
+    threads: workflow.cores
     #resources: gpu=1
     priority: 50
     wildcard_constraints:
@@ -60,4 +62,4 @@ rule evaluate_ct2:
         src_lng=lambda wildcards: wildcards.src if "backward" not in wildcards.model_type else wildcards.trg,
         trg_lng=lambda wildcards: wildcards.trg if "backward" not in wildcards.model_type else wildcards.src,
         ct2_model_dir='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/ct2_conversion'
-    shell: '''bash pipeline/eval/eval-ct2.sh "{params.res_prefix}" "{params.dataset_prefix}" {params.src_lng} {params.trg_lng} {params.ct2_model_dir} "{input.src_spm}" >> {log} 2>&1'''
+    shell: '''bash pipeline/eval/eval-ct2.sh "{params.res_prefix}" "{params.dataset_prefix}" {params.src_lng} {params.trg_lng} {params.ct2_model_dir} "{input.src_spm}" {threads} >> {log} 2>&1'''

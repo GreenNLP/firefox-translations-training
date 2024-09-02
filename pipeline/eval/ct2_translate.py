@@ -32,9 +32,9 @@ if __name__ == "__main__":
     parser.add_argument("--model_directory", help="Path to the CTranslate2 model directory")
     parser.add_argument("--input_file", help="Path to the input file containing text to translate")
     parser.add_argument("--sentencepiece_model", help="Path to the SentencePiece model file")
-    parser.add_argument("--threads", help="Number of threads to use")
+    parser.add_argument("--threads", type=int, help="Number of threads to use")
 
     args = parser.parse_args()
     
-    translate_file(args.model_directory, args.input_file, args.sentencepiece_model)
+    translate_file(args.model_directory, args.input_file, args.sentencepiece_model, args.threads)
 

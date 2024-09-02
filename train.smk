@@ -31,7 +31,8 @@ localrules: ct2_conversion
 rule ct2_conversion:
     message: "Converting Marian model for ctranslate2 use"
     log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/convert_model.log"
-    conda: "envs/base.yml"
+    conda: None
+    container: None
     threads: 1
     input:
     	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz',
@@ -40,11 +41,11 @@ rule ct2_conversion:
     	model='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/ct2_conversion/model.bin'
     params:
         text_vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.vocab",
-        yml_vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{{model_type}}-{{training_type}}/conversion_vocab.yml",
-        conversion_dir="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{{model_type}}-{{training_type}}/ct2_conversion"
+        yml_vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/conversion_vocab.yml",
+        conversion_dir="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/ct2_conversion"
     shell:
         """
-            pipeline/train/convert_vocab.py --input_vocab {params.text_vocab} --output_vocab {params.yml_vocab} >> {{log}} 2>&1 && \
-            ct2-marian-converter --model_path {input.model} --vocab_paths {params.yml_vocab} {params.yml_vocab} --output_dir {params.conversion_dir} >> {{log}} 2>&1
+            python pipeline/train/convert_vocab.py --input_vocab {params.text_vocab} --output_vocab {params.yml_vocab} >> {log} 2>&1 && \
+            ct2-marian-converter --force --model_path {input.model} --vocab_paths {params.yml_vocab} {params.yml_vocab} --output_dir {params.conversion_dir} >> {log} 2>&1
         """ 
 

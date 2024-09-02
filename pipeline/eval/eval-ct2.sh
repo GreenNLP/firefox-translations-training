@@ -14,7 +14,8 @@ src=$3
 trg=$4
 ct2_model_dir=$5
 sp_model=$6
-args=( "${@:7}" )
+threads=$7
+args=( "${@:8}" )
 
 mkdir -p "$(basename "${res_prefix}")"
 
@@ -24,11 +25,12 @@ pigz -dc "${dataset_prefix}.${trg}.gz" > "${res_prefix}.${trg}.ref"
 pigz -dc "${dataset_prefix}.${src}.gz" > "${res_prefix}.${src}"
 
 
-python ct2-translate.py \
-    --model_directory "${ct2_model_dir} \
+python pipeline/eval/ct2_translate.py \
+    --model_directory "${ct2_model_dir}" \
     --input_file "${res_prefix}.${src}" \
-    --sentencepiece_model "${sp_model}" | tee "${res_prefix}.${trg}" |
+    --sentencepiece_model "${sp_model}" \
+    --threads "${threads}" | tee "${res_prefix}.${trg}" |
   sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${src}-${trg}" -m bleu chrf  |
-  tee "${res_prefix}.metrics"
+  tee "${res_prefix}.ct2.metrics"
 
 echo "###### Done: Evaluation of a model"

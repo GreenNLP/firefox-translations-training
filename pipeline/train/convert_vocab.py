@@ -21,14 +21,14 @@ def convert_txt_to_yaml(input_file, output_file):
 def main():
     # Set up the argument parser
     parser = argparse.ArgumentParser(description='Convert a whitespace-delimited text file to a YAML file.')
-    parser.add_argument('input_vocab', help='Path to the txt format .vocab file produced by sentencepiece')
-    parser.add_argument('output_vocab', help='Path to the output YAML file')
+    parser.add_argument('--input_vocab', help='Path to the txt format .vocab file produced by sentencepiece')
+    parser.add_argument('--output_vocab', help='Path to the output YAML file')
 
     # Parse the arguments
     args = parser.parse_args()
 
     # Call the conversion function with the provided input and output file paths
-    convert_txt_to_yaml(args.input_file, args.output_file)
+    convert_txt_to_yaml(args.input_vocab, args.output_vocab)
 
 if __name__ == '__main__':
     main()
