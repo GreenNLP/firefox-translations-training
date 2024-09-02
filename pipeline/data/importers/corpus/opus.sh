@@ -18,16 +18,17 @@ ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
 name=${dataset%%/*}
 name_and_version="${dataset//[^A-Za-z0-9_- ]/_}"
+version=${dataset##*/}
 
 tmp="$(dirname "${output_prefix}")/opus/${name_and_version}"
 mkdir -p "${tmp}"
 
 archive_path="${tmp}/${name}.txt.zip"
 
-wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${src}-${trg}.txt.zip"
+wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/${version}/moses/${src}-${trg}.txt.zip"
 wget_output_1=$?
 
-wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${trg}-${src}.txt.zip"
+wget -q "https://object.pouta.csc.fi/OPUS-${dataset}/${version}/moses/${trg}-${src}.txt.zip"
 wget_output_2=$?
 
 # Attempt to download the file using the first URL
