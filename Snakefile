@@ -745,7 +745,7 @@ else:
             ancient(decoder),
             file=teacher_source_file,
             vocab=teacher_source_file if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
-            teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True)
+            teacher_models=f"{final_teacher_dir}0-0/{best_model}" # BEWARE: only works for one model per language pair
         output: file=teacher_target_file
         params: args=get_args('decoding-teacher')
         shell: '''bash pipeline/translate/translate-nbest.sh \
