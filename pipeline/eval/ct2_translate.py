@@ -1,6 +1,8 @@
 import argparse
 import sentencepiece as spm
 import ctranslate2
+import sys
+import time
 
 def translate_file(model_dir, input_file, sp_model_path, threads, batch_size, beam_size, num_hypotheses, output_file, compute_type):
     # Load the CTranslate2 model and SentencePiece model
@@ -9,24 +11,27 @@ def translate_file(model_dir, input_file, sp_model_path, threads, batch_size, be
     # Open the input file for reading
     with open(input_file, 'r', encoding="utf-8") as f:
         # Segment the input lines using SentencePiece
-        source = map(sp.encode_as_pieces, input_file)
-
+        source = map(sp.encode_as_pieces, f)
         # Use translate_iterable to translate the lines incrementally
         translations = translator.translate_iterable(
             source, batch_type="tokens", beam_size=beam_size, max_batch_size=batch_size, num_hypotheses=num_hypotheses, disable_unk=True)
 
         # Decode the translations back into text and print them
+        translation_count = 0
         if output_file:
             with open(output_file,'wt',encoding="utf-8") as output:
                 for translation in translations:
+                    translation_count += 1
                     decoded_hypotheses = sp.decode(translation.hypotheses[0:num_hypotheses])
                     for hyp in decoded_hypotheses:
-                        output.write(translated_sentence)
+                        output.write(hyp+"\n")
         else:
             for translation in translations:
+                translation_count += 1
                 decoded_hypotheses = sp.decode(translation.hypotheses[0:num_hypotheses])
                 for hyp in decoded_hypotheses:
-                    print(translated_sentence)
+                    sys.stdout.write(hyp+"\n")
+    return translation_count
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Translate text using a CTranslate2 model and SentencePiece.")
@@ -41,5 +46,6 @@ if __name__ == "__main__":
     parser.add_argument("--compute_type", type=str, default="default", help="Quantization to use on model loading")
 
     args = parser.parse_args()
-    translate_file(args.model_directory, args.input_file, args.sentencepiece_model, args.threads, args.batch_size, args.beam_size, args.num_hypotheses, args.output_file, args.compute_type)
-
+    t = time.process_time()
+    translation_count = translate_file(args.model_directory, args.input_file, args.sentencepiece_model, args.threads, args.batch_size, args.beam_size, args.num_hypotheses, args.output_file, args.compute_type)
+    sys.stderr.write(f"translated {translation_count} sentences in {int(time.process_time())} seconds\n")

@@ -42,14 +42,11 @@ rule translate_corpus:
 
 rule translate_corpus_ct2:
     message: "Translating corpus with teacher using CTranslate2"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/translate_{part}.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/translate_ct2_{part}.log"
     conda: None
     container: None
-    envmodules:
-        "gcc/13.2.0",
-        "cuda/12.6.0"
-    threads: gpus_num*2
-    resources: gpu=gpus_num
+    threads: 2
+    resources: gpu=1 # the script is not set up for multiple GPUs right now
     input:
         ancient(config["decoder"]),
         file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
@@ -68,6 +65,18 @@ rule extract_best:
         nbest="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest",
         ref="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.ref"
     output: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest.out"
+    shell: 'python pipeline/translate/bestbleu.py -i {input.nbest} -r {input.ref} -m bleu -o {output} >> {log} 2>&1'
+
+rule extract_best_copyrate:
+    message: "Extracting translations with best copy rate for the corpus"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/extract_best_copyrate_{part}.log"
+    conda: "envs/base.yml"
+    threads: 1
+    input: 
+        nbest="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest",
+        source_file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
+    output: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest.copyrate_out"
+    #TODO: extract fuzzies from source, make them into a synthetic ref, compute BLEU without brev penalty
     shell: 'python pipeline/translate/bestbleu.py -i {input.nbest} -r {input.ref} -m bleu -o {output} >> {log} 2>&1'
 
 rule collect_corpus:
