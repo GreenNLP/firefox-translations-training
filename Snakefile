@@ -48,7 +48,8 @@ use rule * from rat as *
 vocab_config = {
     "spm-train": f"{marian_dir}/spm_train",
     "user-defined-symbols":"FUZZY_BREAK",
-    "spm-sample-size": 1000000
+    "spm-sample-size": 1000000,
+    "spm-character-coverage": 1.0 #since the data is cleaned, it does not contain many weird characters, causing character coverage to drop valid characters, such as Ö and the degree mark
     }
 
 module vocab:

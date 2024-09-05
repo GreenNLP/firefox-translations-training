@@ -11,19 +11,19 @@ rule build_fuzzy_index:
     log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/build_index_{index_type}.log"
     conda: None
     container: None
-    threads: workflow.cores
+    threads: 2
     input:	
     	index_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{src}.gz",
     	index_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}.{trg}.gz"
     output: index="{project_name}/{src}-{trg}/{preprocessing}/build_index/index.{index_type}.{src}-{trg}.fmi"
-    shell: f'''bash pipeline/rat/build_index.sh "{fuzzy_match_cli}" "{{input.index_source}}" "{{input.index_target}}" {{threads}} "{{output.index}}" >> {{log}} 2>&1'''
+    shell: f'''bash pipeline/rat/build_index.sh "{fuzzy_match_cli}" "{{input.index_source}}" "{{input.index_target}}" "{{output.index}}" >> {{log}} 2>&1'''
  
 rule find_fuzzy_matches:
     message: "Finding fuzzies"
     log: "{project_name}/{src}-{trg}/{preprocessing}/build_index/find_matches_{contrast_factor}/find_{index_type}-{set}_matches.log"
     conda: None
     container: None
-    threads: workflow.cores/2
+    threads: workflow.cores
     input: 
         source="{project_name}/{src}-{trg}/{preprocessing}/{set}.{src}.gz", 
         target="{project_name}/{src}-{trg}/{preprocessing}/{set}.{trg}.gz",

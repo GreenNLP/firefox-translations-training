@@ -29,7 +29,7 @@ experiment:
   # split corpus to parallelize translation
   split-length: 1000000
   # vocab training sample
-  spm-sample-size: 10000000
+  spm-sample-size: 1000000
 
   best-model: chrf
 

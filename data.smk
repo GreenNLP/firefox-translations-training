@@ -113,7 +113,7 @@ rule subset_corpus:
 
 rule download_corpus:
     message: "Downloading parallel corpus"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/download_{kind}-{dataset}.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/download_{kind}-{dataset}.log"
     conda: None
     container: None
     threads: 1
@@ -124,10 +124,10 @@ rule download_corpus:
         dataset="[\w\d_]+",
         max_train_sents="\d+[KM]"
     output:
-        source="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{src}.gz",
-        target="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}.{trg}.gz"
+        source="{project_name}/{src}-{trg}/{preprocessing}/{kind}-{dataset}.{src}.gz",
+        target="{project_name}/{src}-{trg}/{preprocessing}/{kind}-{dataset}.{trg}.gz"
     params: 
-        prefix="{project_name}/{src}-{trg}/{preprocessing}/subset_{max_train_sents}/{kind}-{dataset}",
+        prefix="{project_name}/{src}-{trg}/{preprocessing}/{kind}-{dataset}",
         dataset="{dataset}",
         source_lng=lambda wildcards: langcodes.standardize_tag(wildcards.src),
         target_lng=lambda wildcards: langcodes.standardize_tag(wildcards.trg)

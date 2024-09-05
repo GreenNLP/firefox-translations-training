@@ -52,11 +52,13 @@ def process_files(src_file, trg_file, id_file, score_file, min_score, domain_eva
 
     # Write the eval data to respective files
     for corpus_name, (src_lines, trg_lines) in eval_lines.items():
-        eval_file_path = f"{output_dir}/{corpus_name}.eval.gz"
-        with gzip.open(eval_file_path, 'wt', encoding='utf-8') as eval_file:
+        eval_src_file_path = f"{output_dir}/{corpus_name}.eval.src.gz"
+        eval_trg_file_path = f"{output_dir}/{corpus_name}.eval.trg.gz"
+        with gzip.open(eval_file_path, 'wt', encoding='utf-8') as eval_src_file, \
+             gzip.open(eval_file_path, 'wt', encoding='utf-8') as eval_trg_file:
             for src_line, trg_line in zip(src_lines, trg_lines):
-                eval_file.write(src_line)
-                eval_file.write(trg_line)
+                eval_src_file.write(src_line)
+                eval_trg_file.write(trg_line)
 
     # Close all domain-specific files
     for src_file, trg_file in domain_files.values():

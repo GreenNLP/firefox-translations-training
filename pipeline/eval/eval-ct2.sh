@@ -15,7 +15,8 @@ trg=$4
 ct2_model_dir=$5
 sp_model=$6
 threads=$7
-args=( "${@:8}" )
+batch_size=$8
+args=( "${@:9}" )
 
 mkdir -p "$(basename "${res_prefix}")"
 
@@ -29,7 +30,8 @@ python pipeline/eval/ct2_translate.py \
     --model_directory "${ct2_model_dir}" \
     --input_file "${res_prefix}.${src}" \
     --sentencepiece_model "${sp_model}" \
-    --threads "${threads}" | tee "${res_prefix}.${trg}" |
+    --threads "${threads}" \
+    --batch_size "${batch_size}" | tee "${res_prefix}.${trg}" |
   sacrebleu "${res_prefix}.${trg}.ref" -d -f text --score-only -l "${src}-${trg}" -m bleu chrf  |
   tee "${res_prefix}.ct2.metrics"
 

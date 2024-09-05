@@ -14,4 +14,4 @@ rule train_joint_spm_vocab:
         target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz"
     output:
         vocab="{project_name}/{src}-{trg}/{preprocessing}/train_joint_spm_vocab_{vocab_size}_{prepend_spaces}/vocab.spm"
-    shell: f'''bash pipeline/train/spm-vocab.sh "{{input.source}}" "{{input.target}}" "{{output.vocab}}" {config["spm-sample-size"]} {{threads}} {{wildcards.vocab_size}} {config["user-defined-symbols"]} "{{input.spm_train}}" "{{wildcards.prepend_spaces}}" >> {{log}} 2>&1'''
+    shell: f'''bash pipeline/train/spm-vocab.sh "{{input.source}}" "{{input.target}}" "{{output.vocab}}" {config["spm-sample-size"]} {{threads}} {{wildcards.vocab_size}} {config["user-defined-symbols"]} "{{input.spm_train}}" "{{wildcards.prepend_spaces}}" "{config["spm-character-coverage"]} >> {{log}} 2>&1'''

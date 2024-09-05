@@ -14,8 +14,8 @@ keep-going: false
 default-resources: "mem_mb=128000"
 use-singularity: false
 use-conda: false
-resources: gpu=4
-cores: 40
+resources: gpu=1
+cores: 20
 cache: false
 reason: true
 singularity-args: "--bind $PWD/../data,$CUDA_INSTALL_ROOT,$CUDNN_INSTALL_ROOT:/cudnn,$PWD/../data/tmp:/tmp --nv --containall"
@@ -26,6 +26,6 @@ config:
   #- cuda=/appl/spack/v018/install-tree/gcc-9.4.0/cuda-11.1.1-lfaa3j
   #- cudnn=/appl/spack/v018/install-tree/gcc-9.4.0/cudnn-8.0.5.39-11.1-5cnrmz
   - workspace=10000
-  - numgpus=4
+  - numgpus=1
   - mariancmake=""
   - gpus=""

@@ -34,11 +34,30 @@ rule translate_corpus:
         ancient(config["decoder"]),
         file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
         vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm",
-    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.npz.best-{config["best-model-metric"]}.npz'
+    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz'
     output: file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest"
     params: args=config['decoding-teacher-args']
     shell: '''bash pipeline/translate/translate-nbest.sh \
                 "{input.file}" "{output.file}" "{input.vocab}" {input.model} {params.args} >> {log} 2>&1'''
+
+rule translate_corpus_ct2:
+    message: "Translating corpus with teacher using CTranslate2"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/translate_{part}.log"
+    conda: None
+    container: None
+    envmodules:
+        "gcc/13.2.0",
+        "cuda/12.6.0"
+    threads: gpus_num*2
+    resources: gpu=gpus_num
+    input:
+        ancient(config["decoder"]),
+        file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
+        vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm",
+    	model='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/ct2_conversion/model.bin'
+    output: file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.ct2.nbest"
+    shell: '''bash pipeline/translate/translate-nbest-ct2.sh \
+        "{input.file}" "{output.file}" "{input.vocab}" {input.model} >> {log} 2>&1'''
 
 rule extract_best:
     message: "Extracting best translations for the corpus"

@@ -9,12 +9,12 @@ set -euo pipefail
 fuzzy_match_cli=$1
 src_corpus=$2
 trg_corpus=$3
-threads=$4
-index_file=$5
+index_file=$4
 
 echo "##### Building a fuzzy match index"
 
-${fuzzy_match_cli} --action index --corpus ${src_corpus} --nthreads ${threads}
+# index building runs on single thread, --nthreads is only for matching
+${fuzzy_match_cli} --action index --corpus ${src_corpus}
 
 # The add-target flag adds the target sentence to the db but there seems to be some bugs associated, so don't use it
 #${fuzzy_match_cli} --action index --corpus ${src_corpus},${trg_corpus} --nthreads ${threads} --add-target
