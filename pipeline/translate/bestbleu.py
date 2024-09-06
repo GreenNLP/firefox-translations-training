@@ -36,6 +36,7 @@ def main():
     return
 
 def t2t_best_bleu(args, score_function):
+    
     for i, ref_line in enumerate(args.references):
         refs = ref_line.strip().split("\n")
         if args.debpe:
@@ -46,7 +47,7 @@ def t2t_best_bleu(args, score_function):
             texts = [re.sub(r'@@ +', '', t) for t in texts]
             pass
         refs = [r.split() for r in refs]
-        scores = [score_function(refs, t.split()) for t in texts]
+        scores = [score_function(refs, t.split(), args.copyrate) for t in texts]
         best_txt = texts[scores.index(max(scores))]
 
         args.output.write("{}\n".format(best_txt))
@@ -83,7 +84,7 @@ def marian_best_bleu(args,score_function):
         if args.debpe:
             texts = [re.sub(r'@@ +', '', t) for t in texts]
         refs = [r.split() for r in refs]
-        scores = [score_function(refs, t.split()) for t in texts]
+        scores = [score_function(refs, t.split(), args.copyrate) for t in texts]
         best_txt = texts[scores.index(max(scores))]
 
         args.output.write("{}\n".format(best_txt))
@@ -106,7 +107,7 @@ def compute_sacrebleu(references, translation):
     return sacrebleu.sentence_bleu(hypo, refs).score
 
 
-def compute_bleu(references, translation, max_order=4):
+def compute_bleu(references, translation, copyrate, max_order=4):
     precisions = get_ngram_precisions(references, translation, max_order)
     if min(precisions) > 0:
         p_log_sum = sum((1. / max_order) * math.log(p) for p in precisions)
@@ -114,7 +115,10 @@ def compute_bleu(references, translation, max_order=4):
     else:
         geo_mean = 0
 
-    bp = get_brevity_penalty(references, translation)
+    if copyrate:
+        bp = 1
+    else:
+        bp = get_brevity_penalty(references, translation)
     return geo_mean * bp
 
 
@@ -174,6 +178,7 @@ def parse_args():
     parser.add_argument("-m", "--metric", default='bleu')
     parser.add_argument("--debpe", action='store_true')
     parser.add_argument("-d", "--debug", action='store_true')
+    parser.add_argument("-c", "--copyrate", action='store_true', help="Compute copy rate, i.e. no brevity penalty")
     parser.add_argument("-t", "--toolkit", default='marian',
                         help="Toolkit: 'marian' or 't2t'")
     return parser.parse_args()

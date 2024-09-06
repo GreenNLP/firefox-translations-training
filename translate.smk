@@ -74,10 +74,25 @@ rule extract_best_copyrate:
     threads: 1
     input: 
         nbest="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest",
-        source_file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
-    output: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest.copyrate_out"
-    #TODO: extract fuzzies from source, make them into a synthetic ref, compute BLEU without brev penalty
-    shell: 'python pipeline/translate/bestbleu.py -i {input.nbest} -r {input.ref} -m bleu -o {output} >> {log} 2>&1'
+        fuzzy_source_file="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}",
+        ref="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.ref"
+    output:
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.nbest.copyrate_out",
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus/file.{part}.copyrate_src"
+    shell: 'pipeline/translate/bestcopyrate.sh {input.nbest} {input.ref} {input.fuzzy_source_file} {output.train_source} {output.train_target} >> {log} 2>&1'
+
+rule collect_copyrate_corpus:
+    message: "Collecting translated corpus (best copyrate)"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/extract_by_copyrate/collect_corpus_copyrate.log"
+    conda: "envs/base.yml"
+    threads: 4
+    input: lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/translate/corpus/file.{part}.nbest.copyrate_out", part=find_parts(wildcards, checkpoints.split_corpus))
+    output:
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/extract_by_copyrate/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/extract_by_copyrate/train.{trg}.gz"
+    params: 
+        split_dir="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus"
+    shell: 'bash pipeline/translate/collect_copyrate.sh {params.split_dir} {output.train_source} {output.train_target} >> {log} 2>&1'
 
 rule collect_corpus:
     message: "Collecting translated corpus"
