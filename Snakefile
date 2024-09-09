@@ -933,7 +933,7 @@ rule add_lang_tag_corpus_src_for_student:
     conda: "envs/base.yml"
     threads: workflow.cores
     input: expand(f"{train_student_dir}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
-    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz",f"{filtered}/{{langpair}}/corpus.target.gz"
+    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz"
     params: prefix=f"{filtered}/{{langpair}}/corpus",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
             suffix="source"
