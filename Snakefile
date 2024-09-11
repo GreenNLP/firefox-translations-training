@@ -1116,12 +1116,12 @@ rule finetune_student:
     resources: gpu=gpus_num
     #group 'student-finetuned'
     input:
-        rules.merge_devset.output, ancient(trainer),
+        rules.merge_devset_for_student.output.src, ancient(trainer),
         train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment, student_model=f'{student_dir}/{best_model}',
         vocab=vocab_path
     output: model=f'{student_finetuned_dir}/{best_model}'
-    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset.student",
             args=get_args("training-student-finetuned")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student finetune "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
@@ -1135,7 +1135,7 @@ rule quantize:
     input:
         ancient(bmt_decoder), ancient(bmt_converter),
         shortlist=rules.alignments.output.shortlist, model=rules.finetune_student.output.model,
-        vocab=vocab_path, devset=f"{original}/devset.source.gz"
+        vocab=vocab_path, devset=f"{original}/devset.student.source.gz"
     output: model=f'{speed_dir}/model.intgemm.alphas.bin'
     shell: '''bash pipeline/quantize/quantize.sh \
                 "{input.model}" "{input.vocab}" "{input.shortlist}" "{input.devset}" "{speed_dir}" >> {log} 2>&1'''
