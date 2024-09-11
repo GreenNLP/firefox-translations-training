@@ -16,7 +16,7 @@ datasets:
 Data source | Prefix | Name examples | Type | Comments
 --- | --- | --- | ---| ---
 [MTData](https://github.com/thammegowda/mtdata) | mtdata | newstest2017_ruen | corpus | Supports many datasets. Run `mtdata list -l ru-en` to see datasets for a specific language pair.
-[OPUS](opus.nlpl.eu/) | opus | ParaCrawl/v7.1 | corpus | Many open source datasets. Go to the website, choose a language pair, check links under Moses column to see what names and version is used in a link.
+[OPUS](opus.nlpl.eu/) | opus | ParaCrawl__v7.1 | corpus | Many open source datasets. Go to the website, choose a language pair, check links under Moses column to see what names and version is used in a link. The version should be separated by a double _.
 [SacreBLEU](https://github.com/mjpost/sacrebleu) | sacrebleu | wmt20 | corpus | Official evaluation datasets available in SacreBLEU tool. Recommended to use in `datasets:test` config section. Look up supported datasets and language pairs in `sacrebleu.dataset` python module.
 [Flores](https://github.com/facebookresearch/flores) | flores | dev, devtest | corpus | Evaluation dataset from Facebook that supports 100 languages.
 Custom parallel | url | `https://storage.googleapis.com/releng-translations-dev/data/en-ru/pytest-dataset.[LANG].zst` | corpus | A custom zst compressed parallel dataset, for instance uploaded to GCS. The language pairs should be split into two files. the `[LANG]` will be replaced with the `to` and `from` language codes.
