@@ -308,8 +308,8 @@ if use_opusfilter:
         params: input_prefixes=multiext(f"{original}/{{langpair}}/corpus/{{dataset}}", f".source.gz", f".target.gz"),
                 output_prefixes=multiext(f"{clean_corpus_prefix}/{{dataset}}", f".source.gz", f".target.gz"),
                 src_lang=lambda wildcards: wildcards.langpair.split('-')[0], trg_lang=lambda wildcards: wildcards.langpair.split('-')[1]
-        shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" "{opusfilter_config}"\
-                    >> {log} 2>&1'''
+        shell: '''python pipeline/clean/run-opusfilter.py "{params.input_prefixes}" "{params.output_prefixes}" "{params.src_lang}" "{params.trg_lang}" \
+                "{opusfilter_config}" {threads} >> {log} 2>&1'''
 
 rule merge_corpus_langpair:
     message: "Merging clean parallel datasets per langpair"
