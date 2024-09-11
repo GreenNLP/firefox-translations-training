@@ -1,14 +1,14 @@
 verbose: false
 use-conda: true
-resources: gpu=0
-cores: 1
+#resources: gpu=0
+cores: 12
 cache: false
 reason: true
 config:
   # install dependencies on a local machine
   - deps=true
   # root path to a folder with data, models and logs
-  - root=/home/tommin/greennlp/data
+  - root=/home/degibert/Documents/0_Work/OpusDistillery/data
   - cuda=/usr/local/cuda
   - cudnn=/cudnn
   # how much memory Marian reserves on a GPU

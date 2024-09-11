@@ -9,6 +9,5 @@ max-length-crop: true
 beam-size: 8
 quiet-translation: true
 precision: float16
-#upgrade marian to enable this
-#data-threads: 8
+  #cpu-threads: 10
 log-level: debug

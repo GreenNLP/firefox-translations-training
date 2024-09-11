@@ -26,7 +26,8 @@ trg1_template=$3
 trg2_template=$4
 res_src=$5
 res_trg=$6
-model_indices=("${@:7}")
+o2m_student=$7
+model_indices=("${@:8}")
 
 tmp_dir="$(dirname "${res_src}")/tmp"
 mkdir -p "${tmp_dir}"
@@ -35,6 +36,9 @@ mkdir -p "${tmp_dir}"
 for model_index in "${model_indices[@]}"
 do
   pigz -dc "${src1}" >> "${tmp_dir}/original.src"
+  if [ $o2m_student == "False" ]; then
+    sed -i "s/^>>.*<< //" "${tmp_dir}/original.src"
+  fi
   pigz -dc "${trg1_template/model_index/"$model_index"}" >> "${tmp_dir}/original.trg"
   # mono src might be empty
   if [ -s ${src2} ]; then

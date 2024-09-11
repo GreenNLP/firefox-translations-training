@@ -11,7 +11,7 @@
 #   cat sents.txt | parallel --pipe -k -j16 --block 20M ./langid-fasttext.py > code-tab-sents.txt
 
 import argparse
-import fasttext
+from fasttext.FastText import _FastText #import fasttext
 import os
 import sys
 
@@ -27,7 +27,7 @@ def main():
         import urllib.request
         urllib.request.urlretrieve(URL, mpath)
 
-    model = fasttext.load_model(mpath)
+    model = _FastText(model_path=mpath)
 
     for line in sys.stdin:
         #sys.stderr.write(line)

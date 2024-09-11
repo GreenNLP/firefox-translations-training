@@ -31,7 +31,7 @@ conda:
 
 snakemake:
 	$(CONDA_ACTIVATE) base
-	mamba create -c conda-forge -c bioconda -n snakemake snakemake==7.19.1 tabulate==0.8.10 --yes
+	mamba create -c conda-forge -c bioconda -n snakemake python=3.9 snakemake==7.19.1 tabulate==0.8.10 --yes
 	mkdir -p "$(SNAKEMAKE_OUTPUT_CACHE)"
 
 
@@ -65,23 +65,21 @@ pull:
 dry-run:
 	echo "Dry run with config $(CONFIG) and profile $(PROFILE)"
 	$(CONDA_ACTIVATE) snakemake
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
 	  -n \
-	  $(TARGET) \
 	  $(EXTRA) \
 
 dry-run-hpc:
 	echo "Dry run with config $(CONFIG) and profile $(PROFILE)"
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  -n \
-	  --conda-base-path=../bin \
-	  $(TARGET) \
+	  -n -p \
+	  --conda-base-path=../bin --rerun-triggers mtime \
 	  $(EXTRA)
-
+#/scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/oc-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/es-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/ca-en/flores_devtest.metrics
 test-dry-run: CONFIG=configs/config.test.yml
 test-dry-run: dry-run
 
@@ -91,25 +89,25 @@ run:
 	echo "Running with config $(CONFIG) and profile $(PROFILE)"
 	$(CONDA_ACTIVATE) snakemake
 	chmod +x profiles/$(PROFILE)/*
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  $(TARGET) \
 	  $(EXTRA)
 
+# /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/oc-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/es-en/flores_devtest.metrics /scratch/project_462000447/members/degibert/ftt/models/best/rom-eng/evaluation/student/ca-en/flores_devtest.metrics 
 run-hpc:
 	echo "Running with config $(CONFIG) and profile $(PROFILE)"
 	chmod +x profiles/$(PROFILE)/*
-	$(SNAKEMAKE) \
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  --conda-base-path=../bin \
-	  $(TARGET) \
+	  --conda-base-path=../bin --rerun-triggers mtime -p \
 	  $(EXTRA)
 test: CONFIG=configs/config.test.yml
 test: run
 
-
+#--until merge_translated \
+# --unlock
 ### 5. create a report
 
 report:
@@ -134,14 +132,22 @@ clean-meta:
 	  --configfile $(CONFIG) \
 	  --cleanup-metadata $(TARGET)
 
-dag: CONFIG=configs/config.test.yml
 dag:
 	$(CONDA_ACTIVATE) snakemake
 	$(SNAKEMAKE) \
+	  --profile=profiles/local \
+	  --configfile $(CONFIG) \
+	  --dag | dot -Tpdf > DAG.pdf
+
+dag-hpc: CONFIG=configs/config.mtm23.eng-fiu.yml
+dag-hpc:
+	chmod +x profiles/$(PROFILE)/*
+	$(SNAKEMAKE) $(TARGET) \
 	  --profile=profiles/$(PROFILE) \
 	  --configfile $(CONFIG) \
-	  --dag \
-	  | dot -Tpdf > DAG.pdf
+	  --conda-base-path=../bin \
+	  --dag > dag.txt 
+	  #| dot -Tpdf > DAG.pdf
 
 install-tensorboard:
 	$(CONDA_ACTIVATE) base

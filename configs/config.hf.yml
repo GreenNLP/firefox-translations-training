@@ -1,0 +1,36 @@
+####
+# Example of a production config
+# Change language pair, experiment name, datasets and other settings if needed
+# Training low resource languages might require more tuning of pipeline/training/configs
+###
+
+experiment:
+  dirname: emnlp/hf
+  name: eng-fiu
+  langpairs:
+    - en-fi
+    - en-et
+    - en-hu
+
+  parallel-max-sentences: 10000000
+  split-length: 1000000
+  
+  one2many-student: True
+  
+  best-model: perplexity
+  spm-sample-size: 1000000
+  
+  huggingface:
+    model: "facebook/nllb-200-distilled-600M"
+    task: translation #if not in config, assumes "translation by default"
+   # prompt: "Translate this: <sourcetext> to English"
+   # max_length: 100
+   # num_beams: 5
+   # num_return_sequences: 3
+datasets:
+  train:
+    - tc_Tatoeba-Challenge-v2023-09-26
+  devtest:
+    - flores_dev
+  test:
+    - flores_devtest

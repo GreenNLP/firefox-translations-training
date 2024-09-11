@@ -3,9 +3,12 @@
 ###
 
 experiment:
+  dirname: lumi
   name: test
   src: ru
   trg: en
+  langpairs:
+    - ru-en
 
   teacher-ensemble: 2
   backward-model: ""
@@ -23,6 +26,10 @@ experiment:
     dataset-thresholds:
       opus_ada83/v1: 0
       mtdata_Neulab-tedtalks_train-1-eng-rus: 0.6
+
+  one2many-teacher: False
+  one2many-student: False
+  one2many-backward: False
 
 marian-args:
   training-backward:
@@ -67,9 +74,3 @@ datasets:
   test:
     - flores_devtest
     - sacrebleu_wmt20
-  mono-src:
-    - news-crawl_news.2020
-  mono-trg:
-    - news-crawl_news.2020
-
-

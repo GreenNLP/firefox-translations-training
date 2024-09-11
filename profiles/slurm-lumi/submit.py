@@ -4,6 +4,7 @@ import sys
 import subprocess as sp
 import os
 import yaml
+import math
 
 from snakemake.utils import read_job_properties
 from snakemake.logging import logger
@@ -28,20 +29,29 @@ options += ['--job-name', name]
 partition = cluster_config['cpu-partition']
 account = cluster_config['cpu-account']
 
+options += [f'--ntasks=1']
+
 if "resources" in job_properties:
     resources = job_properties["resources"]
 
     if 'gpu' in resources and int(resources['gpu']) >= 1:
         num_gpu = str(resources['gpu'])
-        #options += [f'--gres=gpu:v100:{num_gpu}']
-        options += [f'--gpus=1']
         account = cluster_config['gpu-account']
 
-        if num_gpu == '1':
-            partition = cluster_config['single-gpu-partition']
+        if int(num_gpu) < 8:
+            options += [f'--gpus={num_gpu}']
+            options += [f'--nodes=1']
+            partition = cluster_config['single-gpu-partition'] 
         else:
+            #8 GPUS per node, each node has to be completely used on standard-g
+            num_node = math.ceil(int(num_gpu)/8)
+            options += [f'--nodes={num_node}']
+            options += [f'--gpus-per-node=8']
+            #options += [f'--cpu-bind=map_cpu:48,56,16,24,1,8,32,40']
+
+
             partition = cluster_config['multi-gpu-partition']
-        rocm_dir = os.getenv("ROCM_PATH") 
+        rocm_dir = os.getenv("ROCM_PATH")
         options += ['--export', f'ALL,SINGULARITY_BIND="{rocm_dir}"']
 
     # we don't need explicit memory limiting for now
@@ -52,7 +62,7 @@ if "resources" in job_properties:
 
 options += ['-p', partition]
 options += ['-A', account]
-options += ['--nodes=1']
+#options += ['--nodes=1']
 options += ['-t', str(cluster_config['time-limit'])]
 
 if "threads" in job_properties:

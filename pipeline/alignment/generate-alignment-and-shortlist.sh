@@ -15,7 +15,8 @@ test -v TRG
 corpus_prefix=$1
 vocab_path=$2
 output_dir=$3
-threads=$4
+o2m_student=$4
+threads=$5
 
 cd "$(dirname "${0}")"
 
@@ -29,7 +30,7 @@ corpus_trg="${corpus_prefix}.${TRG}.gz"
 
 echo "### Subword segmentation with SentencePiece"
 test -s "${dir}/corpus.spm.${SRC}.gz" ||
-  pigz -dc "${corpus_src}" |
+  pigz -dc "${corpus_src}" | sed -E "s/^>>[a-z]{3}<< //" |
   parallel --no-notice --pipe -k -j "${threads}" --block 50M "${MARIAN}/spm_encode" --model "${vocab_path}" |
   pigz >"${dir}/corpus.spm.${SRC}.gz"
 test -s "${dir}/corpus.spm.${TRG}.gz" ||
@@ -79,4 +80,12 @@ test -s "${output_dir}/lex.s2t.pruned.gz" ||
 echo "### Deleting tmp dir"
 rm -rf "${dir}"
 
+# If there are language tags, we need to modify the alignments by adding index 1 to every source token
+if [ $o2m_student == "True" ]; then
+
+    echo "###### Correcting alignments taking into account language tags"
+    pigz -dc "${output_dir}/corpus.aln.gz" | parallel --no-notice --pipe -k -j "${threads}" --block 50M \
+    'sed -E "s/([0-9]+)-([0-9]+)/echo \$((\1+1))-\2/ge" | sed "s/echo //g"'| gzip > "${output_dir}/corpus.aln.fixed.gz"
+    mv "${output_dir}/corpus.aln.fixed.gz" "${output_dir}/corpus.aln.gz"
+fi
 echo "###### Done: Generating alignments and shortlist"

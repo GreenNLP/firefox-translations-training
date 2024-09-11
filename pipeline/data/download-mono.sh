@@ -31,7 +31,8 @@ echo "### Sampling dataset"
 # temporary disable pipefail because perl operation causes SIGPIPE (141)
 set +o pipefail
 pigz -dc "${original_prefix}.gz" |
-shuf -n "$(bc -l <<<"${max_sent}+${max_sent}*${coef}")" |
+#shuf -n "$(bc -l <<<"${max_sent}+${max_sent}*${coef}")" |
+shuf -n "$(bc <<<"scale=0; ${max_sent}+${max_sent}*${coef}")" |
 perl -ne 'print if(split(/\s/, $_) < 100)' |
 head -n "${max_sent}" |
 pigz >"${output_path}"

@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # properties = {properties}
 
 #parse properties json and get log file name
@@ -9,7 +9,12 @@ mkdir -p $(dirname $log_file)
 
 if [ $gpu != "null" ] && [ $gpu != "0" ]; then
   #this will add the header row for the csv file, it will be removed for later log lines
-  rocm-smi --csv --showuse --showmemuse --showenergycounter 2> /dev/null | head -1 > $log_file.gpu
+  if test -f $log_file.gpu
+  then
+    echo "new job started" >> $log_file.gpu
+  else
+    rocm-smi --csv --showuse --showmemuse --showenergycounter 2> /dev/null | head -1 > $log_file.gpu
+  fi
   while true; do
     rocm-smi --csv --showuse --showmemuse --showenergycounter 2> /dev/null | \
     grep -v "device" | xargs -I {{}} echo -e "$(date "+%Y-%m-%d_%H:%M:%S")\t{{}}" >> $log_file.gpu; sleep 10;

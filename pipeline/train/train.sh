@@ -8,6 +8,9 @@ set -euo pipefail
 
 echo "###### Training a model"
 
+# On LUMI, having CUDA_VISIBLE_DEVICES set causes a segfault when using multiple GPUs
+unset CUDA_VISIBLE_DEVICES
+
 model_type=$1
 training_type=$2
 src=$3
@@ -25,8 +28,9 @@ test -v WORKSPACE
 
 cd "$(dirname "${0}")"
 mkdir -p "${model_dir}/tmp"
+mkdir -p "${model_dir}/valid_outputs"
 
-all_model_metrics=(chrf ce-mean-words bleu-detok)
+all_model_metrics=(chrf ce-mean-words ) #bleu-detok) Removed because it hangs
 
 echo "### Training ${model_dir}"
 
@@ -45,7 +49,7 @@ echo "### Training ${model_dir}"
   --sync-sgd \
   --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \
   --valid-sets "${valid_set_prefix}".{"${src}","${trg}"}.gz \
-  --valid-translation-output "${model_dir}/devset.out" \
+  --valid-translation-output "${model_dir}/valid_outputs/validation-output-after-{U}-updates-{E}-epochs.txt" \
   --quiet-translation \
   --overwrite \
   --keep-best \

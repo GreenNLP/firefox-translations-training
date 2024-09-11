@@ -4,7 +4,7 @@
 #
 
 set -x
-set -euo pipefail
+#set -euo pipefail
 
 echo "###### Downloading opus corpus"
 
@@ -16,22 +16,38 @@ dataset=$4
 COMPRESSION_CMD="${COMPRESSION_CMD:-pigz}"
 ARTIFACT_EXT="${ARTIFACT_EXT:-gz}"
 
-name=${dataset%%/*}
+name=${dataset%%__*}
 name_and_version="${dataset//[^A-Za-z0-9_- ]/_}"
+version=${dataset##*__}
 
 tmp="$(dirname "${output_prefix}")/opus/${name_and_version}"
 mkdir -p "${tmp}"
 
 archive_path="${tmp}/${name}.txt.zip"
 
-wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${src}-${trg}.txt.zip" ||
-  wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${dataset}/moses/${trg}-${src}.txt.zip"
-unzip -o "${archive_path}" -d "${tmp}"
+wget -q "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${src}-${trg}.txt.zip"
+wget_output_1=$?
 
-for lang in ${src} ${trg}; do
-  ${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}" ||
-    ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${lang}" > "${output_prefix}.${lang}.${ARTIFACT_EXT}"
-done
+wget -q "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${trg}-${src}.txt.zip"
+wget_output_2=$?
+
+# Attempt to download the file using the first URL
+if [ $wget_output_1 -eq 0 ] || [ $wget_output_2 -eq 0 ]; then
+  wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${src}-${trg}.txt.zip" ||
+    wget -O "${archive_path}" "https://object.pouta.csc.fi/OPUS-${name}/${version}/moses/${trg}-${src}.txt.zip"
+
+  unzip -o "${archive_path}" -d "${tmp}"
+
+  ${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${src}" > "${output_prefix}.source.${ARTIFACT_EXT}" ||
+      ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${src}" > "${output_prefix}.source.${ARTIFACT_EXT}"
+  ${COMPRESSION_CMD} -c "${tmp}/${name}.${src}-${trg}.${trg}" > "${output_prefix}.target.${ARTIFACT_EXT}" ||
+      ${COMPRESSION_CMD} -c "${tmp}/${name}.${trg}-${src}.${trg}" > "${output_prefix}.target.${ARTIFACT_EXT}"
+
+else #Otherwise create fake dummy empty files
+    touch "${output_prefix}.source.${ARTIFACT_EXT}"
+    touch "${output_prefix}.target.${ARTIFACT_EXT}" 
+    echo "Fake touch files created since dataset doesn't exist: ${output_prefix}.source.${ARTIFACT_EXT}"
+fi
 
 rm -rf "${tmp}"
 
