@@ -745,7 +745,7 @@ else:
             ancient(decoder),
             file=teacher_source_file,
             vocab=teacher_source_file if opusmt_teacher else vocab_path, #When distilling from an OPUS-MT teacher, there is no need for the vocab to be an input to this rule.
-            teacher_models=expand(f"{final_teacher_dir}{{{{model_index}}}}-{{ens}}/{best_model}",ens=ensemble, allow_missing=True)
+            teacher_models=f"{final_teacher_dir}0-0/{best_model}" # BEWARE: only works for one model per language pair
         output: file=teacher_target_file
         params: args=get_args('decoding-teacher')
         shell: '''bash pipeline/translate/translate-nbest.sh \
@@ -933,7 +933,7 @@ rule add_lang_tag_corpus_src_for_student:
     conda: "envs/base.yml"
     threads: workflow.cores
     input: expand(f"{train_student_dir}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
-    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz",f"{filtered}/{{langpair}}/corpus.target.gz"
+    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz"
     params: prefix=f"{filtered}/{{langpair}}/corpus",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
             suffix="source"
@@ -1116,12 +1116,12 @@ rule finetune_student:
     resources: gpu=gpus_num
     #group 'student-finetuned'
     input:
-        rules.merge_devset.output, ancient(trainer),
+        rules.merge_devset_for_student.output.src, ancient(trainer),
         train_src=rules.merge_filtered.output.src, train_trg=rules.merge_filtered.output.trg,
         alignments=rules.alignments.output.alignment, student_model=f'{student_dir}/{best_model}',
         vocab=vocab_path
     output: model=f'{student_finetuned_dir}/{best_model}'
-    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset",
+    params: prefix_train=rules.merge_filtered.params.prefix_output,prefix_test=f"{original}/devset.student",
             args=get_args("training-student-finetuned")
     shell: '''bash pipeline/train/train-student.sh \
                 "{input.alignments}" student finetune "source" "target" "{params.prefix_train}" "{params.prefix_test}" \
@@ -1135,7 +1135,7 @@ rule quantize:
     input:
         ancient(bmt_decoder), ancient(bmt_converter),
         shortlist=rules.alignments.output.shortlist, model=rules.finetune_student.output.model,
-        vocab=vocab_path, devset=f"{original}/devset.source.gz"
+        vocab=vocab_path, devset=f"{original}/devset.student.source.gz"
     output: model=f'{speed_dir}/model.intgemm.alphas.bin'
     shell: '''bash pipeline/quantize/quantize.sh \
                 "{input.model}" "{input.vocab}" "{input.shortlist}" "{input.devset}" "{speed_dir}" >> {log} 2>&1'''
