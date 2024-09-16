@@ -1,0 +1,30 @@
+####
+# Example of a production config
+# Change language pair, experiment name, datasets and other settings if needed
+# Training low resource languages might require more tuning of pipeline/training/configs
+###
+
+experiment:
+  dirname: test
+  name: hf
+  langpairs:
+    - et-en
+  split-length: 10000
+  best-model: perplexity
+
+  huggingface:
+    modelname: "HPLT/translate-et-en-v1.0-hplt_opus"
+    modelclass: "transformers.AutoModelForSeq2SeqLM"
+    config:
+      top_k: 50
+      top_p: 0.90
+      temperature: 0.1
+      max_new_tokens: 128
+
+datasets:
+  train:
+    - opus_ELRC_2922__v1
+  devtest:
+    - flores_dev
+  test:
+    - flores_devtest

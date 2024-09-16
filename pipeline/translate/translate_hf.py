@@ -1,8 +1,14 @@
 import argparse
 import os
-from transformers import pipeline
-import time
 import torch
+import time
+import ast
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+from transformers import AutoTokenizer
+
+import importlib
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Translate text using Hugging Face pipeline.")
@@ -12,7 +18,11 @@ def parse_args():
     parser.add_argument('modeldir', type=str, help='Model directory')
     parser.add_argument('src', type=str, help='Source language prefix')
     parser.add_argument('trg', type=str, help='Target language prefix')
-    parser.add_argument('task', type=str, help='Translation task')
+    parser.add_argument('modelclass', type=str, help='Model class string')
+    parser.add_argument('langinfo',  type=str, help="Specify if source and target languages are required")
+    parser.add_argument('prompt',  type=str, help="Prompt to use for decoding")
+    parser.add_argument('langtags',  type=str, help="Language tag mapping specific to the model")
+    parser.add_argument('config',  type=str, help="Specific configuration for decoding")
     return parser.parse_args()
 
 def main():
@@ -25,39 +35,36 @@ def main():
     print("CUDA available:", torch.cuda.is_available())
     print("GPUs available:", torch.cuda.device_count())
 
-    # Initialize the translation pipeline with cache_dir
-    pipe = pipeline(
-        task=args.task,
-        model=args.modelname,
-        num_beams=8,
-        num_return_sequences=8,
-        device_map="auto",
-        max_length=150
-    )
+    model_name=args.modelname
+    prompt=args.prompt
+    lang_tags=ast.literal_eval(args.langtags)
 
-    if "nllb" in args.modelname:
-        print("It is a NLLB model, so we need to add source and target languages.")
-        # List of available languages for nllb
-        available_languages = pipe.tokenizer.additional_special_tokens
-        src_lang = next((code for code in available_languages if code.startswith(args.src)), None)
-        trg_lang = next((code for code in available_languages if code.startswith(args.trg)), None)
-        # Check if the full language code was found
-        if src_lang is None or trg_lang is None:
-            raise ValueError("The model does not include all your languages")
-        else:
-            print(f"Source language found: {src_lang}")
-            print(f"Target language found: {trg_lang}")
-            
-        pipe = pipeline(
-            task=args.task,
-            model=args.modelname,
-            num_beams=8,
-            num_return_sequences=8,
-            device_map="auto",
-            src_lang=src_lang,
-            tgt_lang=trg_lang,
-            max_length=150
-        )
+    # Split the module and class names
+    module_name, class_name = args.modelclass.rsplit(".", 1)
+    # Import the module
+    module = importlib.import_module(module_name)
+    # Get the class from the module
+    model_class = getattr(module, class_name)
+
+    model = model_class.from_pretrained(model_name, trust_remote_code=True).to(device)
+    
+    # Mapping target languages
+    src_lang = lang_tags.get(args.src, None)
+    tgt_lang = lang_tags.get(args.trg, None)
+
+    if args.langinfo in ["True","true","1"]:
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, src_lang=src_lang, tgt_lang=trg_lang)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True )
+
+    num_return_sequences=8
+    if args.config == "default":
+        config=dict()
+    else:
+        config=ast.literal_eval(args.config)
+
+    print("Starting translations...")
 
     # Read the input text
     with open(args.filein, 'r', encoding='utf-8') as infile:
@@ -72,21 +79,50 @@ def main():
         # Perform the translation with progress print statements
         for i in range(0, len(text), batch_size):
             batch = text[i:i+batch_size]
-            translated_batch = pipe(batch)
+            input_texts=[prompt.format(src_lang=src_lang, tgt_lang=tgt_lang, source=input_text) for input_text in batch]
+            print("Sample source sentence after prompt formatting:\n", input_texts[0])
+            inputs=tokenizer(input_texts, return_tensors="pt",padding=True).to(device)
 
-            key = list(translated_batch[0][0].keys())[0] # Depending on the task, this may be either "translation_text" or "generated_text"
-            
+            # Generate output
+            translated_batch = model.generate(
+                **inputs,
+                num_return_sequences=num_return_sequences,
+                num_beams=num_return_sequences,
+                **config,
+            )
+
+            # Decode the output
+            translated_batch = tokenizer.batch_decode(translated_batch, skip_special_tokens=True)
+                
             # Write each translated sentence to the output file incrementally
+            i = 0  # Initialize 'i' outside the loop
+            sentence_counter = 0  # Counter to track every 8 sentences
+
             for sentence in translated_batch:
-                for translation in sentence:
-                    outfile.write(f"{i} ||| {translation[key]}\n")
+                # Remove prompt before writing out
+                if prompt != "{source}":
+                    print("source text:",batch[i])
+                    print("translation:",sentence)
+                    curr_prompt=prompt.format(src_lang=src_lang, tgt_lang=tgt_lang, source=batch[i])
+                    print("prompt:",curr_prompt)
+                    sentence=sentence.replace(curr_prompt,"")
+                    print("fixed translation:",sentence)
+                
+                outfile.write(f"{i} ||| {sentence}\n")
+                sentence_counter += 1
+
+                # Increment 'i' every 8 sentences
+                if sentence_counter % num_return_sequences == 0:
+                    i += 1
 
             # Print progress every 50 sentences
-            if i % 50 == 0:
-                print(f"Translated {i} sentences...")
+            if sentence_counter % 50 == 0:
+                print(f"Translated {sentence_counter} sentences...")
+
         end_time = time.time()  # End time
         total_time = end_time - start_time
         translations_per_second = len(text) / total_time if total_time > 0 else float('inf')
+
 
     # Final progress print
     print(f"Translation complete. Translating {len(text)} sentences took {total_time} seconds.")
