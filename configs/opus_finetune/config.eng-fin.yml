@@ -1,0 +1,60 @@
+experiment:
+  name: finetune-uh
+  src: eng
+  trg: fin
+
+  opusmt-teacher: 'https://object.pouta.csc.fi/Tatoeba-MT-models/eng-fin/opusTCv20210807+bt-2021-09-01.zip'
+
+  teacher-ensemble: 1
+  # path to a pretrained backward model (optional)
+  backward-model: ""
+  # path to a pretrained vocabulary (optional)
+  vocab: ""
+
+  finetune:
+    learning-rates: ["00001","00003","000001"]
+
+  wmt23_termtask:
+    annotation-schemes:
+      - 'lemma-nonfac-int-append'
+    term-ratios: [2]
+    sents-per-term-sents: [1]
+    train-term-teacher: False
+    finetune-teacher-with-terms: True
+
+  # Since we are just doing fine-tuning, just use 5 mil sentences
+  parallel-max-sentences: 10000000
+
+  # limits per downloaded dataset
+  mono-max-sentences-src: 100000000
+  mono-max-sentences-trg: 20000000
+  # split corpus to parallelize translation
+  split-length: 1000000
+  # vocab training sample
+  spm-sample-size: 10000000
+
+  best-model: chrf
+
+marian-args:
+# these configs override pipeline/train/configs
+  finetune:
+    after: 1e
+
+
+datasets:
+  # parallel training corpus
+  train:
+    - custom_mix-uh-tilde400K
+  tc_scored: ../data/finetuning_data/en-fi/tc_Tatoeba-Challenge-v2023-09-26.scored.gz
+  # datasets to merge for validation while training
+  devtest:
+    - flores_dev
+    - sacrebleu_wmt15
+    - sacrebleu_wmt16
+  # datasets for evaluation
+  test:
+    - flores_devtest
+    - sacrebleu_wmt17
+    - sacrebleu_wmt18
+    - sacrebleu_wmt19
+    - custom_finetune

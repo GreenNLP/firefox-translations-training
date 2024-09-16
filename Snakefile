@@ -49,7 +49,7 @@ vocab_config = {
     "spm-train": f"{marian_dir}/spm_train",
     "user-defined-symbols":"FUZZY_BREAK",
     "spm-sample-size": 1000000,
-    "spm-character-coverage": 1.0 #since the data is cleaned, it does not contain many weird characters, causing character coverage to drop valid characters, such as Ö and the degree mark
+    "spm-character-coverage": 1.0
     }
 
 module vocab:
@@ -70,6 +70,18 @@ module train:
     config: train_config
 
 use rule * from train
+
+opusmt_config = {
+    "marian": f"{marian_dir}/marian",
+    "gpus-num": gpus_num,
+    "best-model-metric": best_model_metric,
+    "finetune-args": get_args("finetune")}
+
+module opusmt:
+    snakefile: "./opusmt.smk"
+    config: opusmt_config
+
+use rule * from opusmt
 
 eval_config = {
     "marian-decoder": f"{marian_dir}/marian-decoder",
@@ -256,9 +268,15 @@ else:
 
 shell.prefix(f"{envs} ")
 
+results = expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"], dataset=eval_datasets)
+
+# For base model, only generate the metrics once
+results.extend(expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/basemodel-eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"][0], dataset=eval_datasets))
+
+#print(results)
+
 rule all:
-    input: f"{models_dir}/en-fi/corpus-50000-rat-train-baseteacher-0/{best_model}"
-    #input: results
+    input: results
 
 wildcard_constraints:
     term_ratio="\d+",
@@ -382,89 +400,6 @@ if augment_corpus:
         shell: '''bash pipeline/translate/merge-corpus.sh \
                     "{input.src1}" "{input.src2}" "{input.trg1}" "{input.trg2}" "{output.res_src}" "{output.res_trg}" "" \
                       >> {log} 2>&1'''
-
-# Three options for teacher: 1. download opus-mt model, 2. train teacher with pipeline, 3. path to pretrained teacher model
-# TODO: make it possible to combine any of the above options, i.e. use opus-mt, train and use 
-# pretrained all in the same run. Probably should have a model list where you can define all the 
-# models to use, and then prefixes (opusmt_, train_, pretrained_, nllb_ etc.) determine how the models are
-# created/used/connected to (in case of e.g. external APIs).
-if 'opusmt-teacher' in config['experiment']:
-    rule download_teacher_model:
-        message: "Downloading OPUS-MT teacher model"
-        log: f"{log_dir}/download_teacher{{model_index}}-{{ens}}.log"
-        conda: "envs/base.yml"
-        threads: 1
-        wildcard_constraints:
-           model_index="\d+",
-           ens="\d+"
-        output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}',vocab=f'{teacher_base_dir}{{model_index}}-{{ens}}/vocab.yml', model_dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}'), src_spm=f'{teacher_base_dir}{{model_index}}-{{ens}}/source.spm', trg_spm=f'{teacher_base_dir}{{model_index}}-{{ens}}/target.spm'
-        params: teacher_dir=f'{teacher_base_dir}{{model_index}}-{{ens}}',
-                teacher_url=lambda wildcards: opusmt_teacher[int(wildcards.model_index)] 
-        shell: '''bash pipeline/opusmt/download-model.sh \
-                    "{params.teacher_url}" "{params.teacher_dir}" "{best_model}" {src_three_letter} {trg_three_letter} >> {log} 2>&1'''
-elif not forward_pretrained:
-    rule train_teacher:
-        message: "Training teacher on all data"
-        log: f"{log_dir}/train_teacher{{model_index}}-{{ens}}.log"
-        conda: "envs/base.yml"
-        threads: gpus_num*3
-        resources: gpu=gpus_num
-        wildcard_constraints:
-           model_index="\d+",
-           ens="\d+"
-        input:
-            rules.merge_devset.output, train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
-            bin=ancient(trainer), vocab=vocab_path
-        output: model=f'{teacher_base_dir}{{model_index}}-{{ens}}/{best_model}'
-        params: prefix_train=teacher_corpus, 
-                prefix_test=f"{original}/devset", 
-                dir=directory(f'{teacher_base_dir}{{model_index}}-{{ens}}'),
-                args=get_args("training-teacher")
-        shell: '''bash pipeline/train/train.sh \
-                    teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" "{params.dir}" \
-                    "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
-
-
-    # This is normal teacher with alignments, NOT needed for term models, but might be useful later.
-    # Note that it uses train-student script, but that just adds the guided alignment
-    #NOT TESTED YET!
-#    rule train_teacher_with_alignment:
-#        message: "Training student"
-#        log: f"{log_dir}/train_student.log"
-#        conda: "envs/base.yml"
-#        threads: gpus_num*3
-#        resources: gpu=gpus_num
-#        #group 'student'
-#        input:
-#            rules.merge_devset.output, ancient(trainer),
-#            train_src=f'{teacher_corpus}.{src}.gz',train_trg=f'{teacher_corpus}.{trg}.gz',
-#            alignments=rules.teacher_alignments.output.alignment,
-#            vocab=vocab_path
-#        output: model=f'{teacher_base_dir}-align/{best_model}'
-#        params: prefix_train=teacher_corpus,prefix_test=f"{original}/devset",
-#                args=get_args("training-teacher")
-#        shell: '''bash pipeline/train/train-student.sh \
-#                    "{input.alignments}" teacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
-#                    "{student_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
-
-    rule train_term_teacher:
-        message: "Training teacher with term constraints"
-        log: f"{log_dir}/train_teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}.log"
-        conda: "envs/base.yml"
-        threads: gpus_num*3
-        resources: gpu=gpus_num
-        input:
-            rules.merge_devset.output, ancient(trainer),
-            train_src=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.{src}.gz",
-            train_trg=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.{trg}.gz",
-            alignments=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus.aln.gz",
-            vocab=vocab_path
-        output: model=f'{teacher_base_dir}-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/{best_model}'
-        params: prefix_train=f"{term_data_dir}/teacher-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}/corpus",prefix_test=f"{original}/devset",
-                args=get_args("training-term-teacher"),teacher_term_dir=f"{teacher_base_dir}-term-{{scheme}}-{{term_ratio}}-{{sents_per_term_sent}}"
-        shell: '''bash pipeline/train/train-student.sh \
-                    "{input.alignments}" baseteacher train {src} {trg} "{params.prefix_train}" "{params.prefix_test}" \
-                    "{params.teacher_term_dir}" "{input.vocab}" "{best_model_metric}" {params.args} >> {log} 2>&1'''
 
 
 

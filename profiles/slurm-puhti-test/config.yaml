@@ -15,7 +15,7 @@ default-resources: "mem_mb=64000"
 use-singularity: false
 use-conda: false
 resources: gpu=1
-cores: 8
+cores: 16
 cache: false
 reason: true
 singularity-args: "--bind $PWD/../data,$CUDA_INSTALL_ROOT,$CUDNN_INSTALL_ROOT:/cudnn,$PWD/../data/tmp:/tmp --nv --containall"

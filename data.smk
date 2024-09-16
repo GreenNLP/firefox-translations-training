@@ -11,7 +11,7 @@ wildcard_constraints:
 ruleorder: download_tatoeba_corpus > download_corpus
 
 # light-weight rules can run on login node
-localrules: download_corpus, download_tatoeba_corpus, extract_tc_scored, subset_corpus, baseline_preprocessing 
+localrules: download_corpus, download_tatoeba_corpus, subset_corpus, baseline_preprocessing, use_custom_corpus 
 
 rule download_tatoeba_corpus:
     message: "Downloading Tatoeba corpus"
@@ -109,6 +109,57 @@ rule subset_corpus:
         ln {input.train_target} {output.all_filtered_target} >> {log} 2>&1 && \
         {{ pigz -dc {input.train_source} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_source} ; }} 2>> {log} && \
         {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log}
+        """
+
+
+rule use_custom_corpus:
+    message: "Using custom corpus"
+    log: "{datadir}/{project_name}/{src}-{trg}/corpus_custom_{dataset}/custom_corpus_{dataset}.log"
+    conda: None
+    container: None
+    threads: 1
+#    group: 'data'
+    cache: False # caching is broken in snakemake
+    wildcard_constraints:
+        dataset="[\w\d_-]+",
+    output:
+        train_source="{datadir}/{project_name}/{src}-{trg}/corpus_custom_{dataset}/train.{src}.gz",
+        train_target="{datadir}/{project_name}/{src}-{trg}/corpus_custom_{dataset}/train.{trg}.gz",
+        dev_source="{datadir}/{project_name}/{src}-{trg}/corpus_custom_{dataset}/dev.{src}.gz",
+        dev_target="{datadir}/{project_name}/{src}-{trg}/corpus_custom_{dataset}/dev.{trg}.gz"
+    params: 
+        prefix="{datadir}/{dataset}",
+        dataset="{dataset}"
+    shell: 
+        """
+        ln "{params.prefix}/train.{wildcards.src}.gz" "{output.train_source}" >> {log} 2>&1 && \
+        ln "{params.prefix}/train.{wildcards.trg}.gz" "{output.train_target}" >> {log} 2>&1 && \
+        ln "{params.prefix}/dev.{wildcards.src}.gz" "{output.dev_source}" >> {log} 2>&1 && \
+        ln "{params.prefix}/dev.{wildcards.trg}.gz" "{output.dev_target}" >> {log} 2>&1
+        """
+
+ruleorder: use_custom_eval > download_corpus
+
+rule use_custom_eval:
+    message: "Using custom evalset"
+    log: "{datadir}/{project_name}/{src}-{trg}/{preprocessing}/custom_eval_{dataset}.log"
+    conda: None
+    container: None
+    threads: 1
+#    group: 'data'
+    cache: False # caching is broken in snakemake
+    wildcard_constraints:
+        dataset="[\w\d_]+",
+    output:
+        eval_source="{datadir}/{project_name}/{src}-{trg}/{preprocessing}/eval-custom_{dataset}.{src}.gz",
+        eval_target="{datadir}/{project_name}/{src}-{trg}/{preprocessing}/eval-custom_{dataset}.{trg}.gz",
+    params: 
+        prefix="{datadir}/{dataset}",
+        dataset="{dataset}"
+    shell: 
+        """
+        ln "{params.prefix}/eval.{wildcards.src}.gz" "{output.eval_source}" >> {log} 2>&1 && \
+        ln "{params.prefix}/eval.{wildcards.trg}.gz" "{output.eval_target}" >> {log} 2>&1
         """
 
 rule download_corpus:

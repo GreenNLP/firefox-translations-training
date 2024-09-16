@@ -8,12 +8,12 @@ set -euo pipefail
 
 echo "###### Downloading pretrained opus model"
 
-download_url=$1
-
+model_name=$1
 model_dir=$2
 best_model=$3
 source_lang=$4
 target_lang=$5
+download_url="https://object.pouta.csc.fi/Tatoeba-MT-models/${source_lang}-${target_lang}/${model_name}.zip"
 
 #if download url is best, find the best model from list
 #TODO: this doesn't seem to work, the models are not ordered by score in the list
