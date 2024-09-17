@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Basic usage" href="usage.html" />
+    <link rel="next" title="Basic Usage" href="usage.html" />
     <link rel="prev" title="OpusDistillery" href="index.html" /> 
 </head>
 
@@ -83,16 +83,25 @@
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#getting-started-on-csc-s-puhti-and-mahti">Getting started on CSC’s puhti and mahti</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#getting-started-on-csc-s-lumi">Getting started on CSC’s lumi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#locally">Locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#system-requirements">System Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Installation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#on-a-cluster">On a Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">System Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-on-puhti-and-mahti">Installation on Puhti and Mahti</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-on-lumi">Installation on Lumi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">QuickStart Tutorial</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs/downloading_and_selecting_data.html">Dataset importers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs/examples.html">Examples of Configuration Files</a></li>
 </ul>
@@ -169,11 +178,85 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="getting-started-on-csc-s-puhti-and-mahti">
-<h2>Getting started on CSC’s puhti and mahti<a class="headerlink" href="#getting-started-on-csc-s-puhti-and-mahti" title="Permalink to this headline">¶</a></h2>
+<p>This section describes how to set up the OpusDistillery pipeline locally, as well as on three of our supported clusters.</p>
+<div class="section" id="locally">
+<h2>Locally<a class="headerlink" href="#locally" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="system-requirements">
+<h3>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Ubuntu 18.04 (it can work on other Linux distributions, but might require <code class="docutils literal notranslate"><span class="pre">setup</span></code> scripts fixes; see more details in <a class="reference external" href="https://marian-nmt.github.io/quickstart/">marian installation instructions</a>).</p></li>
+<li><p>One or several Nvidia GPUs with CUDA drivers installed and at least 8 GB of memory.</p></li>
+<li><p>CUDNN installed</p></li>
+<li><p>At least 16 CPU cores ( some steps of the pipeline utilize multiple cores pretty well, so the more the better).</p></li>
+<li><p>64 GB RAM (128 GB+ might be required for bigger datasets)</p></li>
+<li><p>200+ GB of disk space ( mostly for datasets and transformations ).
+It depends on chosen datasets and can be significantly higher.</p></li>
+</ul>
+</div>
+<div class="section" id="id1">
+<h3>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ol class="simple">
+<li><p>Clone the repo:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">mozilla</span><span class="o">/</span><span class="n">firefox</span><span class="o">-</span><span class="n">translations</span><span class="o">-</span><span class="n">training</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">firefox</span><span class="o">-</span><span class="n">translations</span><span class="o">-</span><span class="n">training</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Choose a <a class="reference external" href="https://github.com/Snakemake-Profiles">Snakemake profile</a> from <code class="docutils literal notranslate"><span class="pre">profiles/</span></code> or create a new one</p></li>
+<li><p>Adjust paths in the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> if needed and set <code class="docutils literal notranslate"><span class="pre">PROFILE</span></code> variable to the name of your profile</p></li>
+<li><p>Adjust Snakemake and workflow settings in the <code class="docutils literal notranslate"><span class="pre">profiles/&lt;profile&gt;/config.yaml</span></code>, see <a class="reference external" href="https://snakemake.readthedocs.io/en/stable/executing/cli.html">Snakemake CLI reference</a> for details</p></li>
+<li><p>Configure experiment and datasets in <code class="docutils literal notranslate"><span class="pre">configs/config.prod.yml</span></code> (or <code class="docutils literal notranslate"><span class="pre">configs/config.test.yml</span></code> for test run)</p></li>
+<li><p>Change source code if needed for the experiment</p></li>
+<li><p><strong>(Cluster mode)</strong> Adjust cluster settings in the cluster profile.
+For <code class="docutils literal notranslate"><span class="pre">slurm-moz</span></code>: <code class="docutils literal notranslate"><span class="pre">profiles/slurm-moz/config.cluster.yml</span></code>
+You can also modify <code class="docutils literal notranslate"><span class="pre">profiles/slurm-moz/submit.sh</span></code> or create a new Snakemake <a class="reference external" href="https://github.com/Snakemake-Profiles">profile</a>.</p></li>
+<li><p><strong>(Cluster mode)</strong> It might require further tuning of requested resources in <code class="docutils literal notranslate"><span class="pre">Snakemake</span></code> file:</p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">threads</span></code> for a rule to adjust parallelism</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">resources:</span> <span class="pre">mem_mb=&lt;memory&gt;</span></code> to adjust total memory requirements per task
+(default is set in <code class="docutils literal notranslate"><span class="pre">profile/slurm-moz/config.yaml</span></code>)</p></li>
+</ul>
+</li>
+<li><p>Install Mamba - fast Conda package manager</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">conda</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Install Snakemake</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">snakemake</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Update git submodules</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">git</span><span class="o">-</span><span class="n">modules</span>
+</pre></div>
+</div>
+<p>You are all set!</p>
+</div>
+</div>
+<div class="section" id="on-a-cluster">
+<h2>On a Cluster<a class="headerlink" href="#on-a-cluster" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h3>System Requirements<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Slurm cluster with CPU and Nvidia GPU nodes</p></li>
+<li><p>CUDA 11.2 ( it was also tested on 11.5)</p></li>
+<li><p>CUDNN library installed</p></li>
+<li><p>Singularity module if running with containerization (recommended)</p></li>
+<li><p>If running without containerization, there is no procedure to configure the environment automatically.
+All the required modules (for example <code class="docutils literal notranslate"><span class="pre">parallel</span></code>) should be preinstalled and loaded in ~/.bashrc</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="installation-on-puhti-and-mahti">
+<h2>Installation on Puhti and Mahti<a class="headerlink" href="#installation-on-puhti-and-mahti" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
-<li><p>Download the Ftt.sif container to the repository root (ask Ona)</p></li>
+<li><p>Download the Ftt.sif container to the repository root (ask <span class="xref myst">Ona</span>)</p></li>
 <li><p>Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):</p>
 <ol class="simple">
 <li><p>The environment needs to be created with a non-containerized python, as otherwise Apptainer integration will not work. On puhti and mahti, the python executables in /usr/bin/ should work: <code class="docutils literal notranslate"><span class="pre">/usr/bin/python3.9</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">snakemake_env</span></code>.</p></li>
@@ -190,11 +273,11 @@
 <li><p>Run pipeline: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run-hpc</span> <span class="pre">PROFILE=&quot;slurm-puhti&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run</span> <span class="pre">PROFILE=&quot;slurm-mahti&quot;</span></code>. More information in <a class="reference internal" href="usage.html"><span class="doc std std-doc">Basic Usage</span></a>.</p></li>
 </ol>
 </div>
-<div class="section" id="getting-started-on-csc-s-lumi">
-<h2>Getting started on CSC’s lumi<a class="headerlink" href="#getting-started-on-csc-s-lumi" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installation-on-lumi">
+<h2>Installation on Lumi<a class="headerlink" href="#installation-on-lumi" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Clone the repository.</p></li>
-<li><p>Download the Ftt.sif container to the repository root (ask Ona)</p></li>
+<li><p>Download the Ftt.sif container to the repository root (ask <span class="xref myst">Ona</span>)</p></li>
 <li><p>Create a virtual Python environment for Snakemake (e.g. in the parent dir of the repository):</p>
 <ol class="simple">
 <li><p>The environment needs to be created with a non-containerized python, as otherwise Apptainer integration will not work. On lumi, use the <em>cray-python</em> module (it is not containerized): <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span> <span class="pre">cray-python;</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">snakemake_env</span></code>.</p></li>
@@ -223,7 +306,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="usage.html" class="btn btn-neutral float-right" title="Basic usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="Basic Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="OpusDistillery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

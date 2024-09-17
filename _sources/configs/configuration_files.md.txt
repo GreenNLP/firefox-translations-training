@@ -1,19 +1,20 @@
-# Configuration files
+# Configuration Files
 
-Configuration files are in [YAML](https://yaml.org/) format.
-At the top level, they have two sections:
+The configuration files for OpusDistillery are written in [YAML](https://yaml.org/) format and are divided into two main sections:
 
-* `experiment`: contains all the relevant information for your experiment, except the information on which datasets to use.
-* `datasets`: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in [Dataset importers](downloading_and_selecting_data.md).
+- **`experiment`**: Contains the general setup and parameters for the experiment, excluding dataset information.
+- **`datasets`**: Specifies the datasets used for training, development, and evaluation. Details about datasets can be found in [Dataset Importers](downloading_and_selecting_data.md).
 
-At the beginning of your `experiment` section, you should define the following:
+### Experiment Setup
 
-* `dirname`: directory name where everything will be stored.
-* `name`: name of the experiment you are running. All generated data and models will be stored in `dirname`/`name`
-* `langpairs`: a list of the language pairs you want in your student model, with **two letter codes**
+In the `experiment` section, the following key parameters must be defined:
 
+- **`dirname`**: The directory where all experiment outputs will be stored.
+- **`name`**: The name of the experiment. All generated data and models will be saved under `dirname`/`name`.
+- **`langpairs`**: A list of language pairs for the student model, using ISO two-letter language codes.
+
+Example configuration:
 ```yaml
-
 experiment:
   dirname: test
   name: fiu-eng
@@ -27,42 +28,45 @@ experiment:
 
 ### OpusFilter
 
-We have added support for using [OpusFilter](https://github.com/Helsinki-NLP/OpusFilter), a tool for filtering and combining parallel corpora. For data filtering, instead of the default cleaning, you can choose to use opusfilter with a default configuration or with a specific configuration you provide.
+OpusDistillery supports [OpusFilter](https://github.com/Helsinki-NLP/OpusFilter), a tool for filtering and combining parallel corpora. Instead of the default cleaning, you can choose to filter data using OpusFilter with either a default configuration or a custom configuration that you provide.
 
-In the configuration file, if you want to use a [default](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13) configuration, you can see how in [this example](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.fiu-eng.opusfilter.yml#L33). Otherwise, you can specify the path to a specific file with an Opusfilter configuration such as [this one](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml).
+In the configuration file, if you want to use a default configuration, see this [example](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13). 
+Otherwise, you can specify the path to a custom OpusFilter configuration file such as [this one](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml).
 
 ```yaml
   opusfilter:
-    config: default # Otherwise, specify path to opusfilter configuration 'configs/opusfilter/config.opusfilter.yaml'
+    config: default # # Or specify the path to an OpusFilter configuration file
 ```
 
 ### Bicleaner AI
 
-At the moment, this is not working.
+Currently, Bicleaner AI is not operational. Do you want to collaborate? Feel free to work on this [issue](https://github.com/Helsinki-NLP/OpusDistillery/issues/3).
 
 ## Teacher models
 
-You can choose a teacher from OPUS-MT or from Hugging Face (beware, runs on CPU!).
+You can select a teacher model from OPUS-MT or Hugging Face.
 
 ### OPUS-MT Teachers
 
-It is defined by:
+To specify an OPUS-MT teacher, use:
 
 * `opusmt-teacher`
 
-This can be either of the following:
-1. the URL to an OPUS-MT model
+It can be one of the following:
+
+1. A URL to an OPUS-MT model:
 
 ```yaml
   opusmt-teacher: "https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip"
 ```
 
-2. the path to an OPUS-MT model, 
+2. A path to a local OPUS-MT model:
+
 ```yaml
   opusmt-teacher: "/path/to/opus-mt/model"
 ```
 
-3. a list of OPUS-MT models that will be used all together (any combination of the previous two).
+3. A list of OPUS-MT models:
 
 ```yaml
   opusmt-teacher:
@@ -71,7 +75,7 @@ This can be either of the following:
 ```
 
 
-4. In the case of multilingual students, you can combine different teachers. In this case, it should be a dictionary, specifying each teacher per language pair.
+4. For multilingual students, specify different teachers for each language pair:
 
 ```yaml
   opusmt-teacher:
@@ -80,7 +84,7 @@ This can be either of the following:
     en-be: "https://object.pouta.csc.fi/Tatoeba-MT-models/eng-bel/opus+bt-2021-03-07.zip"
 ```
 
-5. `best` which will select the best teacher available for each language pair by checking the FLORES200+ scores from the [OPUS-MT dashboard](https://opus.nlpl.eu/dashboard).
+5. Use the `best` option to automatically select the best teacher for each language pair, based on FLORES200+ scores from the [OPUS-MT dashboard](https://opus.nlpl.eu/dashboard/).
 
 ```yaml
   opusmt-teacher: "best"
@@ -88,26 +92,68 @@ This can be either of the following:
 
 ### Hugging Face Teachers
 
+You can also use a [Hugging Face](https://huggingface.co/) model as a teacher.
 
-It is defined like:
+* `modelname`: The model identifier from the Hugging Face hub.
+* `modelclass`: The class of the model being loaded.
 
 ```yaml
   huggingface:
-    model: "facebook/nllb-200-distilled-600M"
-    task: translation #if not in config, assumes "translation by default"
+    modelname: "Helsinki-NLP/opus-mt-mul-en"
+    modelclass: "transformers.AutoModelForSeq2SeqLM"
 ```
 
-Where model is the identifier from the hub and the task is a sequence-to-sequence task that produces translations with the pipeline implementation.
+You can also configure the decoding options:
 
-When using a HF model as teacher, there is no scoring and no cross-entropy filtering.
+```yaml
+  huggingface:
+    modelname: "HPLT/translate-et-en-v1.0-hplt_opus"
+    modelclass: "transformers.AutoModelForSeq2SeqLM"
+    config:
+      top_k: 50
+      top_p: 0.90
+      temperature: 0.1
+      max_new_tokens: 128
+```
+
+For models that use language tags, additional parameters are required:
+
+* `lang_info`: Set to True if language tags are needed.
+* `lang_tags`: A mapping of language codes to the tags used by the model.
+
+```yaml
+  huggingface:
+    modelname: "facebook/nllb-200-distilled-600M"
+    modelclass: "transformers.AutoModelForSeq2SeqLM"
+    lang_info: True
+    lang_tags:
+      en: eng_Latn
+      et: est_Latn
+```
+
+Finally, for models requiring a prompt, you can define it like this:
+
+```yaml
+  huggingface:
+    modelname: "google-t5/t5-small"
+    modelclass: "transformers.AutoModelForSeq2SeqLM"
+    lang_tags:
+      en: English
+      de: German
+    prompt: "Translate {src_lang} to {tgt_lang}: {source}"
+```
+
+In this case, the lang_tags mapping will be used in the prompt.
+
+Note: When using a Hugging Face model as a teacher, there is no scoring or cross-entropy filtering.
 
 ## Backward models
 
-At the moment, the type of backward models available are only OPUS-MT.
+Currently, only OPUS-MT models are available as backward models for scoring translations.
 
-It is defined by:
+To specify a backward model, use:
 
-* `opusmt-backward`: the URL or path to an OPUS-MT model to be used as a backward model for scoring translations. As the teacher, it can also be a dictionary specifying a backward model per language pair as well as `best`.
+* `opusmt-backward`: The URL or path to an OPUS-MT model. Like the teacher models, this can also be a dictionary for multilingual students or `best`.
 
 ```yaml
   opusmt-backward:
@@ -119,27 +165,27 @@ It is defined by:
 If left empty, the cross-entropy filtering step will be skipped.
 
 ## Multilinguality
-Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  `False`.
+Specify whether the teacher, backward, and student models are many-to-one to properly handle language tags. By default, this is set to `False`.
 
-* `one2many-teacher`: `True` or `False` (default). If `opusmt-teacher` is "best", then this should be also "best"
-* `one2many-backward`: `True` or `False` (default). If `opusmt-backward` is "best", then this should be also "best"
+* `one2many-teacher`: `True` or `False` (default). If `opusmt-teacher` is set to `best`, this should also be `best`.
+* `one2many-backward`: `True` or `False` (default). If `opusmt-backward` is set to `best`, this should also be `best`.
 * `one2many-student`: `True` or `False` (default). 
 
 ```yaml
-# Specify if the teacher and the student are many2one
+# Specify if the teacher and the student are one2many
   one2many-teacher: True
   one2many-student: True
 ```
 ## Training
 
 ### Marian arguments
-These configs override pipeline/train/configs with [Marian settings](https://marian-nmt.github.io/docs/cmd/marian/)
+You can override default pipeline settings with [Marian-specific settings](https://marian-nmt.github.io/docs/cmd/marian/).
 
-The options are: `training-teacher`, `decoding-teacher`,`training-backward`, `decoding-backward`,`training-student`, `training-student-finetuned`
+You can use the following options: `training-teacher`, `decoding-teacher`,`training-backward`, `decoding-backward`,`training-student`, `training-student-finetuned`.
 
 ```yaml
   marian-args:
-  #these configs override pipeline/train/configs
+  # These configs override pipeline/train/configs
   training-student:
     dec-depth: 3
     enc-depth: 3
@@ -160,11 +206,12 @@ The options are: `training-teacher`, `decoding-teacher`,`training-backward`, `de
 
 ### Opustrainer
 
-We have also added support for using [OpusTrainer](https://github.com/hplt-project/OpusTrainer), a tool for curriculum training and data augmentation. 
+OpusDistillery supports [OpusTrainer](https://github.com/hplt-project/OpusTrainer) for curriculum training and data augmentation.
 
-In the configuration file, you can specify a path to the OpusTrainer configuration as in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37). However, this assumes that you already now the final paths of the data as specified in [here](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml).
+You can specify a path to the OpusTrainer configuration, such as in [this example](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37).
+This assumes you know the final paths of the data, as defined in [this file](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml).
 
-At the moment, this is only implemented for student training.
+Currently, this is implemented only for student training.
 
 ```yaml
   opustrainer:
@@ -174,7 +221,7 @@ At the moment, this is only implemented for student training.
 
 ## Exporting
 
-The final student model is in the Bergamot format, which makes use of shortlists for training (and these shorlists are trained using alignments). For that reason, we have also implemented the option to only train a student with the tiny architecture without the guided alignment. For that purpose, the user needs to specify "export" in the configuration file like this:
+The final student model is exported in the Bergamot format, which uses shortlists for training. Shortlists are trained using alignments, so there's an option to train a student without guided alignment using the tiny architecture. To disable this, specify export in the configuration file:
 
 ```yaml
   export: "no"
@@ -182,8 +229,9 @@ The final student model is in the Bergamot format, which makes use of shortlists
 
 ### Other
 
-* `parallel-max-sentences`: maximum parallel sentences to download from each dataset.
-* `split-length`: the amount of sentences into which you want to split your training data for forward translation.
-* `best-model`: metric to select your best model.
-* `spm-sample-size`: sample size to train spm vocabulary of the student.
-* `student-prefix`: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure. Find more about the directory structure [here](../pipeline/dir_structure.md).
+* `parallel-max-sentences`: Maximum parallel sentences to download from each dataset.
+* `split-length`: The number of sentences into which you want to split your training data for forward translation.
+* `best-model`: Metric used to select the best model.
+* `spm-sample-size`: Sample size for training the student’s SPM vocabulary.
+* `spm-vocab-size`: Vocabulary size for training the student’s SPM vocabulary.
+* `student-prefix`: To train multiple students with the same data, add a prefix to the student name, which will allow multiple students to be trained under the same directory structure with the same data. More details on the directory structure can be found [here](../pipeline/dir_structure.md).

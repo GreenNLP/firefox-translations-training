@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basic usage &mdash; OpusDistillery  documentation</title>
+  <title>Basic Usage &mdash; OpusDistillery  documentation</title>
   
 
   
@@ -83,14 +83,13 @@
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Basic usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#configuration-examples">Configuration examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basic Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-examples">Configuration Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#on-lumi">On LUMI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usual-run">Usual run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#specific-target">Specific target</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rerunning">Rerunning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#canceling">Canceling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#on-lumi">On LUMI</a></li>
 </ul>
 </li>
 </ul>
@@ -99,7 +98,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs/configuration_files.html">Configuration Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs/downloading_and_selecting_data.html">Dataset importers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs/examples.html">Examples of Configuration Files</a></li>
 </ul>
@@ -157,7 +156,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Basic usage</li>
+      <li>Basic Usage</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -175,15 +174,13 @@
            <div itemprop="articleBody">
             
   <div class="section" id="basic-usage">
-<h1>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
-<p>The pipeline is built with <a class="reference external" href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a>.</p>
-<p>Snakemake workflow manager infers the DAG of tasks implicitly from the specified inputs and outputs of the steps. The workflow manager checks which files are missing and runs the corresponding jobs either locally or on a cluster depending on the configuration.</p>
-<p>Snakemake parallelizes steps that can be executed simultaneously.</p>
-<p>The main Snakemake process (scheduler) should be launched interactively. It runs the job processes on the worker nodes in cluster mode or on a local machine in local mode.</p>
+<h1>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
+<p>The pipeline is built using <a class="reference external" href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a>.</p>
+<p>Snakemake is a workflow management system that implicitly constructs a Directed Acyclic Graph (DAG) of tasks based on the input and output files specified in each step. It determines which files are missing and executes the corresponding jobs, either locally or on a cluster, depending on the configuration. Snakemake can also parallelize steps that can be run concurrently.</p>
+<p>The main Snakemake process (scheduler) should be launched interactively. It manages the job execution either on worker nodes in a cluster (cluster mode) or on a local machine (local mode).</p>
 <div class="section" id="configuration-examples">
-<h2>Configuration examples<a class="headerlink" href="#configuration-examples" title="Permalink to this headline">¶</a></h2>
-<p>The pipeline is run with the <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/Makefile">Makefile</a> which takes a configuration file as an input.
-Configuration files are in <a class="reference external" href="https://yaml.org/">YAML</a> format. Although we report details of the configuration files in <a class="reference internal" href="configs/downloading_and_selecting_data.html"><span class="doc std std-doc">Setting up your experiment</span></a>, a configuration file that trains a student model (Estonian, Finnish and Hungarian into English) looks like this:</p>
+<h2>Configuration Examples<a class="headerlink" href="#configuration-examples" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline is executed using the provided <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/main/Makefile">Makefile</a>, which takes a configuration file as input. Configuration files are written in <a class="reference external" href="https://yaml.org/">YAML</a> format. You can find more details on configuration in the <a class="reference internal" href="configs/downloading_and_selecting_data.html"><span class="doc std std-doc">Setting up your experiment</span></a> section. Below is an example configuration file that trains a student model for Estonian, Finnish, and Hungarian into English:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">dirname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fiu-eng</span>
@@ -216,12 +213,51 @@ Configuration files are in <a class="reference external" href="https://yaml.org/
 </div>
 <div class="section" id="running">
 <h2>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h2>
+<p>To check that everything is installed correctly, run a dry run first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">dry</span><span class="o">-</span><span class="n">run</span>
+</pre></div>
+</div>
+<p>To execute the full pipeline, specify a specific profile and configuration file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=</span><span class="n">slurm</span><span class="o">-</span><span class="n">puhti</span> <span class="n">CONFIG</span><span class="o">=</span><span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<div class="section" id="specific-target">
+<h3>Specific target<a class="headerlink" href="#specific-target" title="Permalink to this headline">¶</a></h3>
+<p>By default, all Snakemake rules are executed. To run the pipeline up to a specific rule, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=&lt;</span><span class="n">non</span><span class="o">-</span><span class="n">wildcard</span><span class="o">-</span><span class="n">rule</span><span class="o">-</span><span class="ow">or</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>For example,  to collect the corpus first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=</span><span class="n">merge_corpus</span>
+</pre></div>
+</div>
+<p>You can also specify the full file path, such as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=/</span><span class="n">models</span><span class="o">/</span><span class="n">ru</span><span class="o">-</span><span class="n">en</span><span class="o">/</span><span class="n">bicleaner</span><span class="o">/</span><span class="n">teacher</span><span class="o">-</span><span class="n">base0</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">npz</span><span class="o">.</span><span class="n">best</span><span class="o">-</span><span class="n">ce</span><span class="o">-</span><span class="n">mean</span><span class="o">-</span><span class="n">words</span><span class="o">.</span><span class="n">npz</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rerunning">
+<h3>Rerunning<a class="headerlink" href="#rerunning" title="Permalink to this headline">¶</a></h3>
+<p>If you need to rerun a specific step, delete the output files expected in the Snakemake rule.
+If Snakemake reports a missing file and suggests running with the <code class="docutils literal notranslate"><span class="pre">--clean-metadata</span></code> flag, do the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">clean</span><span class="o">-</span><span class="n">meta</span> <span class="n">TARGET</span><span class="o">=&lt;</span><span class="n">missing</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>and then as usual:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=&lt;</span><span class="n">profile</span><span class="o">&gt;</span> <span class="n">CONFIG</span><span class="o">=&lt;</span><span class="n">configuration</span><span class="o">-</span><span class="n">file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="canceling">
+<h3>Canceling<a class="headerlink" href="#canceling" title="Permalink to this headline">¶</a></h3>
+<p>If you need to cancel a running pipeline on a cluster, remember to also cancel the associated SLURM jobs, as these will not be canceled automatically.
+Additionally, delete any resulting files that you want to overwrite.</p>
+</div>
 <div class="section" id="on-lumi">
 <h3>On LUMI<a class="headerlink" href="#on-lumi" title="Permalink to this headline">¶</a></h3>
-<p>On LUMI, the pipeline is run from the login node from your local copy of the root repository.</p>
-<p>Start a tmux session: <code class="docutils literal notranslate"><span class="pre">tmux</span></code>
-You can read more about <a class="reference external" href="https://github.com/tmux/tmux/wiki">tmux</a> here.</p>
-<p>Load LUMI specific modules:</p>
+<p>To run the pipeline on LUMI, start from the login node using your local copy of the root repository.</p>
+<p>First, start a tmux session. You can read more about <a class="reference external" href="https://github.com/tmux/tmux/wiki">tmux</a> here.</p>
+<p>Load the LUMI-specific modules:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module<span class="w"> </span>load<span class="w"> </span>CrayEnv
 module<span class="w"> </span>load<span class="w"> </span>PrgEnv-cray/8.3.3
 module<span class="w"> </span>load<span class="w"> </span>craype-accel-amd-gfx90a
@@ -230,61 +266,11 @@ module<span class="w"> </span>load<span class="w"> </span>rocm/5.3.3
 <span class="nb">export</span><span class="w"> </span><span class="nv">SINGULARITYENV_LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 </div>
-<p>Activate snakemake environment:</p>
+<p>Activate the Snakemake environment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>../snakemake_env/bin/activate
 </pre></div>
 </div>
-<p>Now, you can move on and continue to the next section.</p>
-</div>
-<div class="section" id="usual-run">
-<h3>Usual run<a class="headerlink" href="#usual-run" title="Permalink to this headline">¶</a></h3>
-<p>Dry run first to check that everything was installed correctly:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">dry</span><span class="o">-</span><span class="n">run</span>
-</pre></div>
-</div>
-<p>To run the pipeline:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span>
-</pre></div>
-</div>
-<p>To test the whole pipeline end to end (it is supposed to run relatively quickly and does not train anything useful):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">test</span>
-</pre></div>
-</div>
-<p>You can also run a specific profile or config by overriding variables from Makefile</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">PROFILE</span><span class="o">=</span><span class="n">slurm</span><span class="o">-</span><span class="n">puhti</span> <span class="n">CONFIG</span><span class="o">=</span><span class="n">configs</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">yml</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="specific-target">
-<h3>Specific target<a class="headerlink" href="#specific-target" title="Permalink to this headline">¶</a></h3>
-<p>By default, all Snakemake rules are executed. To run the pipeline up to a specific rule use:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=&lt;</span><span class="n">non</span><span class="o">-</span><span class="n">wildcard</span><span class="o">-</span><span class="n">rule</span><span class="o">-</span><span class="ow">or</span><span class="o">-</span><span class="n">path</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>For example, collect corpus first:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=</span><span class="n">merge_corpus</span>
-</pre></div>
-</div>
-<p>You can also use the full file path, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span> <span class="n">TARGET</span><span class="o">=/</span><span class="n">models</span><span class="o">/</span><span class="n">ru</span><span class="o">-</span><span class="n">en</span><span class="o">/</span><span class="n">bicleaner</span><span class="o">/</span><span class="n">teacher</span><span class="o">-</span><span class="n">base0</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">npz</span><span class="o">.</span><span class="n">best</span><span class="o">-</span><span class="n">ce</span><span class="o">-</span><span class="n">mean</span><span class="o">-</span><span class="n">words</span><span class="o">.</span><span class="n">npz</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="rerunning">
-<h3>Rerunning<a class="headerlink" href="#rerunning" title="Permalink to this headline">¶</a></h3>
-<p>If you want to rerun a specific step or steps, you can delete the result files that are expected in the Snakemake rule output.
-Snakemake might complain about a missing file and suggest to run it with <code class="docutils literal notranslate"><span class="pre">--clean-metadata</span></code> flag. In this case run:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">clean</span><span class="o">-</span><span class="n">meta</span> <span class="n">TARGET</span><span class="o">=&lt;</span><span class="n">missing</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>and then as usual:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">run</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="canceling">
-<h3>Canceling<a class="headerlink" href="#canceling" title="Permalink to this headline">¶</a></h3>
-<p>Be aware that if you cancel a pipeline that is currently running on a cluster, you also need to cancel the related SLURM jobs, as these won’t be canceled automatically. You also need to delete the result files that you want to overwrite.</p>
+<p>You can now proceed as explained above.</p>
 </div>
 </div>
 </div>

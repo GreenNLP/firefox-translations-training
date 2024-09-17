@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Examples of Configuration Files" href="examples.html" />
-    <link rel="prev" title="Configuration files" href="configuration_files.html" /> 
+    <link rel="prev" title="Configuration Files" href="configuration_files.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,12 +83,12 @@
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">QuickStart Tutorial</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_files.html">Configuration Files</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset importers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#find-datasets">Find datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-a-new-importer">Adding a new importer</a></li>
@@ -199,9 +199,9 @@
 </tr>
 <tr class="row-odd"><td><p><span class="xref myst">OPUS</span></p></td>
 <td><p>opus</p></td>
-<td><p>ParaCrawl/v7.1</p></td>
+<td><p>ParaCrawl__v7.1</p></td>
 <td><p>corpus</p></td>
-<td><p>Many open source datasets. Go to the website, choose a language pair, check links under Moses column to see what names and version is used in a link.</p></td>
+<td><p>Many open source datasets. Go to the website, choose a language pair, check links under Moses column to see what names and version is used in a link. The version should be separated by a double _.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference external" href="https://github.com/mjpost/sacrebleu">SacreBLEU</a></p></td>
 <td><p>sacrebleu</p></td>
@@ -258,14 +258,13 @@
 </div>
 <div class="section" id="adding-a-new-importer">
 <h2>Adding a new importer<a class="headerlink" href="#adding-a-new-importer" title="Permalink to this headline">¶</a></h2>
-<p>Just add a shell script to <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/corpus">corpus</a> or <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/mono">mono</a> which is named as <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.sh</span></code>
-and accepts the same parameters as the other scripts from the same folder.</p>
+<p>Just add a shell script to <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/corpus">corpus</a> or <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/mono">mono</a> which is named as <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.sh</span></code> and accepts the same parameters as the other scripts from the same folder.</p>
 </div>
 <div class="section" id="issues">
 <h2>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Currently, it is not possible to download specific datasets per language pair, right now the tool only downloads the same dataset for all language pairs. If a dataset doesn’t exist for a given language pair, it creates dummy files.</p></li>
-<li><p>Currently, there is no support to download monolingual datasets. The use of monolingual data is not implemented and only supports the use of bilingual data at the moment.</p></li>
+<li><p>Currently, it is not possible to download specific datasets per language pair; the tool downloads the same dataset for all language pairs. If a dataset doesn’t exist for a given language pair, dummy files are created. Do you want to collaborate? Feel free to work on this <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/issues/1">issue</a>.</p></li>
+<li><p>There is currently no support for downloading monolingual datasets. The use of monolingual data is not fully implemented; only bilingual data is supported at this time. Do you want to collaborate? Feel free to work on this <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/issues/2">issue</a>.</p></li>
 </ul>
 </div>
 </div>
@@ -281,7 +280,7 @@ and accepts the same parameters as the other scripts from the same folder.</p>
         <a href="examples.html" class="btn btn-neutral float-right" title="Examples of Configuration Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="configuration_files.html" class="btn btn-neutral float-left" title="Configuration files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="configuration_files.html" class="btn btn-neutral float-left" title="Configuration Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

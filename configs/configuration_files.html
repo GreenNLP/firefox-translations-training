@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration files &mdash; OpusDistillery  documentation</title>
+  <title>Configuration Files &mdash; OpusDistillery  documentation</title>
   
 
   
@@ -83,12 +83,13 @@
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">QuickStart Tutorial</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration files</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#experiment-setup">Experiment Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#data-processing">Data processing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#opusfilter">OpusFilter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bicleaner-ai">Bicleaner AI</a></li>
@@ -169,7 +170,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Configuration files</li>
+      <li>Configuration Files</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -187,19 +188,21 @@
            <div itemprop="articleBody">
             
   <div class="section" id="configuration-files">
-<h1>Configuration files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h1>
-<p>Configuration files are in <a class="reference external" href="https://yaml.org/">YAML</a> format.
-At the top level, they have two sections:</p>
+<h1>Configuration Files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h1>
+<p>The configuration files for OpusDistillery are written in <a class="reference external" href="https://yaml.org/">YAML</a> format and are divided into two main sections:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">experiment</span></code>: contains all the relevant information for your experiment, except the information on which datasets to use.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span></code>: contains the infromation regarding the datasets used for training, development and evaluation. Datasets are explained in <a class="reference internal" href="downloading_and_selecting_data.html"><span class="doc std std-doc">Dataset importers</span></a>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">experiment</span></code></strong>: Contains the general setup and parameters for the experiment, excluding dataset information.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">datasets</span></code></strong>: Specifies the datasets used for training, development, and evaluation. Details about datasets can be found in <a class="reference internal" href="downloading_and_selecting_data.html"><span class="doc std std-doc">Dataset Importers</span></a>.</p></li>
 </ul>
-<p>At the beginning of your <code class="docutils literal notranslate"><span class="pre">experiment</span></code> section, you should define the following:</p>
+<div class="section" id="experiment-setup">
+<h2>Experiment Setup<a class="headerlink" href="#experiment-setup" title="Permalink to this headline">¶</a></h2>
+<p>In the <code class="docutils literal notranslate"><span class="pre">experiment</span></code> section, the following key parameters must be defined:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">dirname</span></code>: directory name where everything will be stored.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: name of the experiment you are running. All generated data and models will be stored in <code class="docutils literal notranslate"><span class="pre">dirname</span></code>/<code class="docutils literal notranslate"><span class="pre">name</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">langpairs</span></code>: a list of the language pairs you want in your student model, with <strong>two letter codes</strong></p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dirname</span></code></strong>: The directory where all experiment outputs will be stored.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">name</span></code></strong>: The name of the experiment. All generated data and models will be saved under <code class="docutils literal notranslate"><span class="pre">dirname</span></code>/<code class="docutils literal notranslate"><span class="pre">name</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">langpairs</span></code></strong>: A list of language pairs for the student model, using ISO two-letter language codes.</p></li>
 </ul>
+<p>Example configuration:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">experiment</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">dirname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fiu-eng</span>
@@ -209,46 +212,48 @@ At the top level, they have two sections:</p>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hu-en</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="data-processing">
 <h2>Data processing<a class="headerlink" href="#data-processing" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="opusfilter">
 <h3>OpusFilter<a class="headerlink" href="#opusfilter" title="Permalink to this headline">¶</a></h3>
-<p>We have added support for using <a class="reference external" href="https://github.com/Helsinki-NLP/OpusFilter">OpusFilter</a>, a tool for filtering and combining parallel corpora. For data filtering, instead of the default cleaning, you can choose to use opusfilter with a default configuration or with a specific configuration you provide.</p>
-<p>In the configuration file, if you want to use a <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13">default</a> configuration, you can see how in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.fiu-eng.opusfilter.yml#L33">this example</a>. Otherwise, you can specify the path to a specific file with an Opusfilter configuration such as <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml">this one</a>.</p>
+<p>OpusDistillery supports <a class="reference external" href="https://github.com/Helsinki-NLP/OpusFilter">OpusFilter</a>, a tool for filtering and combining parallel corpora. Instead of the default cleaning, you can choose to filter data using OpusFilter with either a default configuration or a custom configuration that you provide.</p>
+<p>In the configuration file, if you want to use a default configuration, see this <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/pipeline/clean/run-opusfilter.py#13">example</a>.
+Otherwise, you can specify the path to a custom OpusFilter configuration file such as <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/configs/opusfilter/config.opusfilter.yml">this one</a>.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusfilter</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w"> </span><span class="c1"># Otherwise, specify path to opusfilter configuration &#39;configs/opusfilter/config.opusfilter.yaml&#39;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w"> </span><span class="c1"># # Or specify the path to an OpusFilter configuration file</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bicleaner-ai">
 <h3>Bicleaner AI<a class="headerlink" href="#bicleaner-ai" title="Permalink to this headline">¶</a></h3>
-<p>At the moment, this is not working.</p>
+<p>Currently, Bicleaner AI is not operational. Do you want to collaborate? Feel free to work on this <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/issues/3">issue</a>.</p>
 </div>
 </div>
 <div class="section" id="teacher-models">
 <h2>Teacher models<a class="headerlink" href="#teacher-models" title="Permalink to this headline">¶</a></h2>
-<p>You can choose a teacher from OPUS-MT or from Hugging Face (beware, runs on CPU!).</p>
+<p>You can select a teacher model from OPUS-MT or Hugging Face.</p>
 <div class="section" id="opus-mt-teachers">
 <h3>OPUS-MT Teachers<a class="headerlink" href="#opus-mt-teachers" title="Permalink to this headline">¶</a></h3>
-<p>It is defined by:</p>
+<p>To specify an OPUS-MT teacher, use:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code></p></li>
 </ul>
-<p>This can be either of the following:</p>
+<p>It can be one of the following:</p>
 <ol class="simple">
-<li><p>the URL to an OPUS-MT model</p></li>
+<li><p>A URL to an OPUS-MT model:</p></li>
 </ol>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/fiu-eng/opus4m-2020-08-12.zip&quot;</span>
 </pre></div>
 </div>
 <ol class="simple">
-<li><p>the path to an OPUS-MT model,</p></li>
+<li><p>A path to a local OPUS-MT model:</p></li>
 </ol>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/opus-mt/model&quot;</span>
 </pre></div>
 </div>
 <ol class="simple">
-<li><p>a list of OPUS-MT models that will be used all together (any combination of the previous two).</p></li>
+<li><p>A list of OPUS-MT models:</p></li>
 </ol>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/gem-gem/opus-2020-10-04.zip&quot;</span>
@@ -256,7 +261,7 @@ At the top level, they have two sections:</p>
 </pre></div>
 </div>
 <ol class="simple">
-<li><p>In the case of multilingual students, you can combine different teachers. In this case, it should be a dictionary, specifying each teacher per language pair.</p></li>
+<li><p>For multilingual students, specify different teachers for each language pair:</p></li>
 </ol>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">en-uk</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ukr/opus+bt-2021-04-14.zip&quot;</span>
@@ -265,7 +270,7 @@ At the top level, they have two sections:</p>
 </pre></div>
 </div>
 <ol class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">best</span></code> which will select the best teacher available for each language pair by checking the FLORES200+ scores from the <a class="reference external" href="https://opus.nlpl.eu/dashboard">OPUS-MT dashboard</a>.</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">best</span></code> option to automatically select the best teacher for each language pair, based on FLORES200+ scores from the <a class="reference external" href="https://opus.nlpl.eu/dashboard/">OPUS-MT dashboard</a>.</p></li>
 </ol>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-teacher</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;best&quot;</span>
 </pre></div>
@@ -273,22 +278,61 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="hugging-face-teachers">
 <h3>Hugging Face Teachers<a class="headerlink" href="#hugging-face-teachers" title="Permalink to this headline">¶</a></h3>
-<p>It is defined like:</p>
+<p>You can also use a <a class="reference external" href="https://huggingface.co/">Hugging Face</a> model as a teacher.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">modelname</span></code>: The model identifier from the Hugging Face hub.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modelclass</span></code>: The class of the model being loaded.</p></li>
+</ul>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">huggingface</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;facebook/nllb-200-distilled-600M&quot;</span>
-<span class="w">    </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">translation</span><span class="w"> </span><span class="c1">#if not in config, assumes &quot;translation by default&quot;</span>
+<span class="w">    </span><span class="nt">modelname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Helsinki-NLP/opus-mt-mul-en&quot;</span>
+<span class="w">    </span><span class="nt">modelclass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;transformers.AutoModelForSeq2SeqLM&quot;</span>
 </pre></div>
 </div>
-<p>Where model is the identifier from the hub and the task is a sequence-to-sequence task that produces translations with the pipeline implementation.</p>
-<p>When using a HF model as teacher, there is no scoring and no cross-entropy filtering.</p>
+<p>You can also configure the decoding options:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">huggingface</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">modelname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;HPLT/translate-et-en-v1.0-hplt_opus&quot;</span>
+<span class="w">    </span><span class="nt">modelclass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;transformers.AutoModelForSeq2SeqLM&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">top_k</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">      </span><span class="nt">top_p</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
+<span class="w">      </span><span class="nt">temperature</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="w">      </span><span class="nt">max_new_tokens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+</pre></div>
+</div>
+<p>For models that use language tags, additional parameters are required:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lang_info</span></code>: Set to True if language tags are needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lang_tags</span></code>: A mapping of language codes to the tags used by the model.</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">huggingface</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">modelname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;facebook/nllb-200-distilled-600M&quot;</span>
+<span class="w">    </span><span class="nt">modelclass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;transformers.AutoModelForSeq2SeqLM&quot;</span>
+<span class="w">    </span><span class="nt">lang_info</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">lang_tags</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">en</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eng_Latn</span>
+<span class="w">      </span><span class="nt">et</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">est_Latn</span>
+</pre></div>
+</div>
+<p>Finally, for models requiring a prompt, you can define it like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">huggingface</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">modelname</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;google-t5/t5-small&quot;</span>
+<span class="w">    </span><span class="nt">modelclass</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;transformers.AutoModelForSeq2SeqLM&quot;</span>
+<span class="w">    </span><span class="nt">lang_tags</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">en</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">English</span>
+<span class="w">      </span><span class="nt">de</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">German</span>
+<span class="w">    </span><span class="nt">prompt</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Translate</span><span class="nv"> </span><span class="s">{src_lang}</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">{tgt_lang}:</span><span class="nv"> </span><span class="s">{source}&quot;</span>
+</pre></div>
+</div>
+<p>In this case, the lang_tags mapping will be used in the prompt.</p>
+<p>Note: When using a Hugging Face model as a teacher, there is no scoring or cross-entropy filtering.</p>
 </div>
 </div>
 <div class="section" id="backward-models">
 <h2>Backward models<a class="headerlink" href="#backward-models" title="Permalink to this headline">¶</a></h2>
-<p>At the moment, the type of backward models available are only OPUS-MT.</p>
-<p>It is defined by:</p>
+<p>Currently, only OPUS-MT models are available as backward models for scoring translations.</p>
+<p>To specify a backward model, use:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code>: the URL or path to an OPUS-MT model to be used as a backward model for scoring translations. As the teacher, it can also be a dictionary specifying a backward model per language pair as well as <code class="docutils literal notranslate"><span class="pre">best</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code>: The URL or path to an OPUS-MT model. Like the teacher models, this can also be a dictionary for multilingual students or <code class="docutils literal notranslate"><span class="pre">best</span></code>.</p></li>
 </ul>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opusmt-backward</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">uk-en</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://object.pouta.csc.fi/Tatoeba-MT-models/ukr-eng/opus+bt-2021-04-30.zip&quot;</span>
@@ -300,13 +344,13 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="multilinguality">
 <h2>Multilinguality<a class="headerlink" href="#multilinguality" title="Permalink to this headline">¶</a></h2>
-<p>Specify if the teacher, the backward and the student models are many-to-one to be able to deal properly with language tags. By default, this is  <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<p>Specify whether the teacher, backward, and student models are many-to-one to properly handle language tags. By default, this is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">one2many-teacher</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code> is “best”, then this should be also “best”</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">one2many-backward</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code> is “best”, then this should be also “best”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one2many-teacher</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-teacher</span></code> is set to <code class="docutils literal notranslate"><span class="pre">best</span></code>, this should also be <code class="docutils literal notranslate"><span class="pre">best</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one2many-backward</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default). If <code class="docutils literal notranslate"><span class="pre">opusmt-backward</span></code> is set to <code class="docutils literal notranslate"><span class="pre">best</span></code>, this should also be <code class="docutils literal notranslate"><span class="pre">best</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">one2many-student</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> (default).</p></li>
 </ul>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify if the teacher and the student are many2one</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify if the teacher and the student are one2many</span>
 <span class="w">  </span><span class="nt">one2many-teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="w">  </span><span class="nt">one2many-student</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 </pre></div>
@@ -316,10 +360,10 @@ At the top level, they have two sections:</p>
 <h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="marian-arguments">
 <h3>Marian arguments<a class="headerlink" href="#marian-arguments" title="Permalink to this headline">¶</a></h3>
-<p>These configs override pipeline/train/configs with <a class="reference external" href="https://marian-nmt.github.io/docs/cmd/marian/">Marian settings</a></p>
-<p>The options are: <code class="docutils literal notranslate"><span class="pre">training-teacher</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-teacher</span></code>,<code class="docutils literal notranslate"><span class="pre">training-backward</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-backward</span></code>,<code class="docutils literal notranslate"><span class="pre">training-student</span></code>, <code class="docutils literal notranslate"><span class="pre">training-student-finetuned</span></code></p>
+<p>You can override default pipeline settings with <a class="reference external" href="https://marian-nmt.github.io/docs/cmd/marian/">Marian-specific settings</a>.</p>
+<p>You can use the following options: <code class="docutils literal notranslate"><span class="pre">training-teacher</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-teacher</span></code>,<code class="docutils literal notranslate"><span class="pre">training-backward</span></code>, <code class="docutils literal notranslate"><span class="pre">decoding-backward</span></code>,<code class="docutils literal notranslate"><span class="pre">training-student</span></code>, <code class="docutils literal notranslate"><span class="pre">training-student-finetuned</span></code>.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">marian-args</span><span class="p">:</span>
-<span class="w">  </span><span class="c1">#these configs override pipeline/train/configs</span>
+<span class="w">  </span><span class="c1"># These configs override pipeline/train/configs</span>
 <span class="w">  </span><span class="nt">training-student</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">dec-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 <span class="w">    </span><span class="nt">enc-depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
@@ -341,9 +385,10 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="opustrainer">
 <h3>Opustrainer<a class="headerlink" href="#opustrainer" title="Permalink to this headline">¶</a></h3>
-<p>We have also added support for using <a class="reference external" href="https://github.com/hplt-project/OpusTrainer">OpusTrainer</a>, a tool for curriculum training and data augmentation.</p>
-<p>In the configuration file, you can specify a path to the OpusTrainer configuration as in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37">here</a>. However, this assumes that you already now the final paths of the data as specified in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml">here</a>.</p>
-<p>At the moment, this is only implemented for student training.</p>
+<p>OpusDistillery supports <a class="reference external" href="https://github.com/hplt-project/OpusTrainer">OpusTrainer</a> for curriculum training and data augmentation.</p>
+<p>You can specify a path to the OpusTrainer configuration, such as in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.yml#L37">this example</a>.
+This assumes you know the final paths of the data, as defined in <a class="reference external" href="https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/configs/opustrainer/config.fiu-eng.opustrainer.stages.yml">this file</a>.</p>
+<p>Currently, this is implemented only for student training.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">opustrainer</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">student</span><span class="w"> </span><span class="c1"># Ideally, could be teacher or backward</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;configs/opustrainer/config.fiu-eng.opustrainer.stages.yml&quot;</span><span class="w"> </span><span class="c1"># This assumes you already know the paths to the data</span>
@@ -353,18 +398,19 @@ At the top level, they have two sections:</p>
 </div>
 <div class="section" id="exporting">
 <h2>Exporting<a class="headerlink" href="#exporting" title="Permalink to this headline">¶</a></h2>
-<p>The final student model is in the Bergamot format, which makes use of shortlists for training (and these shorlists are trained using alignments). For that reason, we have also implemented the option to only train a student with the tiny architecture without the guided alignment. For that purpose, the user needs to specify “export” in the configuration file like this:</p>
+<p>The final student model is exported in the Bergamot format, which uses shortlists for training. Shortlists are trained using alignments, so there’s an option to train a student without guided alignment using the tiny architecture. To disable this, specify export in the configuration file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">export</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
 </pre></div>
 </div>
 <div class="section" id="other">
 <h3>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">parallel-max-sentences</span></code>: maximum parallel sentences to download from each dataset.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">split-length</span></code>: the amount of sentences into which you want to split your training data for forward translation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">best-model</span></code>: metric to select your best model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">spm-sample-size</span></code>: sample size to train spm vocabulary of the student.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">student-prefix</span></code>: in case you want to train multiple students with exactly the same data, you can add this prefix which will allow you to train multiple students in the same directory structure. Find more about the directory structure <a class="reference internal" href="../pipeline/dir_structure.html"><span class="doc std std-doc">here</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel-max-sentences</span></code>: Maximum parallel sentences to download from each dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">split-length</span></code>: The number of sentences into which you want to split your training data for forward translation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">best-model</span></code>: Metric used to select the best model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spm-sample-size</span></code>: Sample size for training the student’s SPM vocabulary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spm-vocab-size</span></code>: Vocabulary size for training the student’s SPM vocabulary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">student-prefix</span></code>: To train multiple students with the same data, add a prefix to the student name, which will allow multiple students to be trained under the same directory structure with the same data. More details on the directory structure can be found <a class="reference internal" href="../pipeline/dir_structure.html"><span class="doc std std-doc">here</span></a>.</p></li>
 </ul>
 </div>
 </div>

@@ -83,18 +83,21 @@
               <p class="caption"><span class="caption-text">Get started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Basic Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">QuickStart Tutorial</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Setting up your experiment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../configs/configuration_files.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs/configuration_files.html">Configuration Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs/downloading_and_selecting_data.html">Dataset importers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configs/examples.html">Examples of Configuration Files</a></li>
 </ul>
 <p class="caption"><span class="caption-text">The pipeline</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Pipeline steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pipeline steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configurable-steps">Configurable steps</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="dir_structure.html">Directory structure</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Other information</span></p>
@@ -165,6 +168,16 @@
             
   <div class="section" id="pipeline-steps">
 <h1>Pipeline steps<a class="headerlink" href="#pipeline-steps" title="Permalink to this headline">¶</a></h1>
+<p>Below is an overview of the pipeline steps:</p>
+<p><img alt="Alt text" src="pipeline/pipeline.png" /></p>
+<p>The pipeline consists of five main steps:</p>
+<ul class="simple">
+<li><p><strong>Data Preprocessing</strong>: Downloads data from publicly available repositories and handles basic data cleaning.</p></li>
+<li><p><strong>Synthetic Dataset Generation</strong>: Downloads the relevant teacher and backward models, forward translates all source sentences with our teacher model(s) into the target languages, computes cross-entropy scores with a backward model, and then filters the synthetic dataset.</p></li>
+<li><p><strong>Student Training</strong>: Trains a small transformer model on the filtered synthetic dataset with guided alignment.</p></li>
+<li><p><strong>Exporting</strong>: Creates the final student. It includes a fine-tuning step, a quantization step and, finally, the export step which saves the model so it is ready for deployment.</p></li>
+<li><p><strong>Evaluation</strong>: Evaluates the trained model.</p></li>
+</ul>
 <p>The steps are based on <a class="reference external" href="https://github.com/browsermt/students/tree/master/train-student">train-student</a> recipe.</p>
 <p>They can be represented as a Directly Acyclic Graph (DAG).</p>
 <table class="colwidths-auto docutils align-default">
@@ -191,83 +204,192 @@
 <td><p>CPU</p></td>
 <td><p>Good parallelization across CPU cores. To make cleaning of a new language more efficient add it to <span class="xref myst">clean_parallel.py</span>.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Bicleaner</p></td>
-<td><p>Filters noisy sentence pairs in a parallel corpus using <a class="reference external" href="https://github.com/bitextor/bicleaner">bicleaner</a> or <a class="reference external" href="https://github.com/bitextor/bicleaner-ai">bicleaner-ai</a> depending on available language packs.</p></td>
-<td><p>CPU, GPU</p></td>
-<td><p>If there are no pretrained language packs for bicleaner-ai, it uses bicleaner. If there are no ones for bicleaner either, this step is skipped. Cleaning thresholds are configurable per dataset, see [Dataset cleaning](##Dataset cleaning).</p></td>
-</tr>
-<tr class="row-even"><td><p>Merge and dedupe</p></td>
+<tr class="row-odd"><td><p>Merge and dedupe</p></td>
 <td><p>Merges clean dataset and applies deduplicaiton</p></td>
 <td><p>CPU, Disk</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>Training vocabulary</p></td>
+<tr class="row-even"><td><p>Training vocabulary</p></td>
 <td><p>Trains <a class="reference external" href="https://github.com/google/sentencepiece">SentencePiece</a> vocabulary/tokenizer model on parallel corpus.</p></td>
 <td><p>CPU</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p>Training s2s</p></td>
-<td><p>Trains a backward shallow s2s model, which is useful for back-translations and ce-filtering</p></td>
-<td><p>GPU</p></td>
-<td><p>Inspired by a <a class="reference external" href="https://github.com/marian-nmt/marian-examples/tree/master/training-basics-sentencepiece">marian example</a>.</p></td>
+<tr class="row-odd"><td><p>Teacher download</p></td>
+<td><p>Downloads teacher model</p></td>
+<td><p>CPU</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>Augmentation with back-translations</p></td>
-<td><p>Translates mono corpus combined from monolingual datasets in target language using shallow s2s model.</p></td>
-<td><p>GPU</p></td>
-<td><p>It is more useful for low-resource languages and can be skipped for others.</p></td>
+<tr class="row-even"><td><p>Backward model download</p></td>
+<td><p>Downloads backward model</p></td>
+<td><p>CPU</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p>Training teacher</p></td>
-<td><p>Trains an ensemble of big transformer models on augmented dataset</p></td>
-<td><p>GPU</p></td>
-<td><p>You might want to adjust <span class="xref myst">early stopping</span> or <code class="docutils literal notranslate"><span class="pre">after-epochs</span></code> parameters depending on datasets size.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Fine-tuning teacher</p></td>
-<td><p>Continue training an ensemble of teachers on parallel data only</p></td>
-<td><p>GPU</p></td>
-<td><p>You might want to adjust <span class="xref myst">early stopping</span> parameters depending on datasets size.</p></td>
-</tr>
-<tr class="row-even"><td><p>Translation by teacher</p></td>
-<td><p>Translates a corpus and monolingual data combined from configurable <code class="docutils literal notranslate"><span class="pre">dataset.mono-src</span></code> using the ensemble of teacher models</p></td>
+<tr class="row-odd"><td><p>Translation by teacher</p></td>
+<td><p>Translates a corpus using the teacher models</p></td>
 <td><p>GPU</p></td>
 <td><p>The slowest part of the pipeline. Can take days. It is possible to speed it up by using multiple nodes in cluster mode.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Cross-entropy filtering</p></td>
+<tr class="row-even"><td><p>Cross-entropy filtering</p></td>
 <td><p>Scores translated corpus with backward s2s model and removes a part of the corpus with the lowest scores to reduce noise</p></td>
 <td><p>GPU, CPU, Disk</p></td>
 <td><p>At this point we work with huge datasets. Very disk intensive.</p></td>
 </tr>
-<tr class="row-even"><td><p>Training alignments and shortlist</p></td>
+<tr class="row-odd"><td><p>Training alignments and shortlist</p></td>
 <td><p>Trains alignments using <a class="reference external" href="https://github.com/clab/fast_align">fast_align</a> and extracts lexical shortlist using <a class="reference external" href="https://github.com/marian-nmt/extract-lex">extract_lex</a> tool</p></td>
 <td><p>CPU, Disk</p></td>
 <td><p>Some tools require uncompressed datasets on disk and they are huge at this point. Good CPU parallelization.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Training student</p></td>
+<tr class="row-even"><td><p>Training student</p></td>
 <td><p>Trains a small transformer student model on filtered data and using alignments. Shuffling in RAM might fail if dataset is huge and there’s not enough RAM on the machine, so it’s recommended to remove it and use <code class="docutils literal notranslate"><span class="pre">shuffle:</span> <span class="pre">batches</span></code> marian settings (see <a class="reference external" href="https://github.com/mozilla/firefox-translations-training/issues/21">issue</a>).</p></td>
 <td><p>GPU</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p>Fine-tuning student</p></td>
+<tr class="row-odd"><td><p>Fine-tuning student</p></td>
 <td><p>Finetunes the student model by emulating 8bit GEMM during training</p></td>
 <td><p>GPU</p></td>
 <td><p>Converges very quickly and then degrades. It’s quick but you might want to reduce early stopping threshold.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Quantizaiton</p></td>
+<tr class="row-even"><td><p>Quantizaiton</p></td>
 <td><p>Applies 8 bit quantization to the fined-tuned student model and runs evaluation on CPU</p></td>
 <td><p>CPU</p></td>
 <td><p>CPU threads must be set to 1 for this step.</p></td>
 </tr>
-<tr class="row-even"><td><p>Evaluation</p></td>
+<tr class="row-odd"><td><p>Evaluation</p></td>
 <td><p>Calculates metrics for all models (BLEU, chrf) using <a class="reference external" href="https://github.com/mjpost/sacrebleu">SacreBLEU</a></p></td>
 <td><p>GPU</p></td>
 <td><p>Uses <code class="docutils literal notranslate"><span class="pre">datasets.test</span></code> configuration section.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Export</p></td>
+<tr class="row-even"><td><p>Export</p></td>
 <td><p>Exports trained model and shortlist to (bergamot-translator)(https://github.com/mozilla/bergamot-translator) format</p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
+<div class="section" id="configurable-steps">
+<h2>Configurable steps<a class="headerlink" href="#configurable-steps" title="Permalink to this headline">¶</a></h2>
+<p>Summary of OpusDistillery main steps. For each step, we report the compute resource used (CPU or GPU), whether the step is optional, and whether it is configurable or hard-coded.</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Main Step</strong></p></th>
+<th class="head"><p><strong>Step</strong></p></th>
+<th class="head"><p><strong>Resource</strong></p></th>
+<th class="head"><p><strong>Optional</strong></p></th>
+<th class="head"><p><strong>Configurable</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Data Processing</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>Data Download</p></td>
+<td><p>CPU</p></td>
+<td><p>✗</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Data Cleaning</p></td>
+<td><p>CPU</p></td>
+<td><p>✗</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Synthetic Dataset Generation</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Teacher Model Download</p></td>
+<td><p>CPU</p></td>
+<td><p>✗</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>Forward Translation</p></td>
+<td><p>GPU</p></td>
+<td><p>✗</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Backward Model Download</p></td>
+<td><p>CPU</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>Cross-Entropy Scoring</p></td>
+<td><p>GPU</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Cross-Entropy Filtering</p></td>
+<td><p>CPU</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Student Training</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Alignment Training</p></td>
+<td><p>CPU</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>Vocabulary Training</p></td>
+<td><p>CPU</p></td>
+<td><p>✗</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Student Training</p></td>
+<td><p>GPU</p></td>
+<td><p>✗</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Exporting</strong></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Fine-tuning</p></td>
+<td><p>GPU</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p>Quantization</p></td>
+<td><p>CPU</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p>Export</p></td>
+<td><p>-</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Evaluation</strong></p></td>
+<td><p>Evaluation</p></td>
+<td><p>GPU</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
