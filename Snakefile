@@ -933,11 +933,13 @@ rule add_lang_tag_corpus_src_for_student:
     conda: "envs/base.yml"
     threads: workflow.cores
     input: expand(f"{train_student_dir}/corpus.{{lang}}.gz", langpair=langpairs, lang=['source', 'target'])
-    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz"
+    output: f"{filtered}/{{langpair}}/corpus.source.langtagged.gz",f"{filtered}/{{langpair}}/corpus.target.gz"
     params: prefix=f"{filtered}/{{langpair}}/corpus",
             trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
             suffix="source"
-    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_student}" "{params.suffix}" "" >> {log} 2>&1'''
+    shell: '''bash pipeline/clean/add-lang-tag.sh "{params.trg_three_letter}" "{params.prefix}" "{o2m_student}" "{params.suffix}" "" >> {log} 2>&1
+            if [ ! -f "{filtered}/{{langpair}}/corpus.target.gz" ]; then cp "{train_student_dir}/{{langpair}}/corpus.target.gz" "{filtered}/{{langpair}}/corpus.target.gz"; fi
+            '''
 
 rule add_lang_tag_devset_for_student:
     message: "Adding language tag id for devset for student training"
