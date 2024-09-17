@@ -38,9 +38,8 @@ Make sure to check licenses of the datasets before using them.
 
 ## Adding a new importer
 
-Just add a shell script to [corpus](https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/corpus) or [mono](https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/mono) which is named as `<prefix>.sh` 
-and accepts the same parameters as the other scripts from the same folder.
+Just add a shell script to [corpus](https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/corpus) or [mono](https://github.com/Helsinki-NLP/OpusDistillery/tree/main/pipeline/data/importers/mono) which is named as `<prefix>.sh` and accepts the same parameters as the other scripts from the same folder.
 
 ## Issues
-- Currently, it is not possible to download specific datasets per language pair, right now the tool only downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, it creates dummy files. 
-- Currently, there is no support to download monolingual datasets. The use of monolingual data is not implemented and only supports the use of bilingual data at the moment.
+* Currently, it is not possible to download specific datasets per language pair; the tool downloads the same dataset for all language pairs. If a dataset doesn't exist for a given language pair, dummy files are created. Do you want to collaborate? Feel free to work on this [issue](https://github.com/Helsinki-NLP/OpusDistillery/issues/1).
+* There is currently no support for downloading monolingual datasets. The use of monolingual data is not fully implemented; only bilingual data is supported at this time. Do you want to collaborate? Feel free to work on this [issue](https://github.com/Helsinki-NLP/OpusDistillery/issues/2).

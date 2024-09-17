@@ -19,6 +19,9 @@ experiment:
 
   best-model: perplexity
 
+  opusfilter:
+      config: default #Otherwise, specify path to opusfilter configuration 'configs/opusfilter/config.opusfilter.yaml'    
+
 marian-args:
   training-student:
     disp-freq: 10
@@ -30,11 +33,6 @@ marian-args:
     save-freq: 100
     valid-freq: 100
     after: 500u
-  decoding-backward:
-    mini-batch-words: 2000
-  decoding-teacher:
-    mini-batch-words: 1000
-    precision: float16
 
 datasets:
   train:

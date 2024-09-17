@@ -1,17 +1,14 @@
-# Basic usage
+# Basic Usage
 
-The pipeline is built with [Snakemake](https://snakemake.readthedocs.io/en/stable/).
+The pipeline is built using [Snakemake](https://snakemake.readthedocs.io/en/stable/).
 
-Snakemake workflow manager infers the DAG of tasks implicitly from the specified inputs and outputs of the steps. The workflow manager checks which files are missing and runs the corresponding jobs either locally or on a cluster depending on the configuration.
+Snakemake is a workflow management system that implicitly constructs a Directed Acyclic Graph (DAG) of tasks based on the input and output files specified in each step. It determines which files are missing and executes the corresponding jobs, either locally or on a cluster, depending on the configuration. Snakemake can also parallelize steps that can be run concurrently.
 
-Snakemake parallelizes steps that can be executed simultaneously.
+The main Snakemake process (scheduler) should be launched interactively. It manages the job execution either on worker nodes in a cluster (cluster mode) or on a local machine (local mode).
 
-The main Snakemake process (scheduler) should be launched interactively. It runs the job processes on the worker nodes in cluster mode or on a local machine in local mode.
+## Configuration Examples
 
-## Configuration examples
-
-The pipeline is run with the [Makefile](https://github.com/Helsinki-NLP/OpusDistillery/blob/multi-ftt/Makefile) which takes a configuration file as an input. 
-Configuration files are in [YAML](https://yaml.org/) format. Although we report details of the configuration files in [Setting up your experiment](configs/downloading_and_selecting_data.md), a configuration file that trains a student model (Estonian, Finnish and Hungarian into English) looks like this:
+The pipeline is executed using the provided [Makefile](https://github.com/Helsinki-NLP/OpusDistillery/blob/main/Makefile), which takes a configuration file as input. Configuration files are written in [YAML](https://yaml.org/) format. You can find more details on configuration in the [Setting up your experiment](configs/downloading_and_selecting_data.md) section. Below is an example configuration file that trains a student model for Estonian, Finnish, and Hungarian into English:
 
 ```yaml
 
@@ -46,14 +43,63 @@ datasets:
 
 ## Running
 
+To check that everything is installed correctly, run a dry run first:
+
+```
+make dry-run
+```
+
+To execute the full pipeline, specify a specific profile and configuration file:
+
+```
+make run PROFILE=slurm-puhti CONFIG=configs/config.test.yml
+```
+
+### Specific target
+
+By default, all Snakemake rules are executed. To run the pipeline up to a specific rule, use:
+
+```
+make run TARGET=<non-wildcard-rule-or-path>
+```
+
+For example,  to collect the corpus first:
+
+```
+make run TARGET=merge_corpus
+```
+
+You can also specify the full file path, such as:
+
+```
+make run TARGET=/models/ru-en/bicleaner/teacher-base0/model.npz.best-ce-mean-words.npz
+```
+### Rerunning
+
+If you need to rerun a specific step, delete the output files expected in the Snakemake rule.
+If Snakemake reports a missing file and suggests running with the `--clean-metadata` flag, do the following:
+
+```
+make clean-meta TARGET=<missing-file-name>
+```
+and then as usual:
+
+```
+make run PROFILE=<profile> CONFIG=<configuration-file>
+```
+
+### Canceling
+
+If you need to cancel a running pipeline on a cluster, remember to also cancel the associated SLURM jobs, as these will not be canceled automatically.
+Additionally, delete any resulting files that you want to overwrite.
+
 ### On LUMI
 
-On LUMI, the pipeline is run from the login node from your local copy of the root repository.
+To run the pipeline on LUMI, start from the login node using your local copy of the root repository.
 
-Start a tmux session: `tmux`
-You can read more about [tmux](https://github.com/tmux/tmux/wiki) here.
+First, start a tmux session. You can read more about [tmux](https://github.com/tmux/tmux/wiki) here.
 
-Load LUMI specific modules:
+Load the LUMI-specific modules:
 
 ```bash
 module load CrayEnv
@@ -64,64 +110,9 @@ module load rocm/5.3.3
 export SINGULARITYENV_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 ```
 
-Activate snakemake environment:
+Activate the Snakemake environment:
 
 ```bash
 source ../snakemake_env/bin/activate
 ```
-
-Now, you can move on and continue to the next section.
-
-### Usual run
-
-Dry run first to check that everything was installed correctly:
-
-```
-make dry-run
-```
-
-To run the pipeline:
-```
-make run
-```
-
-To test the whole pipeline end to end (it is supposed to run relatively quickly and does not train anything useful):
-
-```
-make test
-```
-You can also run a specific profile or config by overriding variables from Makefile
-```
-make run PROFILE=slurm-puhti CONFIG=configs/config.test.yml
-```
-
-### Specific target
-
-By default, all Snakemake rules are executed. To run the pipeline up to a specific rule use:
-```
-make run TARGET=<non-wildcard-rule-or-path>
-```
-For example, collect corpus first:
-```
-make run TARGET=merge_corpus
-```
-
-You can also use the full file path, for example:
-```
-make run TARGET=/models/ru-en/bicleaner/teacher-base0/model.npz.best-ce-mean-words.npz
-```
-### Rerunning
-
-If you want to rerun a specific step or steps, you can delete the result files that are expected in the Snakemake rule output.
-Snakemake might complain about a missing file and suggest to run it with `--clean-metadata` flag. In this case run:
-```
-make clean-meta TARGET=<missing-file-name>
-```
-and then as usual:
-```
-make run
-```
-
-### Canceling
-
-Be aware that if you cancel a pipeline that is currently running on a cluster, you also need to cancel the related SLURM jobs, as these won't be canceled automatically. You also need to delete the result files that you want to overwrite.
+You can now proceed as explained above.

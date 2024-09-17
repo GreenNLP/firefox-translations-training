@@ -8,15 +8,17 @@ It is built on top of the `Firefox Translations Training pipeline <https://githu
 originally developed within the `Bergamot project <https://browser.mt>`_, for training efficient NMT models that can run locally in a web browser.
 
 The pipeline is capable of training a translation model for any language pair(s) end to end.
-Translation quality depends on the chosen datasets, data cleaning procedures and hyperparameters. Some settings, especially low resource languages might require extra tuning.
+Translation quality depends on the chosen datasets, data cleaning procedures and hyperparameters.
+Some settings, especially low resource languages might require extra tuning.
 
-We use `Marian <https://marian-nmt.github.io/>`_, the fast neural machine translation engine .
+We use `Marian <https://marian-nmt.github.io/>`_, the fast neural machine translation engine.
 
 New features:
 
 * **OPUS-MT models**: We have added the option to simply provide the URL of an existing OPUS-MT model. Our tool is also able to select the best available OpusMT model per language pair.
-* **GPU Utilisation** With the hope of moving towards greener NLP and NMT, we have added GPU utilisation tracking so that we can report the amount of hours and energy consumed by the pipeline.
+* **Hugging Face models**: You can also automatically distill from an existing model on Hugging Face.
 * **Multilinguality Support**: The pipeline supports training multilingual models. This covers two aspects: support for using any combination of multilingual and bilingual teachers, as well as support for multilingual student training.
+* **GPU Utilisation** With the hope of moving towards greener NLP and NMT, we have added GPU utilisation tracking so that we can report the amount of hours and energy consumed by the pipeline.
 
 .. toctree::
    :caption: Get started
