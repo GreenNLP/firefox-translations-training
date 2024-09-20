@@ -8,13 +8,9 @@ experiment:
   dirname: hf
   name: opus
   langpairs:
-    - en-fi
     - en-et
 
-  parallel-max-sentences: 1000
-  split-length: 10000
-  spm-sample-size: 400
-  spm-vocab-size: 3000
+  split-length: 1000
 
   best-model: perplexity
   

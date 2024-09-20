@@ -10,10 +10,7 @@ experiment:
   langpairs:
     - en-de
 
-  parallel-max-sentences: 1000
-  split-length: 10000
-  spm-sample-size: 400
-  spm-vocab-size: 3000
+  split-length: 1000
 
   best-model: perplexity
   
@@ -24,10 +21,12 @@ experiment:
       en: English
       de: German
     prompt: "Translate {src_lang} to {tgt_lang}: {source}"
+    config:
+      max_new_tokens: 150
 
 datasets:
   train:
-    - ELRC-3293-EUROPARL_covid__v1
+    - ELRC_2922__v1
   devtest:
     - flores_dev
   test:
