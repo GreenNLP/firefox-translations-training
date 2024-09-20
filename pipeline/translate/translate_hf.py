@@ -72,7 +72,7 @@ def main():
     # Get the class from the module
     model_class = getattr(module, class_name)
 
-    model = model_class.from_pretrained(model_name, trust_remote_code=True, device_map='auto')
+    model = model_class.from_pretrained(model_name, trust_remote_code=True)
     model = accelerator.prepare(model)  # Prepare model for distributed inference
 
     # Mapping target languages
@@ -101,13 +101,14 @@ def main():
     formatted_text = [prompt.format(src_lang=src_lang, tgt_lang=tgt_lang, source=t) for t in text]
 
     # Tokenize all the inputs at once
-    tokenized_inputs = tokenizer(formatted_text, return_tensors='pt', padding=True).to(accelerator.device)
+    tokenized_inputs = tokenizer(formatted_text, return_tensors='pt', padding=True)
 
     # Prepare dataset and dataloader
     dataset = TokenizedDataset(tokenized_inputs)
     batch_size = 32
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-   
+    dataloader = accelerator.prepare(dataloader)
+
     print("Starting translations...")
 
     # Accumulate multiple sentences in memory and write them to the file in larger batches
@@ -118,10 +119,10 @@ def main():
         start_time = time.time()
         sentence_counter = 0
 
-        for batch in accelerator.prepare(dataloader):
+        for batch in dataloader:
             
             # Generate output
-            translated_batch = model.generate(
+            translated_batch = model.module.generate(
                 **batch,
                 num_return_sequences=num_return_sequences,
                 num_beams=num_return_sequences,
