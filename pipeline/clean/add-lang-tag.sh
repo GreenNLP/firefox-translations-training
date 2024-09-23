@@ -10,6 +10,8 @@ echo "###### Adding language tag"
 
 target_lang_token=$1
 file=$2
+# When we skip Cross-Entropy filtering, we need to move the file from the merged folder to the filtered one.
+outfile="${file/merged/filtered}" 
 o2m=$3
 suffix=$4
 model_dir=$5
@@ -26,13 +28,13 @@ if [ $o2m == "True" ]; then
     target_lang_token=">>${target_lang_token}<< "
     # Check if there is already a language tag token
     if zgrep -q "${target_lang_token}" $file.$lang.gz; then
-        ln -s $file.$lang.gz $file.$suffix.langtagged.gz
+        ln -s $file.$lang.gz $outfile.$suffix.langtagged.gz
         echo "The file already contains language tags, we create a dummy file"
     else
-        zcat $file.$lang.gz | sed "s/^/${target_lang_token}/" | pigz > $file.$suffix.langtagged.gz
+        zcat $file.$lang.gz | sed "s/^/${target_lang_token}/" | pigz > $outfile.$suffix.langtagged.gz
         echo "###### Done: Adding language tag"
     fi
 else
-    ln -s $file.$lang.gz $file.$suffix.langtagged.gz
+    ln -s $file.$lang.gz $outfile.$suffix.langtagged.gz
     echo "The model doesn't have multiple targets, so there is no need to add a language tag, we create a dummy file"
 fi
