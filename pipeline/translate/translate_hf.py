@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument('prompt',  type=str, help="Prompt to use for decoding")
     parser.add_argument('langtags',  type=str, help="Language tag mapping specific to the model")
     parser.add_argument('config',  type=str, help="Specific configuration for decoding")
+    parser.add_argument('batchsize',  type=str, help="Batch size for decoding. Should be small for large models.")
     return parser.parse_args()
 
 def convert_simple_dict(d):
@@ -136,8 +137,7 @@ def main():
     rank = accelerator.process_index
     temp_file = f"{args.fileout}.rank{rank}.tmp"  # Create a temporary file for each process
 
-    batch_size = 32 # 1 batch at a time 8 sents per GPU
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=args.batchsize, shuffle=False)
 
     dataloader = accelerator.prepare(dataloader) # Prepare dataset for distributed inference
     model = accelerator.prepare(model)  # Prepare model for distributed inference

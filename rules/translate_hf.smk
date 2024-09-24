@@ -17,10 +17,10 @@ rule translate_corpus_hf:
             langinfo=config["langinfo"],
             prompt={config["prompt"]},
             langtags=config["langtags"],
-            decoder_config=config["decoder_config"]
-
+            decoder_config=config["decoder_config"],
+            batch_size=config["batch_size"]
     shell: '''
         python pipeline/translate/translate_hf.py \
             "{input.file}" "{output.file}" "{params.teacher}" "{params.model_dir}" "{params.src}" "{params.trg}" \
-            "{params.modelclass}" "{params.langinfo}" "{params.prompt}" "{params.langtags}" "{params.decoder_config}" >> {log} 2>&1
+            "{params.modelclass}" "{params.langinfo}" "{params.prompt}" "{params.langtags}" "{params.decoder_config}" "{params.batch_size}" >> {log} 2>&1
         '''

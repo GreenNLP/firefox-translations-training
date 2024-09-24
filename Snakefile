@@ -728,6 +728,7 @@ if huggingface:
         "prompt": hf_prompt,
         "langtags": hf_langtags,
         "decoder_config": hf_config,
+        "batch_size": hf_batchsize,
         "gpus_num": gpus_num}
 
     module translate_hf:
