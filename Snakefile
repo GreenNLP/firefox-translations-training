@@ -268,10 +268,10 @@ else:
 
 shell.prefix(f"{envs} ")
 
-results = expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"], dataset=eval_datasets)
+#results = expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"], dataset=eval_datasets)
 
 # For base model, only generate the metrics once
-results.extend(expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/basemodel-eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"][0], dataset=eval_datasets))
+#results.extend(expand(f"{data_root_dir}/{experiment}/{src}-{trg}/corpus_{{corpus}}/finetune_{{learning_rate}}_opusTCv20210807+bt-2021-09-01/eval/basemodel-eval-{{dataset}}.metrics", corpus=config["datasets"]["train"][0], learning_rate=config["experiment"]["finetune"]["learning-rates"][0], dataset=eval_datasets))
 
 #print(results)
 

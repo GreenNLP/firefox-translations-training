@@ -85,6 +85,7 @@ echo "### Training ${model_dir}"
   --devices ${GPUS} \
   --beam-size 6 \
   --sharding local \
+  --lr-report \
   --learn-rate "${learn_rate}" \
   --sync-sgd \
   --valid-metrics "${best_model_metric}" ${all_model_metrics[@]/$best_model_metric} \

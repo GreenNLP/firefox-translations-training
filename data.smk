@@ -27,10 +27,11 @@ rule download_tatoeba_corpus:
     shell: 'bash pipeline/data/download-tc-data.sh {wildcards.src} {wildcards.trg} {params.prefix} {params.version} inf >> {log} 2>&1'
 
 #TODO: explicitly defined dev and eval linking, the glob might cause problems
-rule extract_tc_scored:
+checkpoint extract_tc_scored:
     message: "Extracting corpora from scored tc training set"
-    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/extract_tc_scored.log"
-    conda: "envs/base.yml"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}.log"
+    conda: None
+    container: None
     wildcard_constraints:
         min_score="0\.\d+",
     threads: 1
@@ -38,15 +39,22 @@ rule extract_tc_scored:
     output: 
         src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
         trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
+        train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.ids.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz",
         dev_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{src}.gz",
         dev_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{trg}.gz",
         eval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{src}.gz",
-        eval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{trg}.gz"
+        eval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{trg}.gz",
+        subcorpora=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subcorpora")
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
         output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/"
         
-    shell: '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} && ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
+    shell: 
+        '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --source_lang {wildcards.src} --target_lang {wildcards.trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} >> {log} 2>&1 && \
+        ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
 
 rule baseline_preprocessing:
     message: "Preprocessing data for baseline training"

@@ -25,7 +25,6 @@ else:
 
 options += ['--job-name', name]
 
-partition = cluster_config['cpu-partition']
 account = cluster_config['cpu-account']
 
 if "resources" in job_properties:
@@ -43,6 +42,15 @@ if "resources" in job_properties:
             partition = cluster_config['multi-gpu-partition']
         rocm_dir = os.getenv("ROCM_PATH") 
         options += ['--export', f'ALL,SINGULARITY_BIND="{rocm_dir}"']
+    else:
+        #this is a LUMI-C job 
+        if 'threads' in job_properties and int(job_properties['threads']) >= 128:
+            if 'mem_mb' in resources and int(resources['mem_mb'] < 256000):
+                partition = cluster_config['fullnode-cpu-partition']
+            else:
+                partition = cluster_config['partialnode-cpu-partition'] # The LUMI-C nodes with more memory than 256GB are in small partition
+        else:
+            partition = cluster_config['partialnode-cpu-partition']
 
     # we don't need explicit memory limiting for now
     if 'mem_mb' in resources:

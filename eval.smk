@@ -2,9 +2,15 @@ wildcard_constraints:
     src="\w{2,3}",
     trg="\w{2,3}",
     train_vocab="train_joint_spm_vocab[^/]+",
+    extract_tc="extract_tc[^/]+",
     learn_rate="\d+"
 
 gpus_num=config["gpus-num"]
+
+def find_domain_sets(wildcards, checkpoint): 
+    checkpoint_output = checkpoint.get(src=wildcards.src,trg=wildcards.trg,project_name=wildcards.project_name,download_tc_dir=wildcards.download_tc_dir,min_score=wildcards.min_score).output["subcorpora"]
+    print(checkpoint_output)
+    return glob_wildcards(os.path.join(checkpoint_output,f"{{domain,.*}}.{wildcards.src}.gz")).domain
 
 #TODO: combine model evaluation rules by storing vocabs in model dir with normally trained models as well
 rule evaluate_opus_model:
@@ -33,6 +39,24 @@ rule evaluate_opus_model:
     shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" {wildcards.src} {wildcards.trg} {params.decoder} "{params.decoder_config}" >> {log} 2>&1'''
 
 
+#TODO: this need to output a single report on the domain evaluations. input should be a directory containing the domain indices and the domain src, trg and id files. Translate the domain source with all domain indices, then separate the output according to ids for evaluation. Skip crawled data sets.
+rule merge_domain_evaluation:
+    message: "Merging domain evaluation results"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/evaluate_domains.log"
+    conda: None
+    container: None
+    threads: 7
+    resources: gpu=1
+    priority: 50
+    wildcard_constraints:
+        min_score="0\.\d+",
+        model="[\w-]+"
+    input:
+    	lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/eval/{domain}-domeval.metrics", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored))
+    output:
+        report('{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval.done',
+            category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
+    shell: '''touch {output} >> {log} 2>&1'''
 
 rule evaluate:
     message: "Evaluating a model"

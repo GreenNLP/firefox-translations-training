@@ -92,7 +92,8 @@ rule collect_copyrate_corpus:
         train_target="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/extract_by_copyrate/train.{trg}.gz"
     params: 
         split_dir="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{train_model}/translate/corpus"
-    shell: 'bash pipeline/translate/collect_copyrate.sh {params.split_dir} {output.train_source} {output.train_target} >> {log} 2>&1'
+    shell: 
+        'bash pipeline/translate/collect_copyrate.sh {params.split_dir} {output.train_source} {output.train_target} >> {log} 2>&1'
 
 rule collect_corpus:
     message: "Collecting translated corpus"
