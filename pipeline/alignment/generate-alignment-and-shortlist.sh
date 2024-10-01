@@ -43,17 +43,15 @@ test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/corpus" ||
   paste <(pigz -dc "${dir}/corpus.spm.${SRC}.gz") <(pigz -dc "${dir}/corpus.spm.${TRG}.gz") |
   sed 's/\t/ ||| /' >"${dir}/corpus"
 
-echo "### Training alignments"
-test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/align.s2t.gz" ||
-  "${BIN}/fast_align" -vod -i "${dir}/corpus" |
-  pigz >"${dir}/align.s2t.gz"
-test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/align.t2s.gz" ||
-  "${BIN}/fast_align" -vodr -i "${dir}/corpus" |
-  pigz >"${dir}/align.t2s.gz"
+echo "### Removing empty target lines"
+awk -F ' \|\|\| ' '$1!="" && $2!=""' "${dir}/corpus" > "${dir}/corpus_clean"
+mv "${dir}/corpus_clean" "${dir}/corpus"
 
+echo "### Training alignments"
+test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/align.s2t" || test -s "${dir}/align.t2s" ||
+  "eflomal-align" -i "${dir}/corpus" -f "${dir}/align.s2t" -r "${dir}/align.t2s" -m 3
+  
 echo "### Symmetrizing alignments"
-test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/align.t2s" ||
-  pigz -d "${dir}/align.s2t.gz" "${dir}/align.t2s.gz"
 test -s "${output_dir}/corpus.aln.gz" ||
   "${BIN}/atools" -i "${dir}/align.s2t" -j "${dir}/align.t2s" -c grow-diag-final-and |
   pigz >"${output_dir}/corpus.aln.gz"
