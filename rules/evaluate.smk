@@ -60,7 +60,7 @@ rule eval_quantized:
         res_prefix=f'{config["eval_speed_dir"]}/{{langpair}}/{{dataset}}',
         trg_lng=lambda wildcards: wildcards.langpair.split('-')[1],
         trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(), 
-        decoder_config='../../quantize/decoder.yml',
+        decoder_config='../quantize/decoder.yml',
         o2m=config["o2m_student"]
     shell: '''bash pipeline/eval/eval-quantized.sh "{wildcards.langpair}" "{input.model}" "{input.shortlist}" "{params.dataset_prefix}" \
             "{input.vocab}" "{params.res_prefix}" "{params.decoder_config}" "{params.trg_three_letter}" {params.o2m} >> {log} 2>&1'''
