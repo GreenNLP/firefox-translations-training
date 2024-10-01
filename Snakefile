@@ -723,11 +723,13 @@ if huggingface:
         "teacher_source_file": teacher_source_file,
         "teacher_target_file": teacher_target_file,
         "langpairs": langpairs,
-        "task": hf_task,
+        "modelclass": hf_modelclass,
+        "langinfo": hf_langinfo,
         "prompt": hf_prompt,
-        "gpus_num": gpus_num,
-        "log_dir": log_dir
-    }
+        "langtags": hf_langtags,
+        "decoder_config": hf_config,
+        "batch_size": hf_batchsize,
+        "gpus_num": gpus_num}
 
     module translate_hf:
         snakefile: "rules/translate_hf.smk"

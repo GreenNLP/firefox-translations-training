@@ -9,12 +9,18 @@ rule translate_corpus_hf:
     input:
         file=config["teacher_source_file"]
     output: file=config["teacher_target_file"]
-    params: src_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[0]).to_alpha3(),
-            trg_three_letter=lambda wildcards: Language.get(wildcards.langpair.split('-')[1]).to_alpha3(),
+    params: src=lambda wildcards: wildcards.langpair.split('-')[0],
+            trg=lambda wildcards: wildcards.langpair.split('-')[1],
             model_dir=config["final_teacher_dir"],
             teacher=config["hf_teacher"],
-            task=config["task"]
+            modelclass=config["modelclass"],
+            langinfo=config["langinfo"],
+            prompt={config["prompt"]},
+            langtags=config["langtags"],
+            decoder_config=config["decoder_config"],
+            batch_size=config["batch_size"]
     shell: '''
         python pipeline/translate/translate_hf.py \
-            "{input.file}" "{output.file}" "{params.teacher}" "{params.model_dir}" "{params.src_three_letter}" "{params.trg_three_letter}" "{params.task}" >> {log} 2>&1
+            "{input.file}" "{output.file}" "{params.teacher}" "{params.model_dir}" "{params.src}" "{params.trg}" \
+            "{params.modelclass}" "{params.langinfo}" "{params.prompt}" "{params.langtags}" "{params.decoder_config}" "{params.batch_size}" >> {log} 2>&1
         '''

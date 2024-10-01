@@ -237,8 +237,13 @@ else:
 # huggingface
 
 if "huggingface" in config["experiment"]:
-    hf_teacher = config['experiment']['huggingface'].get('model')
-    hf_task = config['experiment']['huggingface'].get('task',"translation")
+    hf_teacher = config['experiment']['huggingface'].get('modelname')
+    hf_modelclass = config['experiment']['huggingface'].get('modelclass')
+    hf_langinfo = config['experiment']['huggingface'].get('lang_info','False')
+    hf_prompt = config['experiment']['huggingface'].get('prompt','{source}')
+    hf_config = config['experiment']['huggingface'].get('config','default')
+    hf_batchsize = config['experiment']['huggingface'].get('batch_size','32')
+    hf_langtags = config['experiment']['huggingface'].get('lang_tags',dict())
     huggingface = True
     train_student_dir = f"{merged}/{{langpair}}"
 else:

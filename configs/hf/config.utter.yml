@@ -1,0 +1,28 @@
+####
+# Example of a production config
+# Change language pair, experiment name, datasets and other settings if needed
+# Training low resource languages might require more tuning of pipeline/training/configs
+###
+
+experiment:
+  dirname: hf
+  name: euroLLM
+  langpairs:
+    - en-et
+
+  split-length: 1000
+  
+  best-model: perplexity
+  
+  huggingface:
+    modelname: "utter-project/EuroLLM-1.7B-Instruct"
+    modelclass: "transformers.AutoModelForCausalLM"
+    prompt:  "<|im_start|>system\nYou are a professional {src_lang} to {tgt_lang} translator. Your goal is to accurately convey the meaning and nuances of the original {src_lang} text while adhering to {tgt_lang} grammar, vocabulary, and cultural sensitivities.\n<|im_end|>\n<|im_start|>user\nTranslate the following {src_lang} source text to {tgt_lang}:\n{src_lang}: {source}\n{tgt_lang}: <|im_end|>\n<|im_start|>assistant\n"
+
+datasets:
+  train:
+    - opus_ELRC_2922__v1
+  devtest:
+    - flores_dev
+  test:
+    - flores_devtest
