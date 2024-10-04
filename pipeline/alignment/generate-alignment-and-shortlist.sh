@@ -27,6 +27,17 @@ mkdir -p "${dir}"
 corpus_src="${corpus_prefix}.${SRC}.gz"
 corpus_trg="${corpus_prefix}.${TRG}.gz"
 
+test -s "${dir}/cleaned_empty_lines" ||
+  echo "### Removing empty target lines"
+  paste <(pigz -dc "${corpus_src}") <(pigz -dc "${corpus_trg}") | sed 's/\t/ ||| /' >"${dir}/corpus"
+  awk -F ' \\|\\|\\| ' '$1!="" && $2!=""' "${dir}/corpus" > "${dir}/corpus_dedup"
+
+  echo "### Splitting corpus back into source and target files and overwriting source and target files"
+  awk -F' \\|\\|\\| ' '{print $1}' "${dir}/corpus_dedup" | pigz -c > "${corpus_src}"
+  awk -F' \\|\\|\\| ' '{print $2}' "${dir}/corpus_dedup" | pigz -c > "${corpus_trg}"
+  rm "${dir}/corpus"
+  rm "${dir}/corpus_dedup"
+  touch "${dir}/cleaned_empty_lines"
 
 echo "### Subword segmentation with SentencePiece"
 test -s "${dir}/corpus.spm.${SRC}.gz" ||
@@ -42,10 +53,6 @@ echo "### Creating merged corpus"
 test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/corpus" ||
   paste <(pigz -dc "${dir}/corpus.spm.${SRC}.gz") <(pigz -dc "${dir}/corpus.spm.${TRG}.gz") |
   sed 's/\t/ ||| /' >"${dir}/corpus"
-
-echo "### Removing empty target lines"
-awk -F ' \|\|\| ' '$1!="" && $2!=""' "${dir}/corpus" > "${dir}/corpus_clean"
-mv "${dir}/corpus_clean" "${dir}/corpus"
 
 echo "### Training alignments"
 test -s "${output_dir}/corpus.aln.gz" || test -s "${dir}/align.s2t" || test -s "${dir}/align.t2s" ||
