@@ -27,6 +27,17 @@ mkdir -p "${dir}"
 corpus_src="${corpus_prefix}.${SRC}.gz"
 corpus_trg="${corpus_prefix}.${TRG}.gz"
 
+test -s "${dir}/cleaned_empty_lines" ||
+  echo "### Removing empty target lines"
+  paste <(pigz -dc "${corpus_src}") <(pigz -dc "${corpus_trg}") | sed 's/\t/ ||| /' >"${dir}/corpus"
+  awk -F ' \\|\\|\\| ' '$1!="" && $2!=""' "${dir}/corpus" > "${dir}/corpus_dedup"
+
+  echo "### Splitting corpus back into source and target files and overwriting source and target files"
+  awk -F' \\|\\|\\| ' '{print $1}' "${dir}/corpus_dedup" | pigz -c > "${corpus_src}"
+  awk -F' \\|\\|\\| ' '{print $2}' "${dir}/corpus_dedup" | pigz -c > "${corpus_trg}"
+  rm "${dir}/corpus"
+  rm "${dir}/corpus_dedup"
+  touch "${dir}/cleaned_empty_lines"
 
 echo "### Subword segmentation with SentencePiece"
 test -s "${dir}/corpus.spm.${SRC}.gz" ||
@@ -43,17 +54,15 @@ test -s "${output_dir}/corpus.aln" || test -s "${dir}/corpus" ||
   paste <(pigz -dc "${dir}/corpus.spm.${SRC}.gz") <(pigz -dc "${dir}/corpus.spm.${TRG}.gz") |
   sed 's/\t/ ||| /' >"${dir}/corpus"
 
+echo "### Removing empty target lines"
+awk -F ' \|\|\| ' '$1!="" && $2!=""' "${dir}/corpus" > "${dir}/corpus_clean"
+mv "${dir}/corpus_clean" "${dir}/corpus"
+
 echo "### Training alignments"
-test -s "${output_dir}/corpus.aln" || test -s "${dir}/align.s2t.gz" ||
-  "${BIN}/fast_align" -vod -i "${dir}/corpus" |
-  pigz >"${dir}/align.s2t.gz"
-test -s "${output_dir}/corpus.aln" || test -s "${dir}/align.t2s.gz" ||
-  "${BIN}/fast_align" -vodr -i "${dir}/corpus" |
-  pigz >"${dir}/align.t2s.gz"
+test -s "${output_dir}/corpus.aln" || test -s "${dir}/align.s2t" || test -s "${dir}/align.t2s" ||
+  "eflomal-align" -i "${dir}/corpus" -f "${dir}/align.s2t" -r "${dir}/align.t2s" -m 3
 
 echo "### Symmetrizing alignments"
-test -s "${output_dir}/corpus.aln" || test -s "${dir}/align.t2s" ||
-  pigz -d "${dir}/align.s2t.gz" "${dir}/align.t2s.gz"
 test -s "${output_dir}/corpus.aln" ||
   "${BIN}/atools" -i "${dir}/align.s2t" -j "${dir}/align.t2s" -c grow-diag-final-and >"${output_dir}/corpus.aln"
 
