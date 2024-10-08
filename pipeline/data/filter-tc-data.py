@@ -34,8 +34,14 @@ def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, m
          gzip.open(domaineval_id_path, 'wt', encoding='utf-8') as eval_ids:
 
         eval_counts = defaultdict(int)
-        
+        domain_counts = defaultdict(int)
+
+        crawl_prefixes = ["CCMatrix","NLLB","ParaCrawl","HPLT","CCAligned","XLEnt"]
+
+ 
         for src_line, trg_line, id_line, score_line in zip(src, trg, ids, scores):
+            if len(src_line) > 1000 or len(trg_line) > 1000:
+                continue
             score = float(score_line.strip().split("\t")[-1])
             if score < min_score:
                 continue
@@ -46,10 +52,13 @@ def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, m
             if corpus_name not in domain_files:
                 domain_src_path = f"{output_dir}/subcorpora/{corpus_name}.{src_lang}.gz"
                 domain_trg_path = f"{output_dir}/subcorpora/{corpus_name}.{trg_lang}.gz"
-                domain_files[corpus_name] = (
-                    gzip.open(domain_src_path, 'wt', encoding='utf-8'),
-                    gzip.open(domain_trg_path, 'wt', encoding='utf-8')
-                )
+                if any(corpus_name.startswith(prefix) for prefix in crawl_prefixes):
+                    domain_files[corpus_name] = None
+                else:
+                    domain_files[corpus_name] = (
+                        gzip.open(domain_src_path, 'wt', encoding='utf-8'),
+                        gzip.open(domain_trg_path, 'wt', encoding='utf-8')
+                    )
 
             if domain_eval_lines > 0 and eval_counts[corpus_name] < domain_eval_lines:
                 eval_src.write(src_line)
@@ -57,11 +66,23 @@ def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, m
                 eval_ids.write(id_line)
                 eval_counts[corpus_name] += 1
             else:
-                domain_files[corpus_name][0].write(src_line)
-                domain_files[corpus_name][1].write(trg_line)
+                if domain_files[corpus_name]:
+                    domain_files[corpus_name][0].write(src_line)
+                    domain_files[corpus_name][1].write(trg_line)
+                    domain_counts[corpus_name] += 1
                 train_src.write(src_line)
                 train_trg.write(trg_line)
                 train_ids.write(id_line)
+
+        for domain_name, (src_file, trg_file) in [x for x in domain_files.items() if x[1] is not None]:
+            src_file.close()
+            trg_file.close()
+            # remove the domain files that do not have enough lines for domain tms
+            if domain_counts[domain_name] < 1000:
+                os.remove(src_file.name)
+                os.remove(trg_file.name)
+
+                
 
 def main():
     parser = argparse.ArgumentParser(description='Process and filter corpus data based on score.')

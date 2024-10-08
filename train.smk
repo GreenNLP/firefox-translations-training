@@ -3,29 +3,34 @@ wildcard_constraints:
     trg="\w{2,3}",
     train_vocab="train_joint_spm_vocab[^/]+",
     training_type="[^/]+",
-    model_type="[^/]+"
+    model_type="[^/_]+"
 
 gpus_num=config["gpus-num"]
 
 rule train_model:
     message: "Training a model"
-    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/train_model.log"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{index_type}-{model_type}-{training_type}_train_model.log"
     conda: "envs/base.yml"
+    envmodules:
+        "LUMI/22.08",
+        "partition/G",
+        "rocm/5.3.3"
     threads: gpus_num*3
     resources: gpu=gpus_num,mem_mb=64000
     input:
-        dev_source="{project_name}/{src}-{trg}/{preprocessing}/dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{preprocessing}/dev.{trg}.gz",
-        train_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz",
-        train_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-dev.{trg}.gz",
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{trg}.gz",
         marian=ancient(config["marian"]),
         vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm",
     output: 
-    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz'
+    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz'
     params:
         args=config["training-teacher-args"]
     shell: f'''bash pipeline/train/train.sh \
                 {{wildcards.model_type}} {{wildcards.training_type}} {{wildcards.src}} {{wildcards.trg}} "{{input.train_source}}" "{{input.train_target}}" "{{input.dev_source}}" "{{input.dev_target}}" "{{output.model}}" "{{input.vocab}}" "{config["best-model-metric"]}" {{params.args}} >> {{log}} 2>&1'''
+
 
 use rule train_model as train_student_model with:
     message: "Training a student model"

@@ -10,8 +10,8 @@ rule train_joint_spm_vocab:
     threads: 2
     input:
         spm_train=ancient(config["spm-train"]),
-        source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz",
-        target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz"
+        source="{project_name}/{src}-{trg}/{preprocessing}/train-train.{src}.gz", #Hacky, should have a wildcard for index, but right now the symbols are the same for all indexes
+        target="{project_name}/{src}-{trg}/{preprocessing}/train-train.{trg}.gz"
     output:
         vocab="{project_name}/{src}-{trg}/{preprocessing}/train_joint_spm_vocab_{vocab_size}_{prepend_spaces}/vocab.spm"
     shell: f'''bash pipeline/train/spm-vocab.sh "{{input.source}}" "{{input.target}}" "{{output.vocab}}" {config["spm-sample-size"]} {{threads}} {{wildcards.vocab_size}} {config["user-defined-symbols"]} "{{input.spm_train}}" "{{wildcards.prepend_spaces}}" "{config["spm-character-coverage"]}" >> {{log}} 2>&1'''

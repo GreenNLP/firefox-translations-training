@@ -18,13 +18,13 @@ cores: 128
 #cache: false
 reason: true
 
-singularity-args: "--bind $PWD/../data,/tmp/$USER:/tmp --rocm --containall"
+singularity-args: "--bind /scratch/project_462000447/members/niemine1/rat/data,/tmp/$USER:/tmp --rocm --containall"
 config:
   - deps=false
     #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data
     #- rocm=/opt/rocm
   - workspace=40000
-  - numgpus=8
+  - numgpus=4
   - mariancmake=""
-  - gpus="0 1 2 3 4 5 6 7"
+  - gpus="0 1 2 3"
   - marianversion="lumi-marian"

@@ -9,7 +9,10 @@ gpus_num=config["gpus-num"]
 
 def find_domain_sets(wildcards, checkpoint): 
     checkpoint_output = checkpoint.get(src=wildcards.src,trg=wildcards.trg,project_name=wildcards.project_name,download_tc_dir=wildcards.download_tc_dir,min_score=wildcards.min_score).output["subcorpora"]
-    print(checkpoint_output)
+    return glob_wildcards(os.path.join(checkpoint_output,f"{{domain,.*}}.{wildcards.src}.gz")).domain
+
+def find_translate_sets(wildcards, checkpoint): 
+    checkpoint_output = checkpoint.get(**wildcards).output["output_dir"]
     return glob_wildcards(os.path.join(checkpoint_output,f"{{domain,.*}}.{wildcards.src}.gz")).domain
 
 #TODO: combine model evaluation rules by storing vocabs in model dir with normally trained models as well
@@ -39,20 +42,50 @@ rule evaluate_opus_model:
     shell: '''bash pipeline/eval/eval-gpu.sh "{params.res_prefix}" "{params.dataset_prefix}" {wildcards.src} {wildcards.trg} {params.decoder} "{params.decoder_config}" >> {log} 2>&1'''
 
 
-#TODO: this need to output a single report on the domain evaluations. input should be a directory containing the domain indices and the domain src, trg and id files. Translate the domain source with all domain indices, then separate the output according to ids for evaluation. Skip crawled data sets.
-rule merge_domain_evaluation:
-    message: "Merging domain evaluation results"
-    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/evaluate_domains.log"
+#TODO: for domeval, only the fuzzy sentences need to be translated for each index. The non-fuzzies can be reused from a common non-fuzz translation file (generate this separately). Otherwise translation takes ages.
+
+# This translates the domeval sets with various indexes in an economincal fashion, i.e. only translating fuzzies
+# TODO: this could also be done with single-file rules, if the non-fuzzy file were to be translated
+# first. Would make the process cleaner, with no need for the output dir
+checkpoint translate_domeval:
+    message: "Translating domain evaluation data"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/translate_domeval.log"
     conda: None
     container: None
-    threads: 7
-    resources: gpu=1
+    envmodules:
+        "LUMI/22.08",
+        "partition/G",
+        "rocm/5.3.3"
+    threads: 1
     priority: 50
     wildcard_constraints:
         min_score="0\.\d+",
         model="[\w-]+"
     input:
-    	lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/eval/{domain}-domeval.metrics", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored))
+        decoder=ancient(config["marian-decoder"]),
+    	domain_index_src=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{domain}-domeval.{{src}}.gz", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored)),
+        train_index_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/train-domeval.{src}.gz",
+        all_filtered_index_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/all_filtered-domeval.{src}.gz"
+    output:
+        output_dir=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval")
+    params:
+        domain_index_src_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}",
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
+    shell: '''pipeline/eval/eval-domains.sh {params.domain_index_src_dir} {output.output_dir} {src} {trg} {input.decoder} params.decoder_config --mini-batch 128 --workspace 20000 >> {log} 2>&1'''
+
+# This evaluates the translations generated with translate_domeval
+rule eval_domeval:
+    message: "Evaluating domain translation quality"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/evaluate_domains.log"
+    conda: None
+    container: None
+    threads: 1
+    priority: 50
+    wildcard_constraints:
+        min_score="0\.\d+",
+        model="[\w-]+"
+    input:
+        domain_index_trg=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/eval/domeval/{domain}-domeval.{{trg}}.gz", domain=find_translate_sets(wildcards, checkpoints.translate_domeval))
     output:
         report('{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval.done',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
@@ -65,6 +98,7 @@ rule evaluate:
     threads: 7
     resources: gpu=1
     priority: 50
+    group: "evaluate"
     wildcard_constraints:
         model="[\w-]+"
     input:

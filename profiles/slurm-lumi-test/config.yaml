@@ -18,7 +18,7 @@ cores: 128
 #cache: false
 reason: true
 
-singularity-args: "--bind $PWD/../data,/tmp/$USER:/tmp --rocm --containall"
+singularity-args: "--bind /scratch/project_462000447/members/niemine1/rat/data,/tmp/$USER:/tmp --rocm --containall"
 config:
   - deps=false
     #- root=/pfs/lustrep1/scratch/project_462000088/members/niemine1/data

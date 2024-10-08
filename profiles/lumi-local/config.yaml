@@ -1,0 +1,14 @@
+verbose: false
+use-conda: true
+cores: all
+reason: true
+use-singularity: false
+use-conda: false
+singularity-args: "--bind $PWD/../data,/tmp/$USER:/tmp --rocm --containall"
+config:
+  - deps=false
+  - workspace=12000
+  - numgpus=1
+  - mariancmake=""
+  - gpus="0"
+  - marianversion="lumi-marian"

@@ -44,7 +44,9 @@ def main(args):
                 break
             if index in scores:
                 score_indices = scores[index]
-                corresponding_sentences = [(index_src_sentences[i-1],index_trg_sentences[i-1]) for score, i in score_indices if score > args.min_score][0:args.max_fuzzies]
+                corresponding_sentences = [
+                    (index_src_sentences[i-1],index_trg_sentences[i-1]) for score,i in
+                    score_indices if score >= args.min_score and score <= args.max_score][0:args.max_fuzzies]
             else:
                 corresponding_sentences = []
             if len(corresponding_sentences) >= args.min_fuzzies:
@@ -75,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--source_separator", default="FUZZY_BREAK", help="Separator token that separates the source side of fuzzies from other fuzzies and the source sentence")
     parser.add_argument("--target_separator", default="FUZZY_BREAK", help="Separator token that separates the target side of fuzzies from other fuzzies and the source sentence")
     parser.add_argument("--min_score", type=float, help="Only consider fuzzies that have a score equal or higher than this")
+    parser.add_argument("--max_score", type=float, help="Only consider fuzzies that have a score equal or lower than this")
     parser.add_argument("--min_fuzzies", type=int, help="Augment sentence if it has at least this many fuzzies")
     parser.add_argument("--max_fuzzies", type=int, help="Augment the sentence with at most this many fuzzies (use n best matches if more than max fuzzies found)") 
     parser.add_argument("--lines_to_augment", type=int, help="Augment this many lines, default is all lines") 

@@ -5,7 +5,7 @@
 log_file=$(echo '{properties}' | jq -r .log[0])
 gpu=$(echo '{properties}' | jq -r .resources.gpu)
 
-#mkdir -p $(dirname $log_file)
+mkdir -p $(dirname $log_file)
 mkdir /tmp/$USER
 
 if [ $gpu != "null" ] && [ $gpu != "0" ]; then

@@ -37,6 +37,11 @@ marian-args:
 # these configs override pipeline/train/configs
   finetune-teacher-with-terms:
     after: 1e
+  training-teacher:
+    after: 120e
+    early-stopping: 40
+    no-restore-corpus: ""
+    valid-reset-stalled: ""
 
 
 datasets:

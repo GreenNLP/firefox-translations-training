@@ -50,8 +50,7 @@ checkpoint extract_tc_scored:
         subcorpora=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subcorpora")
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
-        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/"
-        
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/" 
     shell: 
         '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --source_lang {wildcards.src} --target_lang {wildcards.trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} >> {log} 2>&1 && \
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
@@ -98,6 +97,9 @@ rule subset_corpus:
     input:         
         train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz"
     output: 
         train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{trg}.gz",
@@ -106,7 +108,10 @@ rule subset_corpus:
         eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{src}.gz",
         eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz",
         all_filtered_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{src}.gz",
-        all_filtered_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{trg}.gz"
+        all_filtered_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{trg}.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.ids.gz"
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
         output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/"
@@ -115,10 +120,12 @@ rule subset_corpus:
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1 && \
         ln {input.train_source} {output.all_filtered_source} >> {log} 2>&1 && \
         ln {input.train_target} {output.all_filtered_target} >> {log} 2>&1 && \
+        ln {input.domeval_src} {output.domeval_src} >> {log} 2>&1 && \
+        ln {input.domeval_trg} {output.domeval_trg} >> {log} 2>&1 && \
+        ln {input.domeval_ids} {output.domeval_ids} >> {log} 2>&1 && \
         {{ pigz -dc {input.train_source} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_source} ; }} 2>> {log} && \
         {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log}
         """
-
 
 rule use_custom_corpus:
     message: "Using custom corpus"
