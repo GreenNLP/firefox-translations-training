@@ -48,7 +48,7 @@ translate() {
 
 }
 
-domeval_dir="$result_directory/domeval"
+domeval_dir="$result_directory"
 
 # Create the domeval subdirectory in the output directory
 mkdir -p "$domeval_dir"

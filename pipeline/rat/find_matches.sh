@@ -13,7 +13,7 @@ index_file=$4
 output_file=$5
 contrastive_factor=$6
 
-echo "##### Building a fuzzy match index"
+echo "##### Finding matches"
 
-zcat ${source_corpus} | ${fuzzy_match_cli} --contrast ${contrastive_factor} --no-perfect --index ${index_file} --fuzzy 0.5 --action match --nthreads ${threads} > $output_file
+zcat ${source_corpus} | ${fuzzy_match_cli} --contrast ${contrastive_factor} --no-perfect --index ${index_file} --fuzzy 0.5 --action match --nthreads ${threads} | gzip > $output_file
 

@@ -47,7 +47,7 @@ use rule * from rat as *
 
 vocab_config = {
     "spm-train": f"{marian_dir}/spm_train",
-    "user-defined-symbols":"FUZZY_BREAK",
+    "user-defined-symbols": ",".join(["FUZZY_BREAK","SRC_FUZZY_BREAK"] + [f"FUZZY_BREAK_{bucket}" for bucket in range(0,10)]),
     "spm-sample-size": 1000000,
     "spm-character-coverage": 1.0
     }

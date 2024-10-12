@@ -52,6 +52,7 @@ checkpoint translate_domeval:
     log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/translate_domeval.log"
     conda: None
     container: None
+    resources: gpu=gpus_num
     envmodules:
         "LUMI/22.08",
         "partition/G",
@@ -59,19 +60,18 @@ checkpoint translate_domeval:
     threads: 1
     priority: 50
     wildcard_constraints:
-        min_score="0\.\d+",
-        model="[\w-]+"
+        min_score="0\.\d+"
     input:
         decoder=ancient(config["marian-decoder"]),
-    	domain_index_src=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{domain}-domeval.{{src}}.gz", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored)),
-        train_index_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/train-domeval.{src}.gz",
-        all_filtered_index_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/all_filtered-domeval.{src}.gz"
+    	domain_src=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{domain}-domeval.{{src}}.gz", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored)),
+        train_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/train-domeval.{src}.gz",
+        all_filtered_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/all_filtered-domeval.{src}.gz",
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
     output:
         output_dir=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval")
     params:
-        domain_index_src_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}",
-        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
-    shell: '''pipeline/eval/eval-domains.sh {params.domain_index_src_dir} {output.output_dir} {src} {trg} {input.decoder} params.decoder_config --mini-batch 128 --workspace 20000 >> {log} 2>&1'''
+        domain_index_src_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}"
+    shell: '''pipeline/eval/translate-domeval.sh {params.domain_index_src_dir} {output.output_dir} {wildcards.src} {wildcards.trg} {input.decoder} {input.decoder_config} --mini-batch 128 --workspace 20000 >> {log} 2>&1'''
 
 # This evaluates the translations generated with translate_domeval
 rule eval_domeval:
@@ -89,7 +89,11 @@ rule eval_domeval:
     output:
         report('{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval.done',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
-    shell: '''touch {output} >> {log} 2>&1'''
+    params:
+        input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz",
+        system_id="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}"
+    shell: '''python pipeline/eval/score-domeval.py  --input_dir {params.input_dir} --report {output} --src_lang {wildcards.src} --trg_lang {wildcards.trg} --system_id {params.system_id} --domeval_ids {params.domeval_ids} >> {log} 2>&1'''
 
 rule evaluate:
     message: "Evaluating a model"

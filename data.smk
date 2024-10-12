@@ -65,15 +65,15 @@ rule baseline_preprocessing:
     input:         
         train_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
-        dev_source="{project_name}/{src}-{trg}/{preprocessing}/dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{preprocessing}/dev.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/cleandev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/cleandev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{preprocessing}/eval.{src}.gz",
         eval_target="{project_name}/{src}-{trg}/{preprocessing}/eval.{trg}.gz"
     output: 
-        train_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train.{src}.gz",
-        train_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train.{trg}.gz",
-        dev_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/dev.{trg}.gz",
+        train_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-cleandev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-cleandev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/eval.{src}.gz",
         eval_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/eval.{trg}.gz"
     params:
@@ -81,7 +81,10 @@ rule baseline_preprocessing:
         output_dir="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/"
     shell:
         """
-        ln {params.input_dir}/{{eval,train}}.*.gz {params.output_dir} >> {log} 2>&1 && \
+        ln {input.train_source} {output.train_source} >> {log} 2>&1 && \
+        ln {input.train_target} {output.train_target} >> {log} 2>&1 && \
+        ln {input.eval_source} {output.eval_source} >> {log} 2>&1 && \
+        ln {input.eval_target} {output.eval_target} >> {log} 2>&1 && \
         {{ pigz -dc {input.dev_source} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_source} ; }} 2>> {log} && \
         {{ pigz -dc {input.dev_target} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_target} ; }} 2>> {log}
         """
@@ -97,6 +100,8 @@ rule subset_corpus:
     input:         
         train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{trg}.gz",
         domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{src}.gz",
         domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{trg}.gz",
         domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz"
@@ -105,6 +110,8 @@ rule subset_corpus:
         train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{trg}.gz",
         dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{src}.gz",
         dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{trg}.gz",
+        cleandev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/cleandev.{src}.gz",
+        cleandev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/cleandev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{src}.gz",
         eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz",
         all_filtered_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{src}.gz",
@@ -114,7 +121,7 @@ rule subset_corpus:
         domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.ids.gz"
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
-        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/"
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/",
     shell:
         """
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1 && \
@@ -124,7 +131,8 @@ rule subset_corpus:
         ln {input.domeval_trg} {output.domeval_trg} >> {log} 2>&1 && \
         ln {input.domeval_ids} {output.domeval_ids} >> {log} 2>&1 && \
         {{ pigz -dc {input.train_source} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_source} ; }} 2>> {log} && \
-        {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log}
+        {{ pigz -dc {input.train_target} | head -n {wildcards.max_train_sents}B | pigz -c > {output.train_target} ; }} 2>> {log} && \
+        python pipeline/data/clean-tcdev.py --source {input.dev_source} --target {input.dev_target} --prefix {params.output_dir}clean 2>> {log}
         """
 
 rule use_custom_corpus:

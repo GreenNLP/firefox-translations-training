@@ -1,11 +1,35 @@
+localrules: ensemble_models
+
+ruleorder: ensemble_models > train_model
+
 wildcard_constraints:
     src="\w{2,3}",
     trg="\w{2,3}",
     train_vocab="train_joint_spm_vocab[^/]+",
     training_type="[^/]+",
-    model_type="[^/_]+"
+    model_type="[^/_]+",
+    index_type="[^-]+"
 
 gpus_num=config["gpus-num"]
+
+rule ensemble_models:
+    wildcard_constraints:
+        model1="train_model[^\+]+(?=\+)",
+        model2="(?<=\+)train_model[^\+/]+"
+    message: "Creating an ensemble model decoder config"
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{model1}+{model2}.log"
+    conda: "envs/base.yml"
+    threads: 1
+    input:
+        model1_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml',
+        model2_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model2}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml',
+        vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm"
+    output:
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}+{{model2}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
+    params:
+        args=config["training-teacher-args"],
+        decoder_1_weight=0.5
+    shell: '''python pipeline/train/ensemble.py --decoder_file_1 "{input.model1_decoder_config}" --decoder_file_2 "{input.model2_decoder_config}" --output_decoder_file {output.decoder_config} --vocab_file {input.vocab} --decoder_1_weight {params.decoder_1_weight} >> {log} 2>&1'''
 
 rule train_model:
     message: "Training a model"
@@ -18,19 +42,19 @@ rule train_model:
     threads: gpus_num*3
     resources: gpu=gpus_num,mem_mb=64000
     input:
-        dev_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-dev.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-cleandev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-cleandev.{trg}.gz",
         train_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{trg}.gz",
         marian=ancient(config["marian"]),
         vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm",
     output: 
-    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz'
+    	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz',
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
     params:
         args=config["training-teacher-args"]
     shell: f'''bash pipeline/train/train.sh \
                 {{wildcards.model_type}} {{wildcards.training_type}} {{wildcards.src}} {{wildcards.trg}} "{{input.train_source}}" "{{input.train_target}}" "{{input.dev_source}}" "{{input.dev_target}}" "{{output.model}}" "{{input.vocab}}" "{config["best-model-metric"]}" {{params.args}} >> {{log}} 2>&1'''
-
 
 use rule train_model as train_student_model with:
     message: "Training a student model"
