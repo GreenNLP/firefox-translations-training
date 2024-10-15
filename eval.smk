@@ -66,12 +66,13 @@ checkpoint translate_domeval:
     	domain_src=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{domain}-domeval.{{src}}.gz", domain=find_domain_sets(wildcards, checkpoints.extract_tc_scored)),
         train_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/train-domeval.{src}.gz",
         all_filtered_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/all_filtered-domeval.{src}.gz",
-        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml' 
     output:
         output_dir=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval")
     params:
-        domain_index_src_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}"
-    shell: '''pipeline/eval/translate-domeval.sh {params.domain_index_src_dir} {output.output_dir} {wildcards.src} {wildcards.trg} {input.decoder} {input.decoder_config} --mini-batch 128 --workspace 20000 >> {log} 2>&1'''
+        domain_index_src_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}",
+	uses_bands=lambda wildcards: "false" if "nobands" in wildcards.train_model else "true"
+    shell: '''pipeline/eval/translate-domeval.sh {params.domain_index_src_dir} {output.output_dir} {wildcards.src} {wildcards.trg} {input.decoder} {input.decoder_config} {params.uses_bands} --mini-batch 128 --workspace 20000 >> {log} 2>&1'''
 
 # This evaluates the translations generated with translate_domeval
 rule eval_domeval:
@@ -85,7 +86,8 @@ rule eval_domeval:
         min_score="0\.\d+",
         model="[\w-]+"
     input:
-        domain_index_trg=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/eval/domeval/{domain}-domeval.{{trg}}.gz", domain=find_translate_sets(wildcards, checkpoints.translate_domeval))
+        domain_index_trg=lambda wildcards: expand("{{project_name}}/{{src}}-{{trg}}/{{download_tc_dir}}/extract_tc_scored_{{min_score}}/{{preprocessing}}/{{train_vocab}}/{{train_model}}/eval/domeval/{domain}-domeval.{{trg}}.gz", domain=find_translate_sets(wildcards, checkpoints.translate_domeval)),
+        baseline_translations="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_5M/baseline_preprocessing_2000/train_joint_spm_vocab_50000_prepend/train_model_train-baseteacher-train/eval/domeval.{trg}"
     output:
         report('{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval.done',
             category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
@@ -93,7 +95,7 @@ rule eval_domeval:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}/eval/domeval",
         domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz",
         system_id="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/{preprocessing}/{train_vocab}/{train_model}"
-    shell: '''python pipeline/eval/score-domeval.py  --input_dir {params.input_dir} --report {output} --src_lang {wildcards.src} --trg_lang {wildcards.trg} --system_id {params.system_id} --domeval_ids {params.domeval_ids} >> {log} 2>&1'''
+    shell: '''python pipeline/eval/score-domeval.py  --input_dir {params.input_dir} --report {output} --src_lang {wildcards.src} --trg_lang {wildcards.trg} --system_id {params.system_id} --domeval_ids {params.domeval_ids} --baseline_translations {input.baseline_translations} >> {log} 2>&1'''
 
 rule evaluate:
     message: "Evaluating a model"
@@ -113,8 +115,9 @@ rule evaluate:
         trg_spm='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm',
     	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz'
     output:
-        report('{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/eval/{dataset}.metrics',
-            category='evaluation', subcategory='{model}', caption='reports/evaluation.rst')
+        metrics=report('{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/eval/{dataset}.metrics',
+            category='evaluation', subcategory='{model}', caption='reports/evaluation.rst'),
+        translations='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/eval/{dataset}.{trg}'
     params:
         dataset_prefix='{project_name}/{src}-{trg}/{preprocessing}/{dataset}',
         res_prefix='{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/train_model_{model_type}-{training_type}/eval/{dataset}',

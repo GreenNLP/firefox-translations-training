@@ -17,7 +17,8 @@ marian_decoder=$5
 decoder_config=$6
 model_dir=$(dirname "${decoder_config}")
 model_step=$(basename "${model_dir}")
-args=( "${@:7}" )
+uses_bands=$7
+args=( "${@:8}" )
 
 mkdir -p "$(basename "${result_directory}")"
 
@@ -54,7 +55,11 @@ domeval_dir="$result_directory"
 mkdir -p "$domeval_dir"
 
 # First find all files matching the pattern in the directory
-files=$(find "$data_directory" -type f -name "*-domeval.${src}.gz")
+if [ "$uses_bands" = true ] ; then 
+    files=$(find "$data_directory" -type f -name "*-domeval.${src}.gz")
+else
+    files=$(find "$data_directory" -type f -name "nobands*-domeval.${src}.gz")
+fi
 
 # Remove FUZZY_BREAK tokens, save as gzipped nofuzzies.trans, and run translate on the nofuzzies file for the first file
 first_file=$(echo "$files" | head -n 1)
@@ -68,7 +73,6 @@ ref_file="${domeval_dir}/domeval.${trg}.ref"
 zcat "${data_directory}/${first_file_basename}.${trg}.gz" > ${ref_file}
 
 # Translate domeval with non-domain specific train and all_filtered indexes
-
 
 # Iterate over each file found in the directory
 for file in $files; do
@@ -85,6 +89,12 @@ for file in $files; do
 
     # Run translate on the fuzzies file and generate the translated fuzzies file
     translate "$fuzzies_file" "$translated_fuzzies_file"
+
+    # TODO: if mt system uses bands, downgrade fuzzies to lower band (except for lowest band the same)
+
+    if [ "$uses_bands" = true ] ; then 
+        
+    fi
 
     # Create the output file for this input file
     output_file="$domeval_dir/${basename}.${trg}"

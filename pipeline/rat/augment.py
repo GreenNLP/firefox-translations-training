@@ -2,7 +2,7 @@ import argparse
 import gzip
 import os
 import re
-from random import shuffle
+from random import shuffle, seed
 
 def get_fuzzy_bucket(score):
     return int(score*10)
@@ -48,6 +48,8 @@ def main(args):
 
             if score_line:
                 matches = re.findall("(?P<score>\d\.\d+)\t\d+=(?P<index_src>.+?) \|\|\| (?P<index_trg>[^\t]+)",score_line)
+                # set seed to make shuffle deterministic
+                seed(0)
                 # shuffle to avoid too many high fuzzies
                 shuffle(matches)
                 # if index lang pair is different from the args lang pair, switch source and target

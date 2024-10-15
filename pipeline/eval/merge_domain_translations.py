@@ -15,7 +15,6 @@ def replace_fuzzy_lines(non_fuzzy_file, fuzzy_file, fuzzy_line_number_file, outp
 
     # Replace lines in non-fuzzy lines with those from fuzzy lines based on fuzzy line numbers
     for (line_number_index, line_number) in enumerate(fuzzy_line_numbers):
-        print(line_number)
         # Check if the line number is within range
         if 1 <= line_number <= len(non_fuzzy_lines):
             non_fuzzy_lines[line_number - 1] = fuzzy_lines[line_number_index]

@@ -1,6 +1,8 @@
 # set common variables based on config values
 fuzzy_match_cli=f'{config["fuzzy-match-cli"]}'
 
+localrules: augment_data_with_fuzzies, augment_data_with_reverse_fuzzies, augment_data_with_mixed_fuzzies, augment_data_with_domain_fuzzies
+
 wildcard_constraints:
     src="\w{2,3}",
     trg="\w{2,3}",

@@ -65,6 +65,8 @@ rule baseline_preprocessing:
     input:         
         train_source="{project_name}/{src}-{trg}/{preprocessing}/train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{preprocessing}/train.{trg}.gz",
+        domeval_source="{project_name}/{src}-{trg}/{preprocessing}/domeval.{src}.gz",
+        domeval_target="{project_name}/{src}-{trg}/{preprocessing}/domeval.{trg}.gz",
         dev_source="{project_name}/{src}-{trg}/{preprocessing}/cleandev.{src}.gz",
         dev_target="{project_name}/{src}-{trg}/{preprocessing}/cleandev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{preprocessing}/eval.{src}.gz",
@@ -72,6 +74,8 @@ rule baseline_preprocessing:
     output: 
         train_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-train.{trg}.gz",
+        domeval_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/domeval.{src}.gz",
+        domeval_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/domeval.{trg}.gz",
         dev_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-cleandev.{src}.gz",
         dev_target="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/train-cleandev.{trg}.gz",
         eval_source="{project_name}/{src}-{trg}/{preprocessing}/baseline_preprocessing_{max_dev_sents}/eval.{src}.gz",
@@ -85,6 +89,8 @@ rule baseline_preprocessing:
         ln {input.train_target} {output.train_target} >> {log} 2>&1 && \
         ln {input.eval_source} {output.eval_source} >> {log} 2>&1 && \
         ln {input.eval_target} {output.eval_target} >> {log} 2>&1 && \
+        ln {input.domeval_source} {output.domeval_source} >> {log} 2>&1 && \
+        ln {input.domeval_target} {output.domeval_target} >> {log} 2>&1 && \
         {{ pigz -dc {input.dev_source} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_source} ; }} 2>> {log} && \
         {{ pigz -dc {input.dev_target} | head -n {wildcards.max_dev_sents} | pigz -c > {output.dev_target} ; }} 2>> {log}
         """
