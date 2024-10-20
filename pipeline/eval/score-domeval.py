@@ -3,7 +3,6 @@ import argparse
 import sacrebleu
 import csv
 import gzip
-import bsbleu
 import re
 
 def parse_args():
@@ -24,7 +23,7 @@ def read_file_lines(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         return [line.strip() for line in f.readlines()]
 
-#generate pseudorefs from fuzzy matches for copy rate calculation, use the bsbleu code with modifications (lists instead of files, and BP 0)
+#generate pseudorefs from fuzzy matches for copy rate calculation, use modified sacrebleu
 def split_on_fuzzy_break(source, target):
     results = []
 
@@ -104,11 +103,12 @@ def evaluate_full_domeval(domain, input_dir, trg_lang, ref_lines, report_file, s
     trg_file = os.path.join(input_dir, f"{domain}-domeval.{trg_lang}")
     source_fuzzies_file = os.path.join(input_dir, f"{domain}-domeval.fuzzies")
     translated_fuzzies_file = os.path.join(input_dir, f"{domain}-domeval.translated_fuzzies")
-    linenum_file = os.path.join(input_dir, f"{domain}-domeval.linenum")
-    
+    #downgraded uses the same linenum file as normal
+    linenum_path = os.path.join(input_dir, f"{domain}-domeval.linenum".replace("downgraded_",""))
+
     fuzzy_source_lines = read_file_lines(source_fuzzies_file)
     fuzzy_lines = read_file_lines(translated_fuzzies_file)
-    linenum_lines = [int(line.split(":")[0].strip()) for line in read_file_lines(linenum_file)]
+    linenum_lines = [int(line.split(":")[0].strip()) for line in read_file_lines(linenum_path)]
     fuzzy_ref_lines = [ref_lines[linenum-1] for linenum in linenum_lines]
     nofuzzy_lines = [nofuzzies_trg_lines[linenum-1] for linenum in linenum_lines]
     baseline_lines = [baseline_trg_lines[linenum-1] for linenum in linenum_lines]
@@ -157,12 +157,19 @@ def evaluate_domeval_domains(input_dir, trg_lang, tsv_file, all_ref_lines, nofuz
     domain_specific_baselines = {}
     
     # the crawled corpora are not included as indexes, but they exist in the data, so only add
-    # the tranlations if the translation file exists
-    index_domains = []
+    # the tranlations if the translation file exists (plus train and all_filtered indexes)
+    if "nobands" in system_id:
+        index_domains = ["nobands_train","nobands_all_filtered"]
+    else:
+        index_domains = ["train","all_filtered"]
+        
     for domain in domain_to_id_dict.keys():
         domain_trg_file = os.path.join(input_dir, f"{domain}-domeval.{trg_lang}")
         if os.path.exists(domain_trg_file):
             index_domains.append(domain)
+        downgraded_domain_file = os.path.join(input_dir, f"downgraded_{domain}-domeval.{trg_lang}")
+        if os.path.exists(downgraded_domain_file):
+            index_domains.append(f"downgraded_{domain}")
 
     for index_domain in index_domains:
         domain_trg_file = os.path.join(input_dir, f"{index_domain}-domeval.{trg_lang}")
@@ -174,13 +181,18 @@ def evaluate_domeval_domains(input_dir, trg_lang, tsv_file, all_ref_lines, nofuz
 
     for index_domain in index_domains:
         domain_to_fuzzy_id[index_domain] = {}
-        with open(os.path.join(input_dir, f"{index_domain}-domeval.linenum"),'r') as linenum_file:
-            linenum_lines = {int(line.split(":")[0].strip())-1 for line in linenum_file.readlines()}
+
+        #both downgraded and normal fuzzies have same linenum file
+        linenum_path = os.path.join(input_dir, f"{index_domain}-domeval.linenum".replace("downgraded_",""))
+        with open(linenum_path,'r') as linenum_file:
+            linenum_lines = [int(line.split(":")[0].strip())-1 for line in linenum_file.readlines()]
             # get those ids from domain that have fuzzies with the given index domain
             for domain in domains:
-                domain_to_fuzzy_id[index_domain][domain] = linenum_lines.intersection(domain_to_id_dict[domain])
+                domain_to_fuzzy_id[index_domain][domain] = sorted(set(linenum_lines).intersection(set(domain_to_id_dict[domain])))
+        
         with open(os.path.join(input_dir, f"{index_domain}-domeval.fuzzies"),'r') as fuzzy_file:
-            indexdomain_to_fuzzy_src[index_domain] = zip(linenum_lines, fuzzy_file.readlines())
+            fuzzy_lines = fuzzy_file.readlines()
+            indexdomain_to_fuzzy_src[index_domain] = list(zip(linenum_lines, fuzzy_lines))
             
     for idx, domain in id_to_domain_dict.items():
         if domain not in all_trg_lines.keys():
@@ -212,6 +224,7 @@ def evaluate_domeval_domains(input_dir, trg_lang, tsv_file, all_ref_lines, nofuz
         # calculate baseline score for domain
         baseline_metrics = calculate_metrics(domain_ref_lines, domain_baseline_lines)
         report_file.write(f"{domain}\tbaseline\t{baseline_metrics.bleu}\t{baseline_metrics.chrf}\tN/A\tall\t0\t{system_id}\n")
+        
 
         for index_domain in index_domains:
             domain_fuzzies = domain_to_fuzzy_id[index_domain][domain]
@@ -227,9 +240,15 @@ def evaluate_domeval_domains(input_dir, trg_lang, tsv_file, all_ref_lines, nofuz
             fuzzy_ref_lines = [all_ref_lines[linenum] for linenum in domain_fuzzies]
             fuzzy_trg_lines = [all_trg_lines[index_domain][linenum] for linenum in domain_fuzzies]
 
-            # TODO: the src is out of sync, FIX
             domain_fuzzy_metrics = calculate_metrics(fuzzy_ref_lines, fuzzy_trg_lines, domain_fuzzy_src)
             report_file.write(f"{domain}\t{index_domain}\t{domain_fuzzy_metrics.bleu}\t{domain_fuzzy_metrics.chrf}\t{domain_fuzzy_metrics.copyrate}\tonly_fuzzies\t{fuzzy_count}\t{system_id}\n")
+
+            #don't do this for downgraded
+            if not "downgraded_" in index_domain:
+                baseline_fuzzy_lines = [baseline_lines[linenum] for linenum in domain_fuzzies]
+                
+                domain_baseline_fuzzy_metrics = calculate_metrics(fuzzy_ref_lines, baseline_fuzzy_lines)
+                report_file.write(f"{domain}\tbaseline_{index_domain}\t{domain_baseline_fuzzy_metrics.bleu}\t{domain_baseline_fuzzy_metrics.chrf}\tN/A\tonly_fuzzies\t{fuzzy_count}\t{system_id}\n")
 
             baseline_mix_lines = combine_baseline_and_rat_domain(domain_fuzzies, baseline_lines, all_trg_lines[index_domain], domain_ids=domain_to_id_dict[domain])
             
@@ -256,14 +275,13 @@ def main():
         nofuzzies_trg_lines = read_file_lines(nofuzzies_trg_path)
 
         evaluate_domeval_domains(args.input_dir, args.trg_lang, args.domeval_ids, ref_lines,  nofuzzies_trg_lines, baseline_lines, report_file, args.system_id)
-
-        for file_name in os.listdir(args.input_dir):
+        input_files = os.listdir(args.input_dir)
+        for file_name in input_files:
             if file_name.endswith(f"-domeval.{args.trg_lang}"):
                 domain = file_name.replace(f"-domeval.{args.trg_lang}","")
                 evaluate_full_domeval(domain, args.input_dir, args.trg_lang, ref_lines, report_file, args.system_id, nofuzzies_trg_lines, baseline_lines)
 
         evaluate_baseline(args.input_dir, args.trg_lang, ref_lines, report_file, args.baseline_translations, baseline_lines)
-
 
 if __name__ == "__main__":
     main()

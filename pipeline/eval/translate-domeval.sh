@@ -56,7 +56,7 @@ mkdir -p "$domeval_dir"
 
 # First find all files matching the pattern in the directory
 if [ "$uses_bands" = true ] ; then 
-    files=$(find "$data_directory" -type f -name "*-domeval.${src}.gz")
+    files=$(find "$data_directory" -type f -name "*-domeval.${src}.gz" ! -name "nobands*-domeval.${src}.gz")
 else
     files=$(find "$data_directory" -type f -name "nobands*-domeval.${src}.gz")
 fi
@@ -90,16 +90,24 @@ for file in $files; do
     # Run translate on the fuzzies file and generate the translated fuzzies file
     translate "$fuzzies_file" "$translated_fuzzies_file"
 
-    # TODO: if mt system uses bands, downgrade fuzzies to lower band (except for lowest band the same)
-
-    if [ "$uses_bands" = true ] ; then 
-        
-    fi
-
     # Create the output file for this input file
     output_file="$domeval_dir/${basename}.${trg}"
 
     python pipeline/eval/merge_domain_translations.py $"$domeval_dir/nofuzzies.${trg}" "$translated_fuzzies_file" "${line_numbers_file}" "${output_file}"
+
+    # if mt system uses bands, downgrade fuzzies to lower band (except for lowest band the same)
+    if [ "$uses_bands" = true ] ; then 
+      downgraded_fuzzies_file="$domeval_dir/downgraded_${basename}.fuzzies"
+      translated_downgraded_file="$domeval_dir/downgraded_${basename}.translated_fuzzies"
+      python pipeline/eval/downgrade_fuzzies.py "$fuzzies_file" "$downgraded_fuzzies_file"
+      translate "$downgraded_fuzzies_file" "$translated_downgraded_file"
+
+      # Create the output file for this input file
+      downgraded_output_file="$domeval_dir/downgraded_${basename}.${trg}"
+
+      python pipeline/eval/merge_domain_translations.py $"$domeval_dir/nofuzzies.${trg}" "$translated_downgraded_file" "${line_numbers_file}" "${downgraded_output_file}"
+
+    fi
 
     echo "Created merged output for $file as $output_file"
 done
