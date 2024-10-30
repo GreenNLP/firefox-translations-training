@@ -3,7 +3,9 @@ include: "./configuration.smk"
 
 wildcard_constraints:
     src="\w{2,3}",
-    trg="\w{2,3}"
+    trg="\w{2,3}",
+    nocrawled="(|_nocrawled)",
+    min_score="\d\.\d"
 
 # data downloading
 # Tatoeba data has dev, test and train in same big tar, this is a rule producing them all,
@@ -29,30 +31,30 @@ rule download_tatoeba_corpus:
 #TODO: explicitly defined dev and eval linking, the glob might cause problems
 checkpoint extract_tc_scored:
     message: "Extracting corpora from scored tc training set"
-    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}.log"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}.log"
     conda: None
     container: None
-    wildcard_constraints:
-        min_score="0\.\d+",
     threads: 1
     input: train_src="{project_name}/{src}-{trg}/{download_tc_dir}/train.{src}.gz", train_trg="{project_name}/{src}-{trg}/{download_tc_dir}/train.{trg}.gz", train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/train.id.gz", scores="../data/scores/{src}-{trg}.scored.gz"
     output: 
-        src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
-        trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
-        train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.ids.gz",
-        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{src}.gz",
-        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{trg}.gz",
-        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz",
-        dev_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{src}.gz",
-        dev_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{trg}.gz",
-        eval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{src}.gz",
-        eval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/eval.{trg}.gz",
-        subcorpora=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subcorpora")
+        src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/train.{src}.gz",
+        trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/train.{trg}.gz",
+        train_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/train.ids.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.ids.gz",
+        dev_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/dev.{src}.gz",
+        dev_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/dev.{trg}.gz",
+        eval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/eval.{src}.gz",
+        eval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/eval.{trg}.gz",
+        subcorpora=directory("{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subcorpora")
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
-        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/" 
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/",
+        nocrawled=lambda wildcards: "--no_crawled" if wildcards.nocrawled == "_nocrawled" else ""
+        
     shell: 
-        '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --source_lang {wildcards.src} --target_lang {wildcards.trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} >> {log} 2>&1 && \
+        '''python3 pipeline/data/filter-tc-data.py --source_corpus {input.train_src} --target_corpus {input.train_trg} --source_lang {wildcards.src} --target_lang {wildcards.trg} --id_file {input.train_ids} --score_file {input.scores} --domain_eval_lines 1000 --output_dir {params.output_dir}  --min_score {wildcards.min_score} {params.nocrawled} >> {log} 2>&1 && \
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1'''
 
 rule baseline_preprocessing:
@@ -98,36 +100,36 @@ rule baseline_preprocessing:
 
 rule subset_corpus:
     message: "Extracting N million lines from corpus as training set"
-    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/subset_corpus.log"
+    log: "{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/subset_corpus.log"
     conda: "envs/base.yml"
     wildcard_constraints:
         max_train_sents="\d+[KM]"
     threads: 1
     input:         
-        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{src}.gz",
-        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/train.{trg}.gz",
-        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/dev.{trg}.gz",
-        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{src}.gz",
-        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.{trg}.gz",
-        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/domeval.ids.gz"
+        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/dev.{trg}.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/domeval.ids.gz"
     output: 
-        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{src}.gz",
-        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/train.{trg}.gz",
-        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{src}.gz",
-        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/dev.{trg}.gz",
-        cleandev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/cleandev.{src}.gz",
-        cleandev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/cleandev.{trg}.gz",
-        eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{src}.gz",
-        eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/eval.{trg}.gz",
-        all_filtered_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{src}.gz",
-        all_filtered_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/all_filtered.{trg}.gz",
-        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.{src}.gz",
-        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.{trg}.gz",
-        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/domeval.ids.gz"
+        train_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/train.{src}.gz",
+        train_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/train.{trg}.gz",
+        dev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/dev.{src}.gz",
+        dev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/dev.{trg}.gz",
+        cleandev_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/cleandev.{src}.gz",
+        cleandev_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/cleandev.{trg}.gz",
+        eval_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/eval.{src}.gz",
+        eval_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/eval.{trg}.gz",
+        all_filtered_source="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/all_filtered.{src}.gz",
+        all_filtered_target="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/all_filtered.{trg}.gz",
+        domeval_src="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/domeval.{src}.gz",
+        domeval_trg="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/domeval.{trg}.gz",
+        domeval_ids="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/domeval.ids.gz"
     params:
         input_dir="{project_name}/{src}-{trg}/{download_tc_dir}/",
-        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}/subset_{max_train_sents}/",
+        output_dir="{project_name}/{src}-{trg}/{download_tc_dir}/extract_tc_scored_{min_score}{nocrawled}/subset_{max_train_sents}/",
     shell:
         """
         ln {params.input_dir}/{{eval,dev}}.*.gz {params.output_dir} >> {log} 2>&1 && \

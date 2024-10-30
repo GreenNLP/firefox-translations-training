@@ -1,6 +1,6 @@
-localrules: ensemble_models
+localrules: ensemble_models, self_ensemble_model
 
-ruleorder: ensemble_models > train_model
+ruleorder: self_ensemble_model > ensemble_models > train_model
 
 wildcard_constraints:
     src="\w{2,3}",
@@ -23,13 +23,22 @@ rule ensemble_models:
     input:
         model1_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml',
         model2_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model2}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml',
-        vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm"
+        vocab=ancient("{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm")
     output:
         decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}+{{model2}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
     params:
-        args=config["training-teacher-args"],
         decoder_1_weight=0.5
     shell: '''python pipeline/train/ensemble.py --decoder_file_1 "{input.model1_decoder_config}" --decoder_file_2 "{input.model2_decoder_config}" --output_decoder_file {output.decoder_config} --vocab_file {input.vocab} --decoder_1_weight {params.decoder_1_weight} >> {log} 2>&1'''
+
+#This ensembles the chfr and ce-mean-words models
+use rule ensemble_models as self_ensemble_model with:
+    log: "{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/{model1}_selfensemble.log"
+    input:
+        model1_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml',
+        model2_decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}/model.npz.best-ce-mean-words.npz.decoder.yml',
+        vocab=ancient("{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm")
+    output:
+        decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/{{model1}}+selfensemble/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'
 
 rule train_model:
     message: "Training a model"
@@ -47,7 +56,7 @@ rule train_model:
         train_source="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{src}.gz",
         train_target="{project_name}/{src}-{trg}/{preprocessing}/{index_type}-train.{trg}.gz",
         marian=ancient(config["marian"]),
-        vocab="{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm",
+        vocab=ancient("{project_name}/{src}-{trg}/{preprocessing}/{train_vocab}/vocab.spm")
     output: 
     	model=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz',
         decoder_config=f'{{project_name}}/{{src}}-{{trg}}/{{preprocessing}}/{{train_vocab}}/train_model_{{index_type}}-{{model_type}}-{{training_type}}/final.model.npz.best-{config["best-model-metric"]}.npz.decoder.yml'

@@ -3,7 +3,7 @@ import gzip
 import os
 from collections import defaultdict
 
-def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, min_score, domain_eval_lines, output_dir):
+def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, min_score, domain_eval_lines, output_dir, no_crawled=False):
     print(f"Creating output dir in {output_dir}")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -47,6 +47,8 @@ def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, m
                 continue
 
             corpus_name = id_line.split("\t")[0]
+            if any(corpus_name.startswith(prefix) for prefix in crawl_prefixes):
+                continue
 
 			# Open domain-specific files if not already opened
             if corpus_name not in domain_files:
@@ -82,8 +84,6 @@ def process_files(src_path, trg_path, src_lang, trg_lang, id_path, score_path, m
                 os.remove(src_file.name)
                 os.remove(trg_file.name)
 
-                
-
 def main():
     parser = argparse.ArgumentParser(description='Process and filter corpus data based on score.')
     parser.add_argument('--source_corpus', required=True, help='Path to the source corpus file (gzipped)')
@@ -95,6 +95,7 @@ def main():
     parser.add_argument('--min_score', type=float, required=True, help='Minimum score for filtering (0 to 1)')
     parser.add_argument('--domain_eval_lines', type=int, required=True, help='Number of domain-specific evaluation lines to extract (0 to disable)')
     parser.add_argument('--output_dir', required=True, help='Directory to store the output files')
+    parser.add_argument('--no_crawled', action="store_true", help='Directory to store the output files')
 
     args = parser.parse_args()
 
@@ -109,7 +110,8 @@ def main():
         args.score_file,
         args.min_score,
         args.domain_eval_lines,
-        args.output_dir
+        args.output_dir,
+        args.no_crawled
     )
 
 if __name__ == "__main__":

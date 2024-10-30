@@ -1,8 +1,8 @@
 # CSC LUMI
 single-gpu-partition: dev-g
 multi-gpu-partition: dev-g
-cpu-partition: debug
+cpu-partition: small
 cpu-account: project_462000447
 gpu-account: project_462000447
-time-limit: "00:30:00"
+time-limit: "03:00:00"
 gpu-time-limit: "03:00:00"
