@@ -18,3 +18,5 @@ dependencies:
     - accelerate==0.31.0
     - git+https://github.com/VarunGumma/IndicTransToolkit
     - protobuf==5.28.2
+    - tqdm==4.66.6
+    - ctranslate2==4.5.0
