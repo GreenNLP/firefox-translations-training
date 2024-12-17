@@ -26,27 +26,29 @@ logfile=${12}
 echo "### Converting model with Ctranslate2"
 
 if [ ! -d "${modeldir}" ]; then
-    HF_HOME=$modeldir TRANSFORMERS_CACHE=$modeldir ct2-transformers-converter --force --model $modelname --output_dir $modeldir --trust_remote_code
-    echo "### Done!"
-elif [[ "$modelname" == *"indictrans"* ]]; then
-    # Identify model (extract indic-en, en-indic, or indic-indic)
-    model=$(echo "$modelname" | grep -oP '(indic-[a-z]+|en-indic|indic-indic)')
-    
-    echo "### Identified model: $model"
-    
-    # Download and extract model
-    tmpdir="${modeldir}-tmp"
-    mkdir -p "$tmpdir"
-    
-    wget -q "https://indictrans2-public.objectstore.e2enetworks.net/it2_preprint_ckpts/${model}-preprint.zip" -O "${tmpdir}/${model}-preprint.zip"
-    
-    echo "### Extracting model files..."
-    unzip -q "${tmpdir}/${model}-preprint.zip" -d "$tmpdir"
-    
-    # Move ctranslate converted model to the correct folder
-    mv "${tmpdir}/${model}-preprint/ct2_int8_model/"* "$modeldir"
-    rm -rf "$tmpdir"
-    echo "### Model downloaded and moved to $modeldir!"
+    if [[ "$modelname" == *"indictrans"* ]]; then
+        # Identify model (extract indic-en, en-indic, or indic-indic)
+        model=$(echo "$modelname" | grep -oP '(indic-[a-z]+|en-indic|indic-indic)')
+        
+        echo "### Identified model: $model"
+        
+        # Download and extract model
+        tmpdir="${modeldir}-tmp"
+        mkdir -p "$tmpdir"
+        
+        wget -q "https://indictrans2-public.objectstore.e2enetworks.net/it2_preprint_ckpts/${model}-preprint.zip" -O "${tmpdir}/${model}-preprint.zip"
+        
+        echo "### Extracting model files..."
+        unzip -q "${tmpdir}/${model}-preprint.zip" -d "$tmpdir"
+        
+        # Move ctranslate converted model to the correct folder
+        mv "${tmpdir}/${model}-preprint/ct2_int8_model/"* "$modeldir"
+        rm -rf "$tmpdir"
+        echo "### Model downloaded and moved to $modeldir!"
+    else
+        HF_HOME=$modeldir TRANSFORMERS_CACHE=$modeldir ct2-transformers-converter --force --model $modelname --output_dir $modeldir --trust_remote_code
+        echo "### Done!"
+    fi
 else
     echo "### Converted model already exists! Remove to overwrite"
 fi
