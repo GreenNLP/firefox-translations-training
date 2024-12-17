@@ -53,7 +53,7 @@ fi
 
 echo "### Translation started"
 
-python pipeline/translate/translate_ctranslate_indictrans.py $filein $fileout.tmp $modelname $modeldir $src_lang $trg_lang $langinfo $prompt "$langtags" $config $batch_size $logfile
+python pipeline/translate/translate_ctranslate.py $filein $fileout.tmp $modelname $modeldir $src_lang $trg_lang $langinfo $prompt "$langtags" $config $batch_size $logfile
 
 echo "### Done!"
 
